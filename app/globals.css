@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Merriweather", serif;
+  --font-body: "Inter", sans-serif;
+}
+
+body {
+  @apply bg-paper text-ink font-body antialiased;
+}
+
+.focus-ring {
+  @apply outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
+}
