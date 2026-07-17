@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { VideoUploader } from "@/components/video-uploader";
+import { ImageUploader } from "@/components/image-uploader";
 import { DocumentCourseBuilder } from "@/components/document-course-builder";
 
 async function updateCourseMeta(courseId: string, formData: FormData) {
@@ -57,7 +58,7 @@ export default async function EditCoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, description, is_published, modules(id, title, position, lessons(id, title, mux_playback_id, mux_asset_id, position, is_free_preview))"
+      "id, title, description, is_published, modules(id, title, position, lessons(id, title, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
     )
     .eq("id", params.id)
     .single();
@@ -135,6 +136,13 @@ export default async function EditCoursePage({
                         ) : (
                           <VideoUploader lessonId={lesson.id} />
                         )}
+                      </div>
+                      <div className="mt-2">
+                        <ImageUploader
+                          lessonId={lesson.id}
+                          courseId={course.id}
+                          imageUrl={lesson.image_url}
+                        />
                       </div>
                     </li>
                   ))}

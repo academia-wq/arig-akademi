@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
 
-async function enrollAction(courseId: string) {
+async function enrollAction(courseId: string, courseSlug: string) {
   "use server";
   const supabase = createClient();
   const user = await getUser();
@@ -21,7 +21,7 @@ async function enrollAction(courseId: string) {
     throw new Error(error.message);
   }
 
-  redirect(`/learn/${courseId}`);
+  redirect(`/learn/${encodeURIComponent(courseSlug)}`);
 }
 
 export default async function CourseDetailPage({
@@ -36,13 +36,13 @@ export default async function CourseDetailPage({
     .select(
       "id, title, description, price, is_published, modules(id, title, position, lessons(id, title, is_free_preview, position))"
     )
-    .eq("slug", params.slug)
+    .eq("slug", decodeURIComponent(params.slug))
     .eq("is_published", true)
     .single();
 
   if (!course) notFound();
 
-  const enroll = enrollAction.bind(null, course.id);
+  const enroll = enrollAction.bind(null, course.id, decodeURIComponent(params.slug));
   const modules = (course as any).modules?.sort(
     (a: any, b: any) => a.position - b.position
   );

@@ -16,9 +16,9 @@ export default async function LessonPage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, slug, modules(id, title, position, lessons(id, title, content_text, mux_playback_id, position))"
+      "id, title, slug, modules(id, title, position, lessons(id, title, content_text, mux_playback_id, image_url, position))"
     )
-    .eq("slug", params.courseSlug)
+    .eq("slug", decodeURIComponent(params.courseSlug))
     .single();
 
   if (!course) notFound();
@@ -104,6 +104,14 @@ export default async function LessonPage({
           </div>
         ) : (
           <p className="mt-6 text-ink/50">Энэ хичээлд видео алга.</p>
+        )}
+
+        {currentLesson.image_url && (
+          <img
+            src={currentLesson.image_url}
+            alt={currentLesson.title}
+            className="mt-6 max-w-full rounded-lg border border-ink/10"
+          />
         )}
 
         {currentLesson.content_text && (

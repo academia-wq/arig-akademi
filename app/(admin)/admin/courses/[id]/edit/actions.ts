@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient, getUser } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 import {
   extractFileText,
   generateCourseDraftFromText,
@@ -12,6 +12,55 @@ import { SUPPORTED_MIME_TYPES } from "@/lib/constants/file-upload";
 const MAX_SOURCE_FILE_BYTES = 15 * 1024 * 1024;
 const COURSE_DRAFT_FEATURE = "course_draft_from_file";
 const COURSE_DRAFT_DAILY_LIMIT = 5;
+
+const SUPPORTED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+export async function uploadLessonImage(
+  lessonId: string,
+  courseId: string,
+  formData: FormData
+): Promise<{ success: true; imageUrl: string } | { success: false; error: string }> {
+  const user = await getUser();
+  if (!user) return { success: false, error: "Нэвтрээгүй байна." };
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { success: false, error: "Зураг сонгоно уу." };
+  }
+  if (!SUPPORTED_IMAGE_MIME_TYPES.includes(file.type)) {
+    return { success: false, error: "Зөвхөн JPEG, PNG, WEBP эсвэл GIF зураг дэмжигдэнэ." };
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return { success: false, error: "Зурагны хэмжээ 8MB-с хэтэрсэн байна." };
+  }
+
+  const supabase = createServiceRoleClient();
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `${lessonId}-${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("lesson-images")
+    .upload(path, file, { contentType: file.type, upsert: false });
+
+  if (uploadError) {
+    return { success: false, error: uploadError.message };
+  }
+
+  const { data: publicUrlData } = supabase.storage.from("lesson-images").getPublicUrl(path);
+
+  const { error: updateError } = await supabase
+    .from("lessons")
+    .update({ image_url: publicUrlData.publicUrl })
+    .eq("id", lessonId);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+  return { success: true, imageUrl: publicUrlData.publicUrl };
+}
 
 export async function generateDraftFromFile(
   courseId: string,

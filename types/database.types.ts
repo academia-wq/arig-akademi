@@ -76,6 +76,7 @@ export type Database = {
           content_text: string | null;
           mux_playback_id: string | null;
           mux_asset_id: string | null;
+          image_url: string | null;
           duration_seconds: number | null;
           position: number;
           is_free_preview: boolean;

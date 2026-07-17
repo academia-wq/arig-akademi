@@ -11,7 +11,7 @@ export default async function LearnCourseEntryPage({
   const { data: course } = await supabase
     .from("courses")
     .select("id, modules(id, position, lessons(id, position))")
-    .eq("slug", params.courseSlug)
+    .eq("slug", decodeURIComponent(params.courseSlug))
     .single();
 
   if (!course) notFound();
