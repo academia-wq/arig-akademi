@@ -13,10 +13,6 @@ export default function HomePage() {
             <h1 className="font-display text-4xl font-bold leading-tight text-ink md:text-6xl">
               Хөгжлөөр үйлчилнэ
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg text-ink/70 md:mx-0">
-              Видео хичээл, дадлага, явцын хяналт — бүгд нэг дор. Хаанаас ч,
-              хэзээ ч суралц.
-            </p>
             <div className="mt-10 flex justify-center gap-4 md:justify-start">
               <Link
             prefetch={false}
