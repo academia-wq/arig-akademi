@@ -26,9 +26,14 @@ export default async function AdminLayout({
     <div className="min-h-screen">
       <header className="border-b border-ink/10 bg-ink text-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link prefetch={false} href="/admin/courses" className="font-display font-bold">
-            Ариг Академи — Админ
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link prefetch={false} href="/admin/courses" className="font-display font-bold">
+              Ариг Академи — Админ
+            </Link>
+            <Link prefetch={false} href="/admin/students" className="text-sm text-white/70 hover:text-white">
+              Ажилтнууд
+            </Link>
+          </div>
           <Link prefetch={false} href="/dashboard" className="text-sm text-white/70 hover:text-white">
             Сурагчийн тал руу
           </Link>
