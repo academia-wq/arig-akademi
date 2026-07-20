@@ -48,6 +48,23 @@ async function addLesson(moduleId: string, courseId: string, formData: FormData)
   revalidatePath(`/admin/courses/${courseId}/edit`);
 }
 
+async function updateModuleTitle(moduleId: string, courseId: string, formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const title = formData.get("module_title") as string;
+  await supabase.from("modules").update({ title }).eq("id", moduleId);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+}
+
+async function updateLessonContent(lessonId: string, courseId: string, formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const title = formData.get("lesson_title") as string;
+  const content_text = formData.get("content_text") as string;
+  await supabase.from("lessons").update({ title, content_text }).eq("id", lessonId);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+}
+
 export default async function EditCoursePage({
   params,
 }: {
@@ -118,16 +135,56 @@ export default async function EditCoursePage({
       <div className="mt-8 space-y-6">
         {modules?.map((mod: any) => {
           const createLesson = addLesson.bind(null, mod.id, course.id);
+          const saveModuleTitle = updateModuleTitle.bind(null, mod.id, course.id);
           return (
             <div key={mod.id} className="rounded-lg border border-ink/10 bg-white p-4">
-              <h2 className="font-display font-bold text-ink">{mod.title}</h2>
+              <form action={saveModuleTitle} className="flex gap-2">
+                <input
+                  name="module_title"
+                  defaultValue={mod.title}
+                  required
+                  className="focus-ring flex-1 rounded-md border border-ink/15 px-2 py-1 font-display font-bold text-ink"
+                />
+                <button
+                  type="submit"
+                  className="focus-ring rounded-md border border-ink/15 px-3 py-1 text-sm font-medium hover:border-ink/30"
+                >
+                  Хадгалах
+                </button>
+              </form>
 
               <ul className="mt-4 space-y-4">
                 {mod.lessons
                   ?.sort((a: any, b: any) => a.position - b.position)
-                  .map((lesson: any) => (
+                  .map((lesson: any) => {
+                    const saveLessonContent = updateLessonContent.bind(
+                      null,
+                      lesson.id,
+                      course.id
+                    );
+                    return (
                     <li key={lesson.id} className="rounded-md border border-ink/10 p-3">
-                      <p className="font-medium text-ink">{lesson.title}</p>
+                      <form action={saveLessonContent} className="space-y-2">
+                        <input
+                          name="lesson_title"
+                          defaultValue={lesson.title}
+                          required
+                          className="focus-ring w-full rounded-md border border-ink/15 px-2 py-1 text-sm font-medium text-ink"
+                        />
+                        <textarea
+                          name="content_text"
+                          defaultValue={lesson.content_text || ""}
+                          rows={3}
+                          placeholder="Хичээлийн агуулга..."
+                          className="focus-ring w-full rounded-md border border-ink/15 px-2 py-1 text-sm"
+                        />
+                        <button
+                          type="submit"
+                          className="focus-ring rounded-md border border-ink/15 px-3 py-1 text-sm font-medium hover:border-ink/30"
+                        >
+                          Хадгалах
+                        </button>
+                      </form>
                       <div className="mt-2">
                         {lesson.mux_playback_id ? (
                           <p className="text-sm text-accent">
@@ -145,7 +202,8 @@ export default async function EditCoursePage({
                         />
                       </div>
                     </li>
-                  ))}
+                    );
+                  })}
               </ul>
 
               <form action={createLesson} className="mt-4 flex gap-2">
