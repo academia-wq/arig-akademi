@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { VideoUploader } from "@/components/video-uploader";
 import { ImageUploader } from "@/components/image-uploader";
 import { DocumentCourseBuilder } from "@/components/document-course-builder";
+import { DeleteButton } from "@/components/delete-button";
 
 async function updateCourseMeta(courseId: string, formData: FormData) {
   "use server";
@@ -62,6 +63,29 @@ async function updateLessonContent(lessonId: string, courseId: string, formData:
   const title = formData.get("lesson_title") as string;
   const content_text = formData.get("content_text") as string;
   await supabase.from("lessons").update({ title, content_text }).eq("id", lessonId);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+}
+
+async function deleteLesson(lessonId: string, courseId: string) {
+  "use server";
+  const supabase = createClient();
+  await supabase.from("lesson_progress").delete().eq("lesson_id", lessonId);
+  await supabase.from("lessons").delete().eq("id", lessonId);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+}
+
+async function deleteModule(moduleId: string, courseId: string) {
+  "use server";
+  const supabase = createClient();
+  const { data: lessons } = await supabase
+    .from("lessons")
+    .select("id")
+    .eq("module_id", moduleId);
+  const lessonIds = (lessons || []).map((l) => l.id);
+  if (lessonIds.length) {
+    await supabase.from("lesson_progress").delete().in("lesson_id", lessonIds);
+  }
+  await supabase.from("modules").delete().eq("id", moduleId);
   revalidatePath(`/admin/courses/${courseId}/edit`);
 }
 
@@ -136,22 +160,28 @@ export default async function EditCoursePage({
         {modules?.map((mod: any) => {
           const createLesson = addLesson.bind(null, mod.id, course.id);
           const saveModuleTitle = updateModuleTitle.bind(null, mod.id, course.id);
+          const removeModule = deleteModule.bind(null, mod.id, course.id);
           return (
             <div key={mod.id} className="rounded-lg border border-ink/10 bg-white p-4">
-              <form action={saveModuleTitle} className="flex gap-2">
-                <input
-                  name="module_title"
-                  defaultValue={mod.title}
-                  required
-                  className="focus-ring flex-1 rounded-md border border-ink/15 px-2 py-1 font-display font-bold text-ink"
-                />
-                <button
-                  type="submit"
-                  className="focus-ring rounded-md border border-ink/15 px-3 py-1 text-sm font-medium hover:border-ink/30"
-                >
-                  Хадгалах
-                </button>
-              </form>
+              <div className="flex gap-2">
+                <form action={saveModuleTitle} className="flex flex-1 gap-2">
+                  <input
+                    name="module_title"
+                    defaultValue={mod.title}
+                    required
+                    className="focus-ring flex-1 rounded-md border border-ink/15 px-2 py-1 font-display font-bold text-ink"
+                  />
+                  <button
+                    type="submit"
+                    className="focus-ring rounded-md border border-ink/15 px-3 py-1 text-sm font-medium hover:border-ink/30"
+                  >
+                    Хадгалах
+                  </button>
+                </form>
+                <form action={removeModule}>
+                  <DeleteButton confirmText={`"${mod.title}" бүлгийг устгах уу? Доторх бүх хичээл устна.`} />
+                </form>
+              </div>
 
               <ul className="mt-4 space-y-4">
                 {mod.lessons
@@ -162,6 +192,7 @@ export default async function EditCoursePage({
                       lesson.id,
                       course.id
                     );
+                    const removeLesson = deleteLesson.bind(null, lesson.id, course.id);
                     return (
                     <li key={lesson.id} className="rounded-md border border-ink/10 p-3">
                       <form action={saveLessonContent} className="space-y-2">
@@ -178,12 +209,17 @@ export default async function EditCoursePage({
                           placeholder="Хичээлийн агуулга..."
                           className="focus-ring w-full rounded-md border border-ink/15 px-2 py-1 text-sm"
                         />
-                        <button
-                          type="submit"
-                          className="focus-ring rounded-md border border-ink/15 px-3 py-1 text-sm font-medium hover:border-ink/30"
-                        >
-                          Хадгалах
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            type="submit"
+                            className="focus-ring rounded-md border border-ink/15 px-3 py-1 text-sm font-medium hover:border-ink/30"
+                          >
+                            Хадгалах
+                          </button>
+                        </div>
+                      </form>
+                      <form action={removeLesson} className="mt-2">
+                        <DeleteButton confirmText={`"${lesson.title}" хичээлийг устгах уу?`} />
                       </form>
                       <div className="mt-2">
                         {lesson.mux_playback_id ? (
