@@ -99,7 +99,7 @@ export default async function EditCoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, description, is_published, modules(id, title, position, lessons(id, title, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
+      "id, title, description, is_published, modules(id, title, position, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
     )
     .eq("id", params.id)
     .single();
