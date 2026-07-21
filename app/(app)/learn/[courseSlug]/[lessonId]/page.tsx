@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import clsx from "clsx";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { LessonPlayer } from "@/components/lesson-player";
+import { MarkCompleteButton } from "@/components/mark-complete-button";
 import { isModuleVisible } from "@/lib/module-visibility";
 
 export default async function LessonPage({
@@ -125,6 +126,13 @@ export default async function LessonPage({
           <article className="prose prose-neutral mt-8 max-w-none">
             {currentLesson.content_text}
           </article>
+        )}
+
+        {!currentLesson.mux_playback_id && (
+          <MarkCompleteButton
+            lessonId={currentLesson.id}
+            initiallyCompleted={currentProgress?.is_completed || false}
+          />
         )}
       </main>
     </div>
