@@ -16,6 +16,7 @@ export type Database = {
           id: string;
           full_name: string | null;
           avatar_url: string | null;
+          position: string | null;
           role: "student" | "instructor" | "admin";
           created_at: string;
         };
@@ -55,6 +56,7 @@ export type Database = {
           course_id: string;
           title: string;
           position: number;
+          visible_positions: string[] | null;
         };
         Insert: Partial<Database["public"]["Tables"]["modules"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["modules"]["Row"]>;

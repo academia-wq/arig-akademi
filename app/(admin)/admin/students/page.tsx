@@ -1,6 +1,18 @@
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 import { computeLevel } from "@/lib/gamification";
+
+async function updatePosition(userId: string, formData: FormData) {
+  "use server";
+  const admin = createServiceRoleClient();
+  const position = (formData.get("position") as string).trim();
+  await admin
+    .from("profiles")
+    .update({ position: position || null })
+    .eq("id", userId);
+  revalidatePath("/admin/students");
+}
 
 export default async function AdminStudentsPage() {
   const supabase = createClient();
@@ -11,7 +23,7 @@ export default async function AdminStudentsPage() {
 
   const { data: profiles } = await admin
     .from("profiles")
-    .select("id, full_name, role, created_at")
+    .select("id, full_name, role, position, created_at")
     .order("created_at", { ascending: true });
 
   const { data: authUsers } = await admin.auth.admin.listUsers();
@@ -36,6 +48,7 @@ export default async function AdminStudentsPage() {
         name: p.full_name || emailById.get(p.id) || "Нэргүй",
         email: emailById.get(p.id) || "",
         role: p.role,
+        position: p.position || "",
         completedLessons,
         level,
       };
@@ -57,6 +70,7 @@ export default async function AdminStudentsPage() {
               <th className="px-4 py-3">Нэр</th>
               <th className="px-4 py-3">И-мэйл</th>
               <th className="px-4 py-3">Эрх</th>
+              <th className="px-4 py-3">Албан тушаал</th>
               <th className="px-4 py-3">Дуусгасан хичээл</th>
               <th className="px-4 py-3">Level</th>
             </tr>
@@ -68,6 +82,25 @@ export default async function AdminStudentsPage() {
                 <td className="px-4 py-3 font-medium text-ink">{r.name}</td>
                 <td className="px-4 py-3 text-ink/60">{r.email}</td>
                 <td className="px-4 py-3 text-ink/60">{r.role}</td>
+                <td className="px-4 py-3">
+                  <form
+                    action={updatePosition.bind(null, r.id)}
+                    className="flex gap-1"
+                  >
+                    <input
+                      name="position"
+                      defaultValue={r.position}
+                      placeholder="жишээ: Менежер"
+                      className="focus-ring w-32 rounded-md border border-ink/15 px-2 py-1 text-sm"
+                    />
+                    <button
+                      type="submit"
+                      className="focus-ring rounded-md border border-ink/15 px-2 py-1 text-xs font-medium hover:border-ink/30"
+                    >
+                      Хадгалах
+                    </button>
+                  </form>
+                </td>
                 <td className="px-4 py-3 text-ink/60">{r.completedLessons}</td>
                 <td className="px-4 py-3">
                   <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-500 text-xs font-bold text-white">
@@ -78,7 +111,7 @@ export default async function AdminStudentsPage() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-ink/50">
+                <td colSpan={7} className="px-4 py-8 text-center text-ink/50">
                   Одоогоор хэрэглэгч алга.
                 </td>
               </tr>

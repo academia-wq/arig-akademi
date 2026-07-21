@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import clsx from "clsx";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { LessonPlayer } from "@/components/lesson-player";
+import { isModuleVisible } from "@/lib/module-visibility";
 
 export default async function LessonPage({
   params,
@@ -13,19 +14,25 @@ export default async function LessonPage({
   const user = await getUser();
   if (!user) redirect(`/login?redirect=/learn/${params.courseSlug}/${params.lessonId}`);
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("position")
+    .eq("id", user.id)
+    .single();
+
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, slug, modules(id, title, position, lessons(id, title, content_text, mux_playback_id, image_url, position))"
+      "id, title, slug, modules(id, title, position, visible_positions, lessons(id, title, content_text, mux_playback_id, image_url, position))"
     )
     .eq("slug", decodeURIComponent(params.courseSlug))
     .single();
 
   if (!course) notFound();
 
-  const modules = (course as any).modules?.sort(
-    (a: any, b: any) => a.position - b.position
-  );
+  const modules = (course as any).modules
+    ?.filter((m: any) => isModuleVisible(m.visible_positions, profile?.position))
+    .sort((a: any, b: any) => a.position - b.position);
 
   const currentLesson = modules
     ?.flatMap((m: any) => m.lessons)

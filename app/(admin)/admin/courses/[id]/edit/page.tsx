@@ -57,6 +57,21 @@ async function updateModuleTitle(moduleId: string, courseId: string, formData: F
   revalidatePath(`/admin/courses/${courseId}/edit`);
 }
 
+async function updateModuleVisibility(moduleId: string, courseId: string, formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const raw = (formData.get("visible_positions") as string) || "";
+  const positions = raw
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  await supabase
+    .from("modules")
+    .update({ visible_positions: positions.length ? positions : null })
+    .eq("id", moduleId);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+}
+
 async function updateLessonContent(lessonId: string, courseId: string, formData: FormData) {
   "use server";
   const supabase = createClient();
@@ -99,7 +114,7 @@ export default async function EditCoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, description, is_published, modules(id, title, position, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
+      "id, title, description, is_published, modules(id, title, position, visible_positions, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
     )
     .eq("id", params.id)
     .single();
@@ -160,6 +175,7 @@ export default async function EditCoursePage({
         {modules?.map((mod: any) => {
           const createLesson = addLesson.bind(null, mod.id, course.id);
           const saveModuleTitle = updateModuleTitle.bind(null, mod.id, course.id);
+          const saveModuleVisibility = updateModuleVisibility.bind(null, mod.id, course.id);
           const removeModule = deleteModule.bind(null, mod.id, course.id);
           return (
             <div key={mod.id} className="rounded-lg border border-ink/10 bg-white p-4">
@@ -182,6 +198,22 @@ export default async function EditCoursePage({
                   <DeleteButton confirmText={`"${mod.title}" бүлгийг устгах уу? Доторх бүх хичээл устна.`} />
                 </form>
               </div>
+
+              <form action={saveModuleVisibility} className="mt-2 flex items-center gap-2">
+                <label className="text-xs text-ink/50">Зөвхөн харагдах албан тушаал:</label>
+                <input
+                  name="visible_positions"
+                  defaultValue={mod.visible_positions?.join(", ") || ""}
+                  placeholder="Хоосон = бүгдэд харагдана. Жишээ: Менежер, Бүсийн менежер"
+                  className="focus-ring flex-1 rounded-md border border-ink/15 px-2 py-1 text-xs"
+                />
+                <button
+                  type="submit"
+                  className="focus-ring rounded-md border border-ink/15 px-2 py-1 text-xs font-medium hover:border-ink/30"
+                >
+                  Хадгалах
+                </button>
+              </form>
 
               <ul className="mt-4 space-y-4">
                 {mod.lessons
