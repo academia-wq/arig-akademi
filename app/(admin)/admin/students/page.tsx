@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
@@ -92,7 +93,15 @@ export default async function AdminStudentsPage() {
             {rows.map((r, i) => (
               <tr key={r.id} className="border-b border-ink/5 last:border-0">
                 <td className="px-4 py-3 text-ink/50">{i + 1}</td>
-                <td className="px-4 py-3 font-medium text-ink">{r.name}</td>
+                <td className="px-4 py-3 font-medium text-ink">
+                  <Link
+                    prefetch={false}
+                    href={`/admin/students/${r.id}`}
+                    className="focus-ring text-brand-600 hover:underline"
+                  >
+                    {r.name}
+                  </Link>
+                </td>
                 <td className="px-4 py-3 text-ink/60">{r.email}</td>
                 <td className="px-4 py-3 text-ink/60">{r.role}</td>
                 <td className="px-4 py-3">
