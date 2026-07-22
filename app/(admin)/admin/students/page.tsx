@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 import { computeLevel } from "@/lib/gamification";
+import { DeleteButton } from "@/components/delete-button";
 
 async function updatePosition(userId: string, formData: FormData) {
   "use server";
@@ -11,6 +12,17 @@ async function updatePosition(userId: string, formData: FormData) {
     .from("profiles")
     .update({ position: position || null })
     .eq("id", userId);
+  revalidatePath("/admin/students");
+}
+
+async function deleteUser(userId: string) {
+  "use server";
+  const admin = createServiceRoleClient();
+  await admin.from("ai_usage_logs").delete().eq("user_id", userId);
+  await admin.from("lesson_progress").delete().eq("user_id", userId);
+  await admin.from("enrollments").delete().eq("user_id", userId);
+  await admin.from("profiles").delete().eq("id", userId);
+  await admin.auth.admin.deleteUser(userId);
   revalidatePath("/admin/students");
 }
 
@@ -73,6 +85,7 @@ export default async function AdminStudentsPage() {
               <th className="px-4 py-3">Албан тушаал</th>
               <th className="px-4 py-3">Дуусгасан хичээл</th>
               <th className="px-4 py-3">Level</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -107,11 +120,20 @@ export default async function AdminStudentsPage() {
                     {r.level}
                   </span>
                 </td>
+                <td className="px-4 py-3">
+                  {r.id !== user.id && (
+                    <form action={deleteUser.bind(null, r.id)}>
+                      <DeleteButton
+                        confirmText={`"${r.name}" (${r.email}) хэрэглэгчийг устгах уу? Энэ хэрэглэгчийн бүх явц, элсэлт мөн устана.`}
+                      />
+                    </form>
+                  )}
+                </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-ink/50">
+                <td colSpan={8} className="px-4 py-8 text-center text-ink/50">
                   Одоогоор хэрэглэгч алга.
                 </td>
               </tr>
