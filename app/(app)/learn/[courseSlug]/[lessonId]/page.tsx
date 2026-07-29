@@ -35,11 +35,16 @@ export default async function LessonPage({
     ?.filter((m: any) => isModuleVisible(m.visible_positions, profile?.position))
     .sort((a: any, b: any) => a.position - b.position);
 
-  const currentLesson = modules
-    ?.flatMap((m: any) => m.lessons)
-    .find((l: any) => l.id === params.lessonId);
+  const allLessons = (modules || []).flatMap((m: any) =>
+    [...(m.lessons || [])].sort((a: any, b: any) => a.position - b.position)
+  );
+
+  const currentLesson = allLessons.find((l: any) => l.id === params.lessonId);
 
   if (!currentLesson) notFound();
+
+  const currentIndex = allLessons.findIndex((l: any) => l.id === params.lessonId);
+  const nextLesson = allLessons[currentIndex + 1];
 
   const { data: progressRows } = await supabase
     .from("lesson_progress")
@@ -133,6 +138,18 @@ export default async function LessonPage({
             lessonId={currentLesson.id}
             initiallyCompleted={currentProgress?.is_completed || false}
           />
+        )}
+
+        {nextLesson && (
+          <div className="mt-8 border-t border-ink/10 pt-6">
+            <Link
+              prefetch={false}
+              href={`/learn/${course.slug}/${nextLesson.id}`}
+              className="focus-ring inline-flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              Дараагийн хичээл: {nextLesson.title} →
+            </Link>
+          </div>
         )}
       </main>
     </div>

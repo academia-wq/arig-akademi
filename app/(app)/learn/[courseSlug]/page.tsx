@@ -28,11 +28,23 @@ export default async function LearnCourseEntryPage({
   const modules = (course as any).modules
     ?.filter((m: any) => isModuleVisible(m.visible_positions, profile?.position))
     .sort((a: any, b: any) => a.position - b.position);
-  const firstLesson = modules?.[0]?.lessons?.sort(
-    (a: any, b: any) => a.position - b.position
-  )?.[0];
 
-  if (!firstLesson) notFound();
+  const allLessons = (modules || [])
+    .flatMap((m: any) =>
+      [...(m.lessons || [])].sort((a: any, b: any) => a.position - b.position)
+    );
 
-  redirect(`/learn/${params.courseSlug}/${firstLesson.id}`);
+  if (allLessons.length === 0) notFound();
+
+  const { data: progressRows } = await supabase
+    .from("lesson_progress")
+    .select("lesson_id, is_completed")
+    .eq("user_id", user.id)
+    .eq("is_completed", true);
+
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  const resumeLesson =
+    allLessons.find((l: any) => !completedIds.has(l.id)) || allLessons[0];
+
+  redirect(`/learn/${params.courseSlug}/${resumeLesson.id}`);
 }
