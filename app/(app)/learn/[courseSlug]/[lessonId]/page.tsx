@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import clsx from "clsx";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { LessonPlayer } from "@/components/lesson-player";
 import { MarkCompleteButton } from "@/components/mark-complete-button";
+import { LessonSidebar } from "@/components/lesson-sidebar";
 import { isModuleVisible } from "@/lib/module-visibility";
 
 export default async function LessonPage({
@@ -38,11 +38,15 @@ export default async function LessonPage({
   const categoryGroups: { category: string | null; modules: any[] }[] = [];
   for (const mod of modules || []) {
     const cat = mod.category || null;
+    const sortedMod = {
+      ...mod,
+      lessons: [...(mod.lessons || [])].sort((a: any, b: any) => a.position - b.position),
+    };
     const lastGroup = categoryGroups[categoryGroups.length - 1];
     if (lastGroup && lastGroup.category === cat) {
-      lastGroup.modules.push(mod);
+      lastGroup.modules.push(sortedMod);
     } else {
-      categoryGroups.push({ category: cat, modules: [mod] });
+      categoryGroups.push({ category: cat, modules: [sortedMod] });
     }
   }
 
@@ -68,57 +72,19 @@ export default async function LessonPage({
 
   const currentProgress = progressByLesson.get(currentLesson.id);
 
+  const completedLessonIds = (progressRows || [])
+    .filter((p) => p.is_completed)
+    .map((p) => p.lesson_id);
+
   return (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">
       <aside className="order-2 md:order-1">
-        <nav className="space-y-8">
-          {categoryGroups.map((group, groupIndex) => (
-            <div key={group.category || `no-category-${groupIndex}`} className="space-y-6">
-              {group.category && (
-                <p className="text-xs font-bold uppercase tracking-wide text-brand-600">
-                  📁 {group.category}
-                </p>
-              )}
-              {group.modules.map((mod: any) => (
-                <div key={mod.id}>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">
-                    {mod.title}
-                  </p>
-                  <ul className="space-y-1">
-                    {mod.lessons
-                      ?.sort((a: any, b: any) => a.position - b.position)
-                      .map((lesson: any) => {
-                        const done = progressByLesson.get(lesson.id)?.is_completed;
-                        const active = lesson.id === currentLesson.id;
-                        return (
-                          <li key={lesson.id}>
-                            <Link
-            prefetch={false}
-                              href={`/learn/${course.slug}/${lesson.id}`}
-                              className={clsx(
-                                "focus-ring flex items-center gap-2 rounded-md px-3 py-2 text-sm",
-                                active
-                                  ? "bg-brand-50 font-medium text-brand-700"
-                                  : "text-ink/70 hover:bg-ink/5"
-                              )}
-                            >
-                              <span
-                                className={clsx(
-                                  "h-1.5 w-1.5 flex-shrink-0 rounded-full",
-                                  done ? "bg-accent" : "bg-ink/20"
-                                )}
-                              />
-                              {lesson.title}
-                            </Link>
-                          </li>
-                        );
-                      })}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ))}
-        </nav>
+        <LessonSidebar
+          courseSlug={course.slug}
+          categoryGroups={categoryGroups}
+          currentLessonId={currentLesson.id}
+          completedLessonIds={completedLessonIds}
+        />
       </aside>
 
       <main className="order-1 md:order-2">
