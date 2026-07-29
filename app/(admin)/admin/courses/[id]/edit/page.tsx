@@ -72,6 +72,17 @@ async function updateModuleVisibility(moduleId: string, courseId: string, formDa
   revalidatePath(`/admin/courses/${courseId}/edit`);
 }
 
+async function updateModuleCategory(moduleId: string, courseId: string, formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const category = ((formData.get("category") as string) || "").trim();
+  await supabase
+    .from("modules")
+    .update({ category: category || null })
+    .eq("id", moduleId);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+}
+
 async function updateLessonContent(lessonId: string, courseId: string, formData: FormData) {
   "use server";
   const supabase = createClient();
@@ -114,7 +125,7 @@ export default async function EditCoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, description, is_published, modules(id, title, position, visible_positions, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
+      "id, title, description, is_published, modules(id, title, position, visible_positions, category, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
     )
     .eq("id", params.id)
     .single();
@@ -124,6 +135,17 @@ export default async function EditCoursePage({
   const modules = (course as any).modules?.sort(
     (a: any, b: any) => a.position - b.position
   );
+
+  const categoryGroups: { category: string | null; modules: any[] }[] = [];
+  for (const mod of modules || []) {
+    const cat = mod.category || null;
+    const lastGroup = categoryGroups[categoryGroups.length - 1];
+    if (lastGroup && lastGroup.category === cat) {
+      lastGroup.modules.push(mod);
+    } else {
+      categoryGroups.push({ category: cat, modules: [mod] });
+    }
+  }
 
   const updateMeta = updateCourseMeta.bind(null, course.id);
   const createModule = addModule.bind(null, course.id);
@@ -171,11 +193,20 @@ export default async function EditCoursePage({
         <DocumentCourseBuilder courseId={course.id} />
       )}
 
-      <div className="mt-8 space-y-6">
-        {modules?.map((mod: any) => {
+      <div className="mt-8 space-y-8">
+        {categoryGroups.map((group, groupIndex) => (
+        <div key={group.category || `no-category-${groupIndex}`}>
+          {group.category && (
+            <h2 className="mb-3 font-display text-lg font-bold text-ink">
+              📁 {group.category}
+            </h2>
+          )}
+          <div className="space-y-6">
+        {group.modules.map((mod: any) => {
           const createLesson = addLesson.bind(null, mod.id, course.id);
           const saveModuleTitle = updateModuleTitle.bind(null, mod.id, course.id);
           const saveModuleVisibility = updateModuleVisibility.bind(null, mod.id, course.id);
+          const saveModuleCategory = updateModuleCategory.bind(null, mod.id, course.id);
           const removeModule = deleteModule.bind(null, mod.id, course.id);
           return (
             <div key={mod.id} className="rounded-lg border border-ink/10 bg-white p-4">
@@ -205,6 +236,22 @@ export default async function EditCoursePage({
                   name="visible_positions"
                   defaultValue={mod.visible_positions?.join(", ") || ""}
                   placeholder="Хоосон = бүгдэд харагдана. Жишээ: Менежер, Бүсийн менежер"
+                  className="focus-ring flex-1 rounded-md border border-ink/15 px-2 py-1 text-xs"
+                />
+                <button
+                  type="submit"
+                  className="focus-ring rounded-md border border-ink/15 px-2 py-1 text-xs font-medium hover:border-ink/30"
+                >
+                  Хадгалах
+                </button>
+              </form>
+
+              <form action={saveModuleCategory} className="mt-2 flex items-center gap-2">
+                <label className="text-xs text-ink/50">Folder (ангилал):</label>
+                <input
+                  name="category"
+                  defaultValue={mod.category || ""}
+                  placeholder="Жишээ: Үйлчилгээний нэгдсэн стандарт"
                   className="focus-ring flex-1 rounded-md border border-ink/15 px-2 py-1 text-xs"
                 />
                 <button
@@ -291,6 +338,9 @@ export default async function EditCoursePage({
             </div>
           );
         })}
+          </div>
+        </div>
+        ))}
       </div>
 
       <form action={createModule} className="mt-6 flex gap-2">

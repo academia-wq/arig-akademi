@@ -24,7 +24,7 @@ export default async function LessonPage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, slug, modules(id, title, position, visible_positions, lessons(id, title, content_text, mux_playback_id, image_url, position))"
+      "id, title, slug, modules(id, title, position, visible_positions, category, lessons(id, title, content_text, mux_playback_id, image_url, position))"
     )
     .eq("slug", decodeURIComponent(params.courseSlug))
     .single();
@@ -34,6 +34,17 @@ export default async function LessonPage({
   const modules = (course as any).modules
     ?.filter((m: any) => isModuleVisible(m.visible_positions, profile?.position))
     .sort((a: any, b: any) => a.position - b.position);
+
+  const categoryGroups: { category: string | null; modules: any[] }[] = [];
+  for (const mod of modules || []) {
+    const cat = mod.category || null;
+    const lastGroup = categoryGroups[categoryGroups.length - 1];
+    if (lastGroup && lastGroup.category === cat) {
+      lastGroup.modules.push(mod);
+    } else {
+      categoryGroups.push({ category: cat, modules: [mod] });
+    }
+  }
 
   const allLessons = (modules || []).flatMap((m: any) =>
     [...(m.lessons || [])].sort((a: any, b: any) => a.position - b.position)
@@ -60,42 +71,51 @@ export default async function LessonPage({
   return (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_1fr]">
       <aside className="order-2 md:order-1">
-        <nav className="space-y-6">
-          {modules?.map((mod: any) => (
-            <div key={mod.id}>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">
-                {mod.title}
-              </p>
-              <ul className="space-y-1">
-                {mod.lessons
-                  ?.sort((a: any, b: any) => a.position - b.position)
-                  .map((lesson: any) => {
-                    const done = progressByLesson.get(lesson.id)?.is_completed;
-                    const active = lesson.id === currentLesson.id;
-                    return (
-                      <li key={lesson.id}>
-                        <Link
+        <nav className="space-y-8">
+          {categoryGroups.map((group, groupIndex) => (
+            <div key={group.category || `no-category-${groupIndex}`} className="space-y-6">
+              {group.category && (
+                <p className="text-xs font-bold uppercase tracking-wide text-brand-600">
+                  📁 {group.category}
+                </p>
+              )}
+              {group.modules.map((mod: any) => (
+                <div key={mod.id}>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">
+                    {mod.title}
+                  </p>
+                  <ul className="space-y-1">
+                    {mod.lessons
+                      ?.sort((a: any, b: any) => a.position - b.position)
+                      .map((lesson: any) => {
+                        const done = progressByLesson.get(lesson.id)?.is_completed;
+                        const active = lesson.id === currentLesson.id;
+                        return (
+                          <li key={lesson.id}>
+                            <Link
             prefetch={false}
-                          href={`/learn/${course.slug}/${lesson.id}`}
-                          className={clsx(
-                            "focus-ring flex items-center gap-2 rounded-md px-3 py-2 text-sm",
-                            active
-                              ? "bg-brand-50 font-medium text-brand-700"
-                              : "text-ink/70 hover:bg-ink/5"
-                          )}
-                        >
-                          <span
-                            className={clsx(
-                              "h-1.5 w-1.5 flex-shrink-0 rounded-full",
-                              done ? "bg-accent" : "bg-ink/20"
-                            )}
-                          />
-                          {lesson.title}
-                        </Link>
-                      </li>
-                    );
-                  })}
-              </ul>
+                              href={`/learn/${course.slug}/${lesson.id}`}
+                              className={clsx(
+                                "focus-ring flex items-center gap-2 rounded-md px-3 py-2 text-sm",
+                                active
+                                  ? "bg-brand-50 font-medium text-brand-700"
+                                  : "text-ink/70 hover:bg-ink/5"
+                              )}
+                            >
+                              <span
+                                className={clsx(
+                                  "h-1.5 w-1.5 flex-shrink-0 rounded-full",
+                                  done ? "bg-accent" : "bg-ink/20"
+                                )}
+                              />
+                              {lesson.title}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                </div>
+              ))}
             </div>
           ))}
         </nav>
