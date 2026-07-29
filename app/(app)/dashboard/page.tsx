@@ -81,10 +81,10 @@ export default async function DashboardPage() {
           <p className="text-ink/60">Та одоогоор ямар ч курст элсээгүй байна.</p>
           <Link
             prefetch={false}
-            href="/courses"
+            href="/learn"
             className="focus-ring mt-4 inline-block font-medium text-brand-500"
           >
-            Курс сонгох →
+            Сургалт эхлэх →
           </Link>
         </div>
       )}

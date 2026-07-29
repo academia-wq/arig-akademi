@@ -16,10 +16,10 @@ export default function HomePage() {
             <div className="mt-10 flex justify-center gap-4 md:justify-start">
               <Link
             prefetch={false}
-                href="/courses"
+                href="/learn"
                 className="focus-ring rounded-md bg-brand-500 px-6 py-3 font-medium text-white transition hover:bg-brand-700"
               >
-                Курсууд үзэх
+                Сургалт эхлэх
               </Link>
               <Link
             prefetch={false}
