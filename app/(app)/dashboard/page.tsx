@@ -6,6 +6,7 @@ import { CourseCard } from "@/components/course-card";
 import { ArrowRightIcon } from "@/components/icons";
 import { formatDuration } from "@/lib/format";
 import { getCourseIcon } from "@/lib/course-icon";
+import { computeCourseProgress } from "@/lib/course-progress";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -29,32 +30,9 @@ export default async function DashboardPage() {
 
   // Курс тус бүрийн явц, нийт үргэлжлэх хугацааг тооцоолох
   const coursesWithProgress = await Promise.all(
-    (enrollments || []).map(async (enrollment: any) => {
-      const course = enrollment.courses;
-
-      const { data: lessons } = await supabase
-        .from("lessons")
-        .select("id, duration_seconds, modules!inner(course_id)")
-        .eq("modules.course_id", course.id);
-
-      const lessonIds = (lessons || []).map((l: any) => l.id);
-      const durationSeconds = (lessons || []).reduce(
-        (sum: number, l: any) => sum + (l.duration_seconds || 0),
-        0
-      );
-
-      const { count: completedCount } = await supabase
-        .from("lesson_progress")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_completed", true)
-        .in("lesson_id", lessonIds.length ? lessonIds : ["00000000-0000-0000-0000-000000000000"]);
-
-      const total = lessonIds.length;
-      const progress = total > 0 ? Math.round(((completedCount || 0) / total) * 100) : 0;
-
-      return { course, progress, durationSeconds };
-    })
+    (enrollments || []).map((enrollment: any) =>
+      computeCourseProgress(supabase, user.id, enrollment.courses)
+    )
   );
 
   if (coursesWithProgress.length === 0) {
