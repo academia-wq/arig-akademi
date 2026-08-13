@@ -15,9 +15,13 @@ export default async function MarketingLayout({
           <Link
             prefetch={false}
             href="/"
-            className="focus-ring font-display text-lg font-semibold tracking-tight text-ink"
+            className="focus-ring flex items-center gap-2.5"
           >
-            Ариг Академи
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" className="h-9 w-9" />
+            <span className="font-display text-lg font-semibold tracking-tight text-ink">
+              Ариг Академи
+            </span>
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm font-medium text-ink/70 md:flex">
@@ -64,15 +68,20 @@ export default async function MarketingLayout({
 
       <footer className="border-t border-ink/10 bg-white">
         <div className="mx-auto max-w-6xl px-6 py-10">
-          <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-            <div>
-              <p className="font-display text-base font-semibold text-ink">
-                Ариг Академи
-              </p>
-              <p className="mt-1 text-sm text-ink/50">
-                Хөгжлөөр үйлчилнэ.
-              </p>
+          <div className="flex flex-col items-start justify-between gap-8 sm:flex-row">
+            <div className="flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" className="h-9 w-9" />
+              <div>
+                <p className="font-display text-base font-semibold text-ink">
+                  Ариг Академи
+                </p>
+                <p className="mt-1 text-sm text-ink/50">
+                  Хөгжлөөр үйлчилнэ.
+                </p>
+              </div>
             </div>
+
             <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink/60">
               <Link prefetch={false} href="/" className="hover:text-ink">
                 Нүүр
@@ -84,6 +93,24 @@ export default async function MarketingLayout({
                 Бүртгүүлэх
               </Link>
             </nav>
+
+            <div className="text-sm text-ink/60">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink/40">
+                Холбоо барих
+              </p>
+              <a
+                href="tel:+97670007020"
+                className="focus-ring mt-2 block hover:text-ink"
+              >
+                7000-7020
+              </a>
+              <a
+                href="mailto:academia@ariganya.com"
+                className="focus-ring mt-1 block hover:text-ink"
+              >
+                academia@ariganya.com
+              </a>
+            </div>
           </div>
           <p className="mt-8 text-xs text-ink/40">
             © {new Date().getFullYear()} Ариг Академи. Бүх эрх хуулиар хамгаалагдсан.

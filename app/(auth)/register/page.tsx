@@ -56,9 +56,13 @@ export default function RegisterPage() {
       <Link
         prefetch={false}
         href="/"
-        className="focus-ring mb-8 self-start font-display text-base font-semibold text-ink"
+        className="focus-ring mb-8 flex items-center gap-2 self-start"
       >
-        Ариг Академи
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" className="h-8 w-8" />
+        <span className="font-display text-base font-semibold text-ink">
+          Ариг Академи
+        </span>
       </Link>
       <h1 className="font-display text-2xl font-semibold text-ink">Бүртгүүлэх</h1>
 

@@ -138,9 +138,13 @@ export function AppHeader({
           <Link
             prefetch={false}
             href="/dashboard"
-            className="focus-ring font-display text-lg font-semibold tracking-tight text-ink"
+            className="focus-ring flex items-center gap-2.5"
           >
-            Ариг Академи
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" className="h-9 w-9" />
+            <span className="font-display text-lg font-semibold tracking-tight text-ink">
+              Ариг Академи
+            </span>
           </Link>
 
           <nav className="hidden items-center gap-7 text-[15px] font-medium md:flex">
