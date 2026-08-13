@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import { Inter, Merriweather } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 
-const body = Inter({ subsets: ["latin"], variable: "--font-body" });
-const display = Merriweather({
-  subsets: ["latin"],
-  weight: ["400", "700", "900"],
+const body = Montserrat({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600"],
+  variable: "--font-body",
+});
+const display = Montserrat({
+  subsets: ["latin", "cyrillic"],
+  weight: ["700", "800", "900"],
   variable: "--font-display",
 });
 

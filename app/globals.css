@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --font-display: "Merriweather", serif;
-  --font-body: "Inter", sans-serif;
+  --font-display: "Montserrat", sans-serif;
+  --font-body: "Montserrat", sans-serif;
 }
 
 body {
