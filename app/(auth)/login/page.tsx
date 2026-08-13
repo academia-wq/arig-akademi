@@ -60,6 +60,13 @@ function LoginForm() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
+      <Link
+        prefetch={false}
+        href="/"
+        className="focus-ring mb-8 self-start font-display text-base font-bold text-ink"
+      >
+        Ариг Академи
+      </Link>
       <h1 className="font-display text-2xl font-bold text-ink">Нэвтрэх</h1>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">

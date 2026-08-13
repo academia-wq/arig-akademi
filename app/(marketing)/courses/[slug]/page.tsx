@@ -34,7 +34,7 @@ export default async function CourseDetailPage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, description, price, is_published, modules(id, title, position, lessons(id, title, is_free_preview, position))"
+      "id, title, description, price, thumbnail_url, is_published, modules(id, title, position, lessons(id, title, is_free_preview, position))"
     )
     .eq("slug", decodeURIComponent(params.slug))
     .eq("is_published", true)
@@ -46,10 +46,26 @@ export default async function CourseDetailPage({
   const modules = (course as any).modules?.sort(
     (a: any, b: any) => a.position - b.position
   );
+  const totalLessons = (modules || []).reduce(
+    (sum: number, m: any) => sum + (m.lessons?.length || 0),
+    0
+  );
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="font-display text-3xl font-bold text-ink">
+      {course.thumbnail_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={course.thumbnail_url}
+          alt=""
+          className="mb-8 aspect-[16/7] w-full rounded-lg border border-ink/10 object-cover"
+        />
+      )}
+
+      <p className="text-xs font-semibold uppercase tracking-wide text-brand-500">
+        Сургалт · {totalLessons} хичээл
+      </p>
+      <h1 className="mt-2 font-display text-3xl font-bold text-ink">
         {course.title}
       </h1>
       <p className="mt-4 text-ink/70">{course.description}</p>

@@ -11,6 +11,9 @@ export function CourseCard({
   durationSeconds,
   progress,
   tintIndex = 0,
+  href,
+  eyebrow,
+  ctaLabel,
 }: {
   slug: string;
   title: string;
@@ -18,6 +21,9 @@ export function CourseCard({
   durationSeconds: number;
   progress: number;
   tintIndex?: number;
+  href?: string;
+  eyebrow?: string;
+  ctaLabel?: string;
 }) {
   const duration = formatDuration(durationSeconds);
   const started = progress > 0;
@@ -26,7 +32,7 @@ export function CourseCard({
   return (
     <Link
       prefetch={false}
-      href={`/learn/${slug}`}
+      href={href ?? `/learn/${slug}`}
       className="focus-ring group flex flex-col overflow-hidden rounded-lg border border-ink/10 bg-white transition hover:border-brand-300 hover:shadow-sm"
     >
       <div
@@ -50,7 +56,7 @@ export function CourseCard({
 
       <div className="flex flex-1 flex-col p-5">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-500">
-          {done ? "Дууссан" : started ? "Үргэлжилж буй" : "Курс"}
+          {eyebrow ?? (done ? "Дууссан" : started ? "Үргэлжилж буй" : "Курс")}
         </p>
         <h3 className="mt-1.5 font-display font-bold leading-snug text-ink">
           {title}
@@ -73,7 +79,7 @@ export function CourseCard({
         )}
 
         <p className="focus-ring mt-auto flex items-center gap-1.5 pt-4 text-sm font-medium text-brand-500">
-          {done ? "Дахин үзэх" : started ? "Үргэлжлүүлэх" : "Эхлэх"}
+          {ctaLabel ?? (done ? "Дахин үзэх" : started ? "Үргэлжлүүлэх" : "Эхлэх")}
           <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
         </p>
       </div>

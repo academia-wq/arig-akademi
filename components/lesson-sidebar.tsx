@@ -3,6 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
+import {
+  CheckCircleIcon,
+  ChevronRightIcon,
+  CircleIcon,
+  FolderIcon,
+  PlayCircleIcon,
+} from "@/components/icons";
 
 type Lesson = { id: string; title: string; position: number };
 type Module = { id: string; title: string; lessons: Lesson[] };
@@ -40,7 +47,7 @@ export function LessonSidebar({
   }
 
   return (
-    <nav className="space-y-4">
+    <nav className="space-y-4 rounded-lg border border-ink/10 bg-white p-3">
       {categoryGroups.map((group, groupIndex) => {
         const key = group.category || `no-category-${groupIndex}`;
         const isOpen = !group.category || openCategories.has(group.category);
@@ -52,47 +59,55 @@ export function LessonSidebar({
                 onClick={() => toggle(group.category)}
                 className="focus-ring flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-xs font-bold uppercase tracking-wide text-brand-600 hover:bg-brand-50"
               >
-                <span
+                <ChevronRightIcon
                   className={clsx(
-                    "inline-block transition-transform",
-                    isOpen ? "rotate-90" : "rotate-0"
+                    "h-3.5 w-3.5 flex-shrink-0 transition-transform",
+                    isOpen && "rotate-90"
                   )}
-                >
-                  ▶
-                </span>
-                📁 {group.category}
+                />
+                <FolderIcon className="h-4 w-4 flex-shrink-0" />
+                {group.category}
               </button>
             )}
             {isOpen && (
-              <div className="mt-3 space-y-6 pl-1">
+              <div className="mt-3 space-y-5 pl-1">
                 {group.modules.map((mod) => (
                   <div key={mod.id}>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">
+                    <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink/40">
                       {mod.title}
                     </p>
-                    <ul className="space-y-1">
+                    <ul className="space-y-0.5">
                       {mod.lessons.map((lesson) => {
                         const done = completedSet.has(lesson.id);
                         const active = lesson.id === currentLessonId;
+                        const Icon = done
+                          ? CheckCircleIcon
+                          : active
+                          ? PlayCircleIcon
+                          : CircleIcon;
                         return (
                           <li key={lesson.id}>
                             <Link
                               prefetch={false}
                               href={`/learn/${courseSlug}/${lesson.id}`}
                               className={clsx(
-                                "focus-ring flex items-center gap-2 rounded-md px-3 py-2 text-sm",
+                                "focus-ring flex items-center gap-2.5 rounded-md px-2 py-2 text-sm",
                                 active
                                   ? "bg-brand-50 font-medium text-brand-700"
                                   : "text-ink/70 hover:bg-ink/5"
                               )}
                             >
-                              <span
+                              <Icon
                                 className={clsx(
-                                  "h-1.5 w-1.5 flex-shrink-0 rounded-full",
-                                  done ? "bg-accent" : "bg-ink/20"
+                                  "h-4 w-4 flex-shrink-0",
+                                  done
+                                    ? "text-accent"
+                                    : active
+                                    ? "text-brand-500"
+                                    : "text-ink/25"
                                 )}
                               />
-                              {lesson.title}
+                              <span className="truncate">{lesson.title}</span>
                             </Link>
                           </li>
                         );
