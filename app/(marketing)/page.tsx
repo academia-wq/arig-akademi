@@ -78,8 +78,8 @@ export default async function HomePage() {
 
   return (
     <main>
-      <section className="border-b border-brand-100 bg-brand-50 px-6 py-16 md:py-24">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2">
+      <section className="border-b border-brand-100 bg-brand-50 px-6 py-16 md:py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.15fr_1fr] md:gap-16">
           <div className="text-center md:text-left">
             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">
               Ариг Академи
@@ -110,15 +110,31 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl shadow-lg md:max-w-none">
-            <Image
-              src="/hero-illustration.png"
-              alt="Ариг Аня"
-              fill
-              priority
-              sizes="(min-width: 768px) 40vw, 90vw"
-              className="object-cover"
-            />
+          <div className="relative mx-auto w-full max-w-[280px] md:max-w-sm">
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl shadow-md">
+              <Image
+                src="/hero-illustration.png"
+                alt="Ариг Аня"
+                fill
+                priority
+                sizes="(min-width: 768px) 24vw, 60vw"
+                className="object-cover"
+              />
+            </div>
+
+            {featuredCourses.length > 0 && (
+              <div className="absolute -bottom-4 -left-4 flex items-center gap-2.5 rounded-xl border border-ink/10 bg-white px-4 py-3 shadow-md sm:-bottom-5 sm:-left-6">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-accent/10">
+                  <CheckCircleIcon className="h-5 w-5 text-accent" />
+                </div>
+                <div>
+                  <p className="font-display text-sm font-semibold leading-none text-ink">
+                    {featuredCourses.length}+ сургалт
+                  </p>
+                  <p className="mt-1 text-xs text-ink/50">одоо бэлэн</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
