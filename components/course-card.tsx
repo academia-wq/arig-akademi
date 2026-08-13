@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { ArrowRightIcon, BookIcon, ClockIcon } from "@/components/icons";
+import { ArrowRightIcon, ClockIcon } from "@/components/icons";
 import { formatDuration } from "@/lib/format";
 
-const FALLBACK_TINTS = ["bg-brand-50", "bg-accent/10", "bg-brand-100"];
+const BANNER_TINTS = ["bg-brand-500", "bg-accent", "bg-brand-700"];
 
 export function CourseCard({
   slug,
@@ -36,8 +36,8 @@ export function CourseCard({
       className="focus-ring group flex flex-col overflow-hidden rounded-lg border border-ink/10 bg-white transition hover:border-brand-300 hover:shadow-sm"
     >
       <div
-        className={`relative aspect-[16/10] w-full overflow-hidden ${
-          thumbnailUrl ? "bg-ink/5" : FALLBACK_TINTS[tintIndex % FALLBACK_TINTS.length]
+        className={`relative aspect-[16/9] w-full overflow-hidden ${
+          thumbnailUrl ? "bg-ink/5" : BANNER_TINTS[tintIndex % BANNER_TINTS.length]
         }`}
       >
         {thumbnailUrl ? (
@@ -48,17 +48,31 @@ export function CourseCard({
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <BookIcon className="h-10 w-10 text-brand-500/40" />
+          <div className="flex h-full w-full flex-col justify-between p-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" className="h-8 w-8" />
+            <p className="font-display text-lg font-semibold leading-tight text-white">
+              Ариг Академи
+            </p>
           </div>
         )}
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-500">
+        <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt=""
+            className="h-5 w-5 flex-shrink-0 rounded-full"
+          />
+          <p className="text-xs text-ink/50">Ариг Академи</p>
+        </div>
+
+        <p className="mt-2.5 text-xs font-semibold uppercase tracking-wide text-brand-500">
           {eyebrow ?? (done ? "Дууссан" : started ? "Үргэлжилж буй" : "Курс")}
         </p>
-        <h3 className="mt-1.5 font-display font-semibold leading-snug text-ink">
+        <h3 className="mt-1 font-display font-semibold leading-snug text-ink">
           {title}
         </h3>
 
