@@ -5,6 +5,7 @@ import { LessonPlayer } from "@/components/lesson-player";
 import { MarkCompleteButton } from "@/components/mark-complete-button";
 import { LessonSidebar } from "@/components/lesson-sidebar";
 import { isModuleVisible } from "@/lib/module-visibility";
+import { getCourseIcon } from "@/lib/course-icon";
 
 export default async function LessonPage({
   params,
@@ -108,9 +109,18 @@ export default async function LessonPage({
               initiallyCompleted={currentProgress?.is_completed || false}
             />
           </div>
-        ) : (
-          <p className="mt-6 text-ink/50">Энэ хичээлд видео алга.</p>
-        )}
+        ) : !currentLesson.image_url ? (
+          (() => {
+            const courseIcon = getCourseIcon(course.title);
+            return (
+              <div
+                className={`mt-6 flex h-40 items-center justify-center rounded-lg ${courseIcon.tint}`}
+              >
+                <courseIcon.icon className={`h-14 w-14 ${courseIcon.tone}`} />
+              </div>
+            );
+          })()
+        ) : null}
 
         {currentLesson.image_url && (
           <img
