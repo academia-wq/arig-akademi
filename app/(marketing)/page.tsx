@@ -84,7 +84,7 @@ export default async function HomePage() {
             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">
               Ариг Академи
             </p>
-            <h1 className="font-display text-4xl font-bold leading-tight text-ink md:text-6xl">
+            <h1 className="font-display text-4xl font-semibold leading-tight text-ink md:text-6xl">
               Хөгжлөөр үйлчилнэ
             </h1>
             <p className="mx-auto mt-5 max-w-md text-lg text-ink/70 md:mx-0">
@@ -127,7 +127,7 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-6xl grid-cols-3 gap-6">
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-display text-2xl font-bold text-ink md:text-3xl">
+              <p className="font-display text-2xl font-semibold text-ink md:text-3xl">
                 {stat.value}
               </p>
               <p className="mt-1 text-xs text-ink/50 md:text-sm">
@@ -144,7 +144,7 @@ export default async function HomePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
               Онцлох
             </p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-ink">
+            <h2 className="mt-2 font-display text-3xl font-semibold text-ink">
               Сургалтууд
             </h2>
           </div>
@@ -180,7 +180,7 @@ export default async function HomePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
               Яагаад Ариг Академи
             </p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-ink">
+            <h2 className="mt-2 font-display text-3xl font-semibold text-ink">
               Суралцахад хялбар, ахицад төвлөрсөн
             </h2>
           </div>
@@ -191,7 +191,7 @@ export default async function HomePage() {
                 <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-brand-50 sm:mx-0">
                   <feature.icon className="h-5 w-5 text-brand-500" />
                 </div>
-                <h3 className="mt-4 font-display font-bold text-ink">
+                <h3 className="mt-4 font-display font-semibold text-ink">
                   {feature.title}
                 </h3>
                 <p className="mt-1.5 text-sm text-ink/60">
@@ -205,7 +205,7 @@ export default async function HomePage() {
 
       <section className="px-6 py-20">
         <div className="mx-auto flex max-w-4xl flex-col items-center rounded-2xl border border-brand-100 bg-brand-50 px-8 py-14 text-center">
-          <h2 className="font-display text-2xl font-bold text-ink md:text-3xl">
+          <h2 className="font-display text-2xl font-semibold text-ink md:text-3xl">
             Өнөөдрөөс суралцаж эхлээрэй
           </h2>
           <p className="mt-3 max-w-md text-ink/70">

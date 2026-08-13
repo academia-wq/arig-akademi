@@ -57,7 +57,7 @@ export function LessonSidebar({
               <button
                 type="button"
                 onClick={() => toggle(group.category)}
-                className="focus-ring flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-xs font-bold uppercase tracking-wide text-brand-600 hover:bg-brand-50"
+                className="focus-ring flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-xs font-semibold uppercase tracking-wide text-brand-600 hover:bg-brand-50"
               >
                 <ChevronRightIcon
                   className={clsx(

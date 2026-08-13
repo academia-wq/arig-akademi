@@ -95,7 +95,7 @@ export default async function LessonPage({
         >
           ← Сургалтын агуулга руу буцах
         </Link>
-        <h1 className="font-display text-2xl font-bold text-ink">
+        <h1 className="font-display text-2xl font-semibold text-ink">
           {currentLesson.title}
         </h1>
 

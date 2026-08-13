@@ -138,7 +138,7 @@ export function AppHeader({
           <Link
             prefetch={false}
             href="/dashboard"
-            className="focus-ring font-display text-lg font-bold tracking-tight text-ink"
+            className="focus-ring font-display text-lg font-semibold tracking-tight text-ink"
           >
             Ариг Академи
           </Link>
@@ -278,7 +278,7 @@ export function AppHeader({
               onClick={() => setMenuOpen((v) => !v)}
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border-2 border-brand-500 bg-brand-50 font-display text-sm font-bold text-brand-700 transition hover:bg-brand-100"
+              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border-2 border-brand-500 bg-brand-50 font-display text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
             >
               {avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -300,7 +300,7 @@ export function AppHeader({
                 <span className="absolute -top-1.5 right-3 h-3 w-3 rotate-45 border-l border-t border-ink/10 bg-white" />
 
                 <div className="flex flex-col items-center border-b border-ink/10 pb-4 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-brand-500 bg-brand-50 font-display text-base font-bold text-brand-700">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-brand-500 bg-brand-50 font-display text-base font-semibold text-brand-700">
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -308,7 +308,7 @@ export function AppHeader({
                       initials
                     )}
                   </div>
-                  <p className="mt-2 font-display text-sm font-bold text-ink">
+                  <p className="mt-2 font-display text-sm font-semibold text-ink">
                     Тавтай морил, {fullName || email}!
                   </p>
                 </div>

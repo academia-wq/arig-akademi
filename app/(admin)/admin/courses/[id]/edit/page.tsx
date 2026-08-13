@@ -152,7 +152,7 @@ export default async function EditCoursePage({
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-ink">
+      <h1 className="font-display text-2xl font-semibold text-ink">
         {course.title}
       </h1>
 
@@ -197,7 +197,7 @@ export default async function EditCoursePage({
         {categoryGroups.map((group, groupIndex) => (
         <div key={group.category || `no-category-${groupIndex}`}>
           {group.category && (
-            <h2 className="mb-3 font-display text-lg font-bold text-ink">
+            <h2 className="mb-3 font-display text-lg font-semibold text-ink">
               📁 {group.category}
             </h2>
           )}
@@ -216,7 +216,7 @@ export default async function EditCoursePage({
                     name="module_title"
                     defaultValue={mod.title}
                     required
-                    className="focus-ring flex-1 rounded-md border border-ink/15 px-2 py-1 font-display font-bold text-ink"
+                    className="focus-ring flex-1 rounded-md border border-ink/15 px-2 py-1 font-display font-semibold text-ink"
                   />
                   <button
                     type="submit"

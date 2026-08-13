@@ -49,7 +49,7 @@ export default async function AdminCoursesPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-ink">
+      <h1 className="font-display text-2xl font-semibold text-ink">
         Миний курсууд
       </h1>
 

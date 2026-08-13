@@ -59,7 +59,7 @@ export default async function DashboardPage() {
   if (coursesWithProgress.length === 0) {
     return (
       <div>
-        <h1 className="font-display text-2xl font-bold text-ink">Нүүр</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink">Нүүр</h1>
         <div className="mt-8 rounded-lg border border-dashed border-ink/20 p-10 text-center">
           <p className="text-ink/60">Та одоогоор ямар ч курст элсээгүй байна.</p>
           <Link
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
             {featuredLabel}
           </p>
-          <h1 className="font-display text-3xl font-bold leading-tight text-ink md:text-4xl">
+          <h1 className="font-display text-3xl font-semibold leading-tight text-ink md:text-4xl">
             {featured.course.title}
           </h1>
           {featured.course.description && (
@@ -156,11 +156,11 @@ export default async function DashboardPage() {
       </section>
 
       <div className="mt-8 flex items-center gap-4 rounded-lg border border-ink/10 bg-white p-5">
-        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-brand-500 font-display text-xl font-bold text-white">
+        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-brand-500 font-display text-xl font-semibold text-white">
           {level}
         </div>
         <div className="flex-1">
-          <p className="font-display font-bold text-ink">Level {level}</p>
+          <p className="font-display font-semibold text-ink">Level {level}</p>
           <div className="mt-1.5 h-2 rounded-full bg-ink/5">
             <div
               className="h-2 rounded-full bg-accent"
@@ -176,7 +176,7 @@ export default async function DashboardPage() {
 
       {rest.length > 0 && (
         <>
-          <h2 className="mt-10 font-display text-xl font-bold text-ink">
+          <h2 className="mt-10 font-display text-xl font-semibold text-ink">
             Миний сургалтууд
           </h2>
           <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

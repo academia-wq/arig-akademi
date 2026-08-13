@@ -93,7 +93,7 @@ export function DocumentCourseBuilder({ courseId }: { courseId: string }) {
 
   return (
     <div className="mt-6 rounded-lg border border-ink/10 bg-white p-4">
-      <h2 className="font-display font-bold text-ink">Файлаас автоматаар үүсгэх</h2>
+      <h2 className="font-display font-semibold text-ink">Файлаас автоматаар үүсгэх</h2>
       <p className="mt-1 text-sm text-ink/60">
         Сургалтын хөтөлбөр эсвэл хичээлийн төлөвлөгөө агуулсан PDF, Word (.docx)
         эсвэл Excel (.xlsx/.xls) файл байршуулбал AI автоматаар бүлэг/хичээлийн

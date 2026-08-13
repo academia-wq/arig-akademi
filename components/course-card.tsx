@@ -58,7 +58,7 @@ export function CourseCard({
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-500">
           {eyebrow ?? (done ? "Дууссан" : started ? "Үргэлжилж буй" : "Курс")}
         </p>
-        <h3 className="mt-1.5 font-display font-bold leading-snug text-ink">
+        <h3 className="mt-1.5 font-display font-semibold leading-snug text-ink">
           {title}
         </h3>
 

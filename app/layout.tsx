@@ -9,7 +9,7 @@ const body = Montserrat({
 });
 const display = Montserrat({
   subsets: ["latin", "cyrillic"],
-  weight: ["700", "800", "900"],
+  weight: ["600"],
   variable: "--font-display",
 });
 

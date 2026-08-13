@@ -63,11 +63,11 @@ function LoginForm() {
       <Link
         prefetch={false}
         href="/"
-        className="focus-ring mb-8 self-start font-display text-base font-bold text-ink"
+        className="focus-ring mb-8 self-start font-display text-base font-semibold text-ink"
       >
         Ариг Академи
       </Link>
-      <h1 className="font-display text-2xl font-bold text-ink">Нэвтрэх</h1>
+      <h1 className="font-display text-2xl font-semibold text-ink">Нэвтрэх</h1>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>

@@ -79,11 +79,11 @@ export default async function StudentDetailPage({
       </Link>
 
       <div className="mt-4 flex items-center gap-4">
-        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-brand-500 font-display text-xl font-bold text-white">
+        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-brand-500 font-display text-xl font-semibold text-white">
           {level}
         </div>
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">
+          <h1 className="font-display text-2xl font-semibold text-ink">
             {profile.full_name || email}
           </h1>
           <p className="text-sm text-ink/60">
@@ -107,7 +107,7 @@ export default async function StudentDetailPage({
         {courses.map(({ course, modules, completedCount, total, percent }) => (
           <div key={course.id} className="rounded-lg border border-ink/10 bg-white p-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-display font-bold text-ink">{course.title}</h2>
+              <h2 className="font-display font-semibold text-ink">{course.title}</h2>
               <span className="text-sm text-ink/60">
                 {completedCount}/{total} хичээл ({percent}%)
               </span>

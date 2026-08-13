@@ -65,7 +65,7 @@ export default async function CourseDetailPage({
       <p className="text-xs font-semibold uppercase tracking-wide text-brand-500">
         Сургалт · {totalLessons} хичээл
       </p>
-      <h1 className="mt-2 font-display text-3xl font-bold text-ink">
+      <h1 className="mt-2 font-display text-3xl font-semibold text-ink">
         {course.title}
       </h1>
       <p className="mt-4 text-ink/70">{course.description}</p>
@@ -80,7 +80,7 @@ export default async function CourseDetailPage({
       </form>
 
       <div className="mt-12">
-        <h2 className="font-display text-xl font-bold text-ink">
+        <h2 className="font-display text-xl font-semibold text-ink">
           Хөтөлбөр
         </h2>
         <div className="mt-4 space-y-4">

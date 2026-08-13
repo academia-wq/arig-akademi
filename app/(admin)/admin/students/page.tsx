@@ -70,7 +70,7 @@ export default async function AdminStudentsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-ink">Ажилтнууд</h1>
+      <h1 className="font-display text-2xl font-semibold text-ink">Ажилтнууд</h1>
       <p className="mt-1 text-sm text-ink/60">
         Нийт {rows.length} хэрэглэгч, level-ээр нь эрэмбэлсэн.
       </p>
@@ -125,7 +125,7 @@ export default async function AdminStudentsPage() {
                 </td>
                 <td className="px-4 py-3 text-ink/60">{r.completedLessons}</td>
                 <td className="px-4 py-3">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-500 text-xs font-bold text-white">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-500 text-xs font-semibold text-white">
                     {r.level}
                   </span>
                 </td>

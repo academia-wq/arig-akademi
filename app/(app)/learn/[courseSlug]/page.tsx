@@ -90,7 +90,7 @@ export default async function CourseCurriculumPage({
         </div>
 
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-bold text-ink">
+          <h1 className="font-display text-2xl font-semibold text-ink">
             {course.title}
           </h1>
           {course.description && (
@@ -120,7 +120,7 @@ export default async function CourseCurriculumPage({
         </Link>
       </div>
 
-      <h2 className="mb-4 mt-10 font-display text-xl font-bold text-ink">
+      <h2 className="mb-4 mt-10 font-display text-xl font-semibold text-ink">
         Сургалтын агуулга
       </h2>
 

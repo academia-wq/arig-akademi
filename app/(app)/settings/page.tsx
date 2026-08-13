@@ -35,7 +35,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-md">
-      <h1 className="font-display text-2xl font-bold text-ink">Тохиргоо</h1>
+      <h1 className="font-display text-2xl font-semibold text-ink">Тохиргоо</h1>
 
       <form action={updateProfile} className="mt-8 space-y-4">
         <div>

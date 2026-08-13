@@ -15,7 +15,7 @@ export default async function MarketingLayout({
           <Link
             prefetch={false}
             href="/"
-            className="focus-ring font-display text-lg font-bold tracking-tight text-ink"
+            className="focus-ring font-display text-lg font-semibold tracking-tight text-ink"
           >
             Ариг Академи
           </Link>
@@ -66,7 +66,7 @@ export default async function MarketingLayout({
         <div className="mx-auto max-w-6xl px-6 py-10">
           <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
             <div>
-              <p className="font-display text-base font-bold text-ink">
+              <p className="font-display text-base font-semibold text-ink">
                 Ариг Академи
               </p>
               <p className="mt-1 text-sm text-ink/50">

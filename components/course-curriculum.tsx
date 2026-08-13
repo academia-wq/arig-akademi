@@ -75,7 +75,7 @@ export function CourseCurriculum({
               <button
                 type="button"
                 onClick={() => toggleCategory(group.category)}
-                className="focus-ring mb-3 flex w-full items-center gap-2 rounded-md py-1 text-left text-xs font-bold uppercase tracking-wide text-brand-600 hover:text-brand-700"
+                className="focus-ring mb-3 flex w-full items-center gap-2 rounded-md py-1 text-left text-xs font-semibold uppercase tracking-wide text-brand-600 hover:text-brand-700"
               >
                 <ChevronRightIcon
                   className={clsx(
@@ -108,7 +108,7 @@ export function CourseCurriculum({
                         className="focus-ring flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left hover:bg-ink/[0.02] sm:px-5"
                       >
                         <span>
-                          <span className="block font-display font-bold text-ink">
+                          <span className="block font-display font-semibold text-ink">
                             {mod.title}
                           </span>
                           <span className="mt-0.5 block text-xs text-ink/50">
@@ -159,7 +159,7 @@ export function CourseCurriculum({
                                 <Link
                                   prefetch={false}
                                   href={`/learn/${courseSlug}/${lesson.id}`}
-                                  className="focus-ring flex-shrink-0 rounded-full bg-brand-700 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-brand-900"
+                                  className="focus-ring flex-shrink-0 rounded-full bg-brand-700 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-brand-900"
                                 >
                                   {done ? "Дахих" : isResume ? "Үргэлжлүүлэх" : "Эхлэх"}
                                 </Link>
