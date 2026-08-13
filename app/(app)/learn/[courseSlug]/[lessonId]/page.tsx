@@ -88,6 +88,13 @@ export default async function LessonPage({
       </aside>
 
       <main className="order-1 md:order-2">
+        <Link
+          prefetch={false}
+          href={`/learn/${course.slug}`}
+          className="focus-ring mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink/50 hover:text-brand-500"
+        >
+          ← Сургалтын агуулга руу буцах
+        </Link>
         <h1 className="font-display text-2xl font-bold text-ink">
           {currentLesson.title}
         </h1>
