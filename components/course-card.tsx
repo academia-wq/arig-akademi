@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { ArrowRightIcon, ClockIcon } from "@/components/icons";
 import { formatDuration } from "@/lib/format";
-
-const BANNER_TINTS = ["bg-brand-500", "bg-accent", "bg-brand-700"];
+import { getCourseIcon } from "@/lib/course-icon";
 
 export function CourseCard({
   slug,
@@ -28,6 +27,7 @@ export function CourseCard({
   const duration = formatDuration(durationSeconds);
   const started = progress > 0;
   const done = progress >= 100;
+  const { icon: TopicIcon, tint, tone } = getCourseIcon(title, tintIndex);
 
   return (
     <Link
@@ -37,7 +37,7 @@ export function CourseCard({
     >
       <div
         className={`relative aspect-[16/9] w-full overflow-hidden ${
-          thumbnailUrl ? "bg-ink/5" : BANNER_TINTS[tintIndex % BANNER_TINTS.length]
+          thumbnailUrl ? "bg-ink/5" : tint
         }`}
       >
         {thumbnailUrl ? (
@@ -48,12 +48,8 @@ export function CourseCard({
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full flex-col justify-between p-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" className="h-8 w-8" />
-            <p className="font-display text-lg font-semibold leading-tight text-white">
-              Ариг Академи
-            </p>
+          <div className="flex h-full w-full items-center justify-center">
+            <TopicIcon className={`h-11 w-11 ${tone}`} />
           </div>
         )}
       </div>

@@ -109,3 +109,81 @@ export function FolderIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function UsersIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 19c.6-3.2 3-5 5.5-5s4.9 1.8 5.5 5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.2 5.3a3.2 3.2 0 0 1 0 6.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.5 14.2c2.2.4 4 2.1 4.5 4.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function ShieldCheckIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M12 3.5 19 6v5.2c0 4.4-2.9 7.6-7 9.3-4.1-1.7-7-4.9-7-9.3V6l7-2.5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="m8.7 12.2 2.3 2.3 4.3-4.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function SparklesIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M11 3.5c.4 2.6 1 3.9 1.6 4.6.7.7 2 1.2 4.6 1.6-2.6.4-3.9 1-4.6 1.6-.7.7-1.2 2-1.6 4.6-.4-2.6-1-3.9-1.6-4.6-.7-.7-2-1.2-4.6-1.6 2.6-.4 3.9-1 4.6-1.6.7-.7 1.2-2 1.6-4.6Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M18.5 15.5c.2 1.3.5 2 .9 2.4.4.4 1.1.7 2.4.9-1.3.2-2 .5-2.4.9-.4.4-.7 1.1-.9 2.4-.2-1.3-.5-2-.9-2.4-.4-.4-1.1-.7-2.4-.9 1.3-.2 2-.5 2.4-.9.4-.4.7-1.1.9-2.4Z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function PhoneIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M5.3 4h2.9l1.3 3.6-1.9 1.6a11.5 11.5 0 0 0 5.2 5.2l1.6-1.9 3.6 1.3v2.9c0 1-.85 1.75-1.83 1.6A16 16 0 0 1 3.7 5.83 1.5 1.5 0 0 1 5.3 4Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function LightbulbIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M9 17.5h6M9.8 20h4.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 3.5a5.8 5.8 0 0 0-3.3 10.6c.6.45.8 1 .8 1.6v.3h5v-.3c0-.6.2-1.15.8-1.6A5.8 5.8 0 0 0 12 3.5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function HeartIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M12 20s-7.5-4.6-9.6-9.3C1.3 7.8 3 4.8 6.2 4.4c1.9-.25 3.5.7 5.8 3.2 2.3-2.5 3.9-3.45 5.8-3.2 3.2.4 4.9 3.4 3.8 6.3C19.5 15.4 12 20 12 20Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
