@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { computeLevel } from "@/lib/gamification";
 import { CourseCard } from "@/components/course-card";
-import { ArrowRightIcon, BookIcon } from "@/components/icons";
+import { ArrowRightIcon } from "@/components/icons";
 import { formatDuration } from "@/lib/format";
+import { getCourseIcon } from "@/lib/course-icon";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -74,15 +75,13 @@ export default async function DashboardPage() {
     );
   }
 
-  // Идэвхтэй ("үргэлжилж буй") курсийг hero-д онцолж, бусдыг доор нь жагсаана
+  // Идэвхтэй ("үргэлжилж буй") курсийг hero-д онцолж, доор нь бүх курсийг жагсаана
   const featured =
     coursesWithProgress.find((c) => c.progress > 0 && c.progress < 100) ||
     coursesWithProgress[0];
-  const rest = coursesWithProgress.filter(
-    (c) => c.course.id !== featured.course.id
-  );
 
   const featuredDuration = formatDuration(featured.durationSeconds);
+  const featuredIcon = getCourseIcon(featured.course.title);
   const featuredLabel =
     featured.progress >= 100
       ? "Дууссан"
@@ -141,7 +140,11 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <div className="hidden h-48 w-48 flex-shrink-0 overflow-hidden rounded-2xl border border-white bg-white shadow-sm md:flex md:items-center md:justify-center">
+        <div
+          className={`hidden h-48 w-48 flex-shrink-0 overflow-hidden rounded-2xl border border-white shadow-sm md:flex md:items-center md:justify-center ${
+            featured.course.thumbnail_url ? "bg-white" : featuredIcon.tint
+          }`}
+        >
           {featured.course.thumbnail_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -150,7 +153,7 @@ export default async function DashboardPage() {
               className="h-full w-full object-cover"
             />
           ) : (
-            <BookIcon className="h-16 w-16 text-brand-500/40" />
+            <featuredIcon.icon className={`h-16 w-16 ${featuredIcon.tone}`} />
           )}
         </div>
       </section>
@@ -174,26 +177,22 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {rest.length > 0 && (
-        <>
-          <h2 className="mt-10 font-display text-xl font-semibold text-ink">
-            Миний сургалтууд
-          </h2>
-          <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {rest.map(({ course, progress, durationSeconds }, i) => (
-              <CourseCard
-                key={course.id}
-                slug={course.slug}
-                title={course.title}
-                thumbnailUrl={course.thumbnail_url}
-                durationSeconds={durationSeconds}
-                progress={progress}
-                tintIndex={i}
-              />
-            ))}
-          </div>
-        </>
-      )}
+      <h2 className="mt-10 font-display text-xl font-semibold text-ink">
+        Миний сургалтууд
+      </h2>
+      <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {coursesWithProgress.map(({ course, progress, durationSeconds }, i) => (
+          <CourseCard
+            key={course.id}
+            slug={course.slug}
+            title={course.title}
+            thumbnailUrl={course.thumbnail_url}
+            durationSeconds={durationSeconds}
+            progress={progress}
+            tintIndex={i}
+          />
+        ))}
+      </div>
     </div>
   );
 }

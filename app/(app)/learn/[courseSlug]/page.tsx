@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { isModuleVisible } from "@/lib/module-visibility";
 import { CourseCurriculum } from "@/components/course-curriculum";
-import { ArrowRightIcon, BookIcon } from "@/components/icons";
+import { ArrowRightIcon } from "@/components/icons";
+import { getCourseIcon } from "@/lib/course-icon";
 
 export default async function CourseCurriculumPage({
   params,
@@ -72,11 +73,16 @@ export default async function CourseCurriculumPage({
   const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
   const started = completedCount > 0;
   const done = completedCount === total;
+  const courseIcon = getCourseIcon(course.title);
 
   return (
     <div>
       <div className="flex flex-col gap-6 rounded-lg border border-ink/10 bg-white p-6 sm:flex-row sm:items-center sm:p-7">
-        <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-50 sm:h-28 sm:w-28">
+        <div
+          className={`flex h-24 w-24 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-28 sm:w-28 ${
+            course.thumbnail_url ? "bg-ink/5" : courseIcon.tint
+          }`}
+        >
           {course.thumbnail_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -85,7 +91,7 @@ export default async function CourseCurriculumPage({
               className="h-full w-full object-cover"
             />
           ) : (
-            <BookIcon className="h-10 w-10 text-brand-500/40" />
+            <courseIcon.icon className={`h-10 w-10 ${courseIcon.tone}`} />
           )}
         </div>
 
