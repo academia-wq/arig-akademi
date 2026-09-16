@@ -1,27 +1,10 @@
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { computeCourseProgress, getLastCompletedDatesByCourse } from "@/lib/course-progress";
 import { formatDuration, formatJoinDate, formatCompletedDate, initialsOf } from "@/lib/format";
 import { MailIcon, CalendarIcon } from "@/components/icons";
-
-async function updateProfile(formData: FormData) {
-  "use server";
-
-  const supabase = createClient();
-  const user = await getUser();
-  if (!user) return;
-
-  const fullName = formData.get("full_name") as string;
-  const position = formData.get("position") as string;
-
-  await supabase
-    .from("profiles")
-    .update({ full_name: fullName, position })
-    .eq("id", user.id);
-
-  revalidatePath("/settings");
-}
+import { AvatarUploader } from "@/components/avatar-uploader";
+import { updateProfile } from "./actions";
 
 export default async function SettingsPage() {
   const supabase = createClient();
@@ -91,14 +74,7 @@ export default async function SettingsPage() {
       )}
 
       <div className="mt-6 flex flex-col gap-6 rounded-2xl border border-ink/15 bg-white p-7 sm:flex-row sm:items-center">
-        <div className="flex h-[120px] w-[120px] flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-brand-500 bg-brand-50 font-display text-3xl font-semibold text-brand-700">
-          {profile?.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            initials
-          )}
-        </div>
+        <AvatarUploader avatarUrl={profile?.avatar_url ?? null} initials={initials} />
         <div className="flex-1">
           <p className="font-display text-lg font-semibold text-ink">
             {profile?.full_name || user.email}
