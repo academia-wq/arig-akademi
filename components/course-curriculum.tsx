@@ -7,12 +7,11 @@ import {
   CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  CircleIcon,
   FolderIcon,
-  PlayCircleIcon,
 } from "@/components/icons";
+import { getLessonIllustration } from "@/lib/course-icon";
 
-type Lesson = { id: string; title: string; position: number };
+type Lesson = { id: string; title: string; position: number; image_url: string | null };
 type Module = { id: string; title: string; lessons: Lesson[] };
 type CategoryGroup = { category: string | null; modules: Module[] };
 
@@ -62,6 +61,8 @@ export function CourseCurriculum({
       return next;
     });
   }
+
+  let lessonCounter = 0;
 
   return (
     <div className="space-y-6">
@@ -126,47 +127,81 @@ export function CourseCurriculum({
                       </button>
 
                       {moduleOpen && (
-                        <ul>
+                        <div className="grid grid-cols-2 gap-3 border-t border-ink/10 p-4 sm:grid-cols-3 sm:gap-4 sm:p-5 lg:grid-cols-4">
                           {mod.lessons.map((lesson) => {
                             const done = completedSet.has(lesson.id);
                             const isResume = lesson.id === resumeLessonId;
-                            const Icon = done
-                              ? CheckCircleIcon
-                              : isResume
-                              ? PlayCircleIcon
-                              : CircleIcon;
+                            const { tint, illustration } = getLessonIllustration(
+                              lessonCounter++
+                            );
 
                             return (
-                              <li
+                              <Link
                                 key={lesson.id}
-                                className="flex items-center justify-between gap-4 border-t border-ink/10 px-4 py-3 sm:px-5"
+                                prefetch={false}
+                                href={`/learn/${courseSlug}/${lesson.id}`}
+                                className={clsx(
+                                  "focus-ring group flex flex-col overflow-hidden rounded-lg border bg-white transition hover:shadow-sm",
+                                  isResume
+                                    ? "border-brand-500 ring-1 ring-brand-500"
+                                    : "border-ink/10 hover:border-brand-300"
+                                )}
                               >
-                                <span className="flex min-w-0 items-center gap-3">
-                                  <Icon
+                                <div
+                                  className={`relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden ${
+                                    lesson.image_url ? "bg-ink/5" : `p-3 ${tint}`
+                                  }`}
+                                >
+                                  {lesson.image_url ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={lesson.image_url}
+                                      alt=""
+                                      className={clsx(
+                                        "h-full w-full object-cover transition duration-300 group-hover:scale-105",
+                                        !isResume && !done && "opacity-80"
+                                      )}
+                                    />
+                                  ) : illustration ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={illustration}
+                                      alt=""
+                                      className={clsx(
+                                        "h-full w-full object-contain transition duration-300 group-hover:scale-105",
+                                        !isResume && !done && "opacity-80"
+                                      )}
+                                    />
+                                  ) : null}
+
+                                  {done && (
+                                    <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-white shadow-sm">
+                                      <CheckCircleIcon className="h-4 w-4" />
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex flex-1 flex-col p-3">
+                                  <p className="line-clamp-2 flex-1 text-sm font-medium leading-snug text-ink">
+                                    {lesson.title}
+                                  </p>
+                                  <p
                                     className={clsx(
-                                      "h-5 w-5 flex-shrink-0",
+                                      "mt-2 text-xs font-semibold uppercase tracking-wide",
                                       done
                                         ? "text-accent"
                                         : isResume
                                         ? "text-brand-500"
-                                        : "text-ink/25"
+                                        : "text-ink/40"
                                     )}
-                                  />
-                                  <span className="truncate text-sm text-ink/80">
-                                    {lesson.title}
-                                  </span>
-                                </span>
-                                <Link
-                                  prefetch={false}
-                                  href={`/learn/${courseSlug}/${lesson.id}`}
-                                  className="focus-ring flex-shrink-0 rounded-full bg-brand-700 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-brand-900"
-                                >
-                                  {done ? "Дахих" : isResume ? "Үргэлжлүүлэх" : "Эхлэх"}
-                                </Link>
-                              </li>
+                                  >
+                                    {done ? "Дахих" : isResume ? "Үргэлжлүүлэх" : "Эхлэх"}
+                                  </p>
+                                </div>
+                              </Link>
                             );
                           })}
-                        </ul>
+                        </div>
                       )}
                     </div>
                   );

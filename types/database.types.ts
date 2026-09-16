@@ -169,6 +169,65 @@ export type Database = {
           }
         ];
       };
+      academy_structure: {
+        Row: {
+          id: string;
+          data: unknown;
+          updated_by: string | null;
+          updated_at: string | null;
+        };
+        Insert: Partial<Database["public"]["Tables"]["academy_structure"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["academy_structure"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "academy_structure_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      onboarding_plans: {
+        Row: {
+          id: string;
+          employee_email: string;
+          company_name: string;
+          job_title: string;
+          plan: unknown;
+          created_by: string | null;
+          sent_at: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["onboarding_plans"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["onboarding_plans"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_plans_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      mystery_shopper_evaluations: {
+        Row: {
+          id: string;
+          branch_name: string;
+          evaluation_date: string;
+          evaluator_name: string;
+          evaluation_time: string | null;
+          comment: string | null;
+          total_score: number;
+          max_score: number;
+          answers: unknown;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["mystery_shopper_evaluations"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["mystery_shopper_evaluations"]["Row"]>;
+        Relationships: [];
+      };
     };
     Views: {};
     Functions: {};

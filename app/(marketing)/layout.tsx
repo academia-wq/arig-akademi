@@ -25,11 +25,8 @@ export default async function MarketingLayout({
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm font-medium text-ink/70 md:flex">
-            <Link prefetch={false} href="/#courses" className="hover:text-ink">
+            <Link prefetch={false} href="/courses" className="hover:text-ink">
               Сургалтууд
-            </Link>
-            <Link prefetch={false} href="/#about" className="hover:text-ink">
-              Бидний тухай
             </Link>
           </nav>
 

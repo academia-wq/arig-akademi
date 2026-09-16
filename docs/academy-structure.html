@@ -1,0 +1,527 @@
+<title>Ариг Академи — Сургалтын бүтэц</title>
+<style>
+  :root {
+    --paper: #FAF9F6;
+    --paper-raised: #FFFFFF;
+    --ink: #151417;
+    --ink-soft: rgba(21, 20, 23, 0.62);
+    --ink-faint: rgba(21, 20, 23, 0.4);
+    --line: rgba(21, 20, 23, 0.14);
+    --line-strong: rgba(21, 20, 23, 0.28);
+
+    --ochre-50: #FBF3EC;
+    --ochre-100: #F4DECB;
+    --ochre-300: #E4A672;
+    --ochre-500: #C9702F;
+    --ochre-700: #8F4A18;
+
+    --juniper: #2E6E5E;
+    --juniper-50: #EAF1EE;
+    --juniper-100: #D7E6E0;
+    --juniper-700: #1F4B40;
+
+    --shadow: 0 1px 2px rgba(21, 20, 23, 0.05), 0 6px 16px -8px rgba(21, 20, 23, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #171410;
+      --paper-raised: #1F1B16;
+      --ink: #F3EEE6;
+      --ink-soft: rgba(243, 238, 230, 0.66);
+      --ink-faint: rgba(243, 238, 230, 0.42);
+      --line: rgba(243, 238, 230, 0.16);
+      --line-strong: rgba(243, 238, 230, 0.3);
+
+      --ochre-50: #2A2019;
+      --ochre-100: #3A2A1D;
+      --ochre-300: #C88750;
+      --ochre-500: #E0925A;
+      --ochre-700: #F0B27F;
+
+      --juniper: #6FB59B;
+      --juniper-50: #1B2B26;
+      --juniper-100: #223B33;
+      --juniper-700: #9BD1BB;
+
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 20px -10px rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171410;
+    --paper-raised: #1F1B16;
+    --ink: #F3EEE6;
+    --ink-soft: rgba(243, 238, 230, 0.66);
+    --ink-faint: rgba(243, 238, 230, 0.42);
+    --line: rgba(243, 238, 230, 0.16);
+    --line-strong: rgba(243, 238, 230, 0.3);
+    --ochre-50: #2A2019;
+    --ochre-100: #3A2A1D;
+    --ochre-300: #C88750;
+    --ochre-500: #E0925A;
+    --ochre-700: #F0B27F;
+    --juniper: #6FB59B;
+    --juniper-50: #1B2B26;
+    --juniper-100: #223B33;
+    --juniper-700: #9BD1BB;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 20px -10px rgba(0, 0, 0, 0.5);
+  }
+  :root[data-theme="light"] {
+    --paper: #FAF9F6;
+    --paper-raised: #FFFFFF;
+    --ink: #151417;
+    --ink-soft: rgba(21, 20, 23, 0.62);
+    --ink-faint: rgba(21, 20, 23, 0.4);
+    --line: rgba(21, 20, 23, 0.14);
+    --line-strong: rgba(21, 20, 23, 0.28);
+    --ochre-50: #FBF3EC;
+    --ochre-100: #F4DECB;
+    --ochre-300: #E4A672;
+    --ochre-500: #C9702F;
+    --ochre-700: #8F4A18;
+    --juniper: #2E6E5E;
+    --juniper-50: #EAF1EE;
+    --juniper-100: #D7E6E0;
+    --juniper-700: #1F4B40;
+    --shadow: 0 1px 2px rgba(21, 20, 23, 0.05), 0 6px 16px -8px rgba(21, 20, 23, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45;
+    padding: 56px 24px 80px;
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+
+  /* ---------- root band ---------- */
+  .root {
+    text-align: center;
+    padding-bottom: 36px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ochre-500);
+  }
+
+  .title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(30px, 4vw, 42px);
+    font-weight: 700;
+    margin: 10px 0 6px;
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin: 0 auto;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .meta-chip {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 16px;
+    font-size: 13px;
+    box-shadow: var(--shadow);
+  }
+
+  .meta-chip .k {
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 11px;
+  }
+
+  .meta-chip .v {
+    font-weight: 600;
+  }
+
+  .meta-chip.deadline .v { color: var(--ochre-500); }
+  .meta-chip .days {
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- connector from root to two pillars ---------- */
+  .trunk {
+    width: 1px;
+    height: 28px;
+    background: var(--line-strong);
+    margin: 0 auto;
+  }
+
+  .fork {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  .fork-half {
+    flex: 1;
+    max-width: 460px;
+    position: relative;
+  }
+
+  .fork-half::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    height: 1px;
+    background: var(--line-strong);
+  }
+
+  .fork-half.left::before { left: 50%; right: -1px; }
+  .fork-half.right::before { left: -1px; right: 50%; }
+
+  .fork-half .drop {
+    width: 1px;
+    height: 24px;
+    background: var(--line-strong);
+    margin: 0 auto;
+  }
+
+  /* ---------- pillars ---------- */
+  .pillars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  @media (max-width: 760px) {
+    .pillars { grid-template-columns: 1fr; }
+    .fork { flex-direction: column; align-items: center; }
+    .fork-half { max-width: 100%; }
+    .fork-half::before { display: none; }
+  }
+
+  .pillar-head {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .pillar-head .label {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line-strong);
+  }
+
+  .pillar-head .desc {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- section blocks within a pillar ---------- */
+  .section {
+    margin-bottom: 26px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 8px;
+  }
+
+  .person-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .person-card .name {
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+
+  .person-card .role {
+    margin-top: 3px;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+
+  .person-card .tag {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border: 1px dashed var(--line-strong);
+    border-radius: 5px;
+    padding: 2px 6px;
+  }
+
+  .person-card.domain .name { color: var(--ochre-700); }
+
+  /* ---------- content taxonomy panels ---------- */
+  .material-panel {
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+    border: 1px solid var(--line);
+  }
+
+  .material-panel.intl {
+    background: var(--ochre-50);
+    border-color: var(--ochre-100);
+  }
+  .material-panel.franchise {
+    background: var(--juniper-50);
+    border-color: var(--juniper-100);
+  }
+
+  .material-panel + .material-panel { margin-top: 16px; }
+
+  .material-panel .m-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .material-panel .swatch {
+    width: 9px; height: 9px; border-radius: 50%;
+    flex: none;
+  }
+  .material-panel.intl .swatch { background: var(--ochre-500); }
+  .material-panel.franchise .swatch { background: var(--juniper); }
+
+  .material-panel .m-title {
+    font-family: Georgia, serif;
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .material-panel.intl .m-title { color: var(--ochre-700); }
+  .material-panel.franchise .m-title { color: var(--juniper-700); }
+
+  .branch-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .branch {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .branch .b-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 10px;
+    box-shadow: var(--shadow);
+  }
+
+  .branch ul {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0 0 0 10px;
+    border-left: 1px dashed var(--line-strong);
+  }
+
+  .branch li {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 6px 9px;
+    margin: 6px 0 6px 8px;
+  }
+
+  .branch li .sub {
+    display: block;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    margin-top: 1px;
+  }
+
+  /* ---------- footnote ---------- */
+  .footnote {
+    max-width: 640px;
+    margin: 48px auto 0;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+  }
+</style>
+
+<div class="page">
+  <h2 class="sr-only">
+    Ариг Академийн сургалтын бүтэц: багийн бүрэлдэхүүн, чиглэл хариуцагчид, мөн Ариг Интернэшнл ба Франчайз
+    сургалтын материалын ангилал, эцсийн хугацаа 2026 оны 11 сарын 1.
+  </h2>
+
+  <div class="root">
+    <div class="eyebrow">Бүтээмж алба</div>
+    <h1 class="title">Ариг Академи</h1>
+    <p class="subtitle">Сургалтын бүтэц ба хариуцагчид</p>
+
+    <div class="meta-row">
+      <div class="meta-chip"><span class="k">Хариуцагч</span><span class="v">Болормаа — Ерөнхий менежер</span></div>
+      <div class="meta-chip deadline"><span class="k">Эцсийн хугацаа</span><span class="v">2026.11.01</span><span class="days">· ~87 хоног үлдсэн</span></div>
+      <div class="meta-chip"><span class="k">Гарц</span><span class="v">Сургалтын Book</span></div>
+    </div>
+  </div>
+
+  <div class="trunk"></div>
+  <div class="fork">
+    <div class="fork-half left"><div class="drop"></div></div>
+    <div class="fork-half right"><div class="drop"></div></div>
+  </div>
+
+  <div class="pillars">
+    <!-- PILLAR: TEAM -->
+    <div>
+      <div class="pillar-head">
+        <span class="label">Баг — бүрэлдэхүүн</span>
+        <span class="desc">Хэн юуг хариуцах вэ</span>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Бүсийн 5 менежер</div>
+        <div class="card-grid">
+          <div class="person-card">
+            <div class="name">Насанжаргал</div>
+            <span class="tag">чиглэл тодорхойлох</span>
+          </div>
+          <div class="person-card">
+            <div class="name">Мөнх-Эрдэнэ</div>
+            <span class="tag">чиглэл тодорхойлох</span>
+          </div>
+          <div class="person-card">
+            <div class="name">Билигсайхан</div>
+            <span class="tag">чиглэл тодорхойлох</span>
+          </div>
+          <div class="person-card">
+            <div class="name">Гэрэлмаа</div>
+            <span class="tag">чиглэл тодорхойлох</span>
+          </div>
+          <div class="person-card">
+            <div class="name">Солонгоо</div>
+            <span class="tag">чиглэл тодорхойлох</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Чиглэл хариуцагчид</div>
+        <div class="card-grid">
+          <div class="person-card domain">
+            <div class="name">Байгууллагын соёл</div>
+            <div class="role">Зөвлөх менежер Б.Дэлгэрмандал</div>
+          </div>
+          <div class="person-card domain">
+            <div class="name">Менежмент</div>
+            <div class="role">БАЕМ Н.Болормаа</div>
+          </div>
+          <div class="person-card domain">
+            <div class="name">Эрүүл ахуй</div>
+            <div class="role">Эрүүл ахуйч Ц.Онон</div>
+          </div>
+          <div class="person-card domain">
+            <div class="name">Brand стандарт, Хөгжил</div>
+            <div class="role">Хөгжлийн захирал О.Мөнхдэлгэр</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PILLAR: MATERIALS -->
+    <div>
+      <div class="pillar-head">
+        <span class="label">Сургалтын материал — 2 төрөл</span>
+        <span class="desc">Юу бэлдэх вэ</span>
+      </div>
+
+      <div class="material-panel intl">
+        <div class="m-head"><span class="swatch"></span><span class="m-title">Ариг Интернэшнл</span></div>
+        <div class="branch-row">
+          <div class="branch">
+            <div class="b-title">Шинэ ажилтан</div>
+          </div>
+          <div class="branch">
+            <div class="b-title">Үндсэн ажилтан</div>
+            <ul>
+              <li>1. Нэгдсэн<span class="sub">хагас жил / сар тутам</span></li>
+              <li>2. Албадын сургалт</li>
+              <li>3. Хувь хүний хөгжил<span class="sub">гадны сургалт</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="material-panel franchise">
+        <div class="m-head"><span class="swatch"></span><span class="m-title">Франчайз</span></div>
+        <div class="branch-row">
+          <div class="branch">
+            <div class="b-title">Эзэн</div>
+          </div>
+          <div class="branch">
+            <div class="b-title">Ажилтан</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footnote">
+    Бүсийн 5 менежерийн хариуцах чиглэлийг түр орхив — тодорхой болмогц нэмнэ.
+    Сургалтын материалаас эцсийн гарц болгож Book бэлтгэнэ.
+  </p>
+</div>

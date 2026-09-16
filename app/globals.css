@@ -14,3 +14,10 @@ body {
 .focus-ring {
   @apply outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
 }
+
+/* Бараан дэвсгэр (sidebar гэх мэт) дээрх элементүүдэд зориулсан focus-ring —
+   цайвар ring-offset нь бараан дэвсгэр дээр цагаан хайрцаг шиг харагддаг тул
+   ring-offset-ийг дэвсгэртэй нь ижил бараан өнгөөр сольсон. */
+.focus-ring-dark {
+  @apply outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-ink;
+}

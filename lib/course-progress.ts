@@ -24,7 +24,31 @@ export async function computeCourseProgress(
     .in("lesson_id", lessonIds.length ? lessonIds : ["00000000-0000-0000-0000-000000000000"]);
 
   const total = lessonIds.length;
-  const progress = total > 0 ? Math.round(((completedCount || 0) / total) * 100) : 0;
+  const completed = completedCount || 0;
+  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  return { course, progress, durationSeconds };
+  return { course, progress, durationSeconds, totalLessons: total, completedLessons: completed };
+}
+
+// Хэрэглэгчийн курс тус бүрийн хамгийн сүүлд дуусгасан хичээлийн огноог
+// буцаана (курс "дуусгасан" болсон огноо гэж үзнэ).
+export async function getLastCompletedDatesByCourse(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<Map<string, string>> {
+  const { data: rows } = await supabase
+    .from("lesson_progress")
+    .select("completed_at, lessons(modules(course_id))")
+    .eq("user_id", userId)
+    .eq("is_completed", true);
+
+  const result = new Map<string, string>();
+  for (const row of rows || []) {
+    const courseId = (row as any).lessons?.modules?.course_id;
+    const completedAt = (row as any).completed_at;
+    if (!courseId || !completedAt) continue;
+    const prev = result.get(courseId);
+    if (!prev || completedAt > prev) result.set(courseId, completedAt);
+  }
+  return result;
 }

@@ -4,6 +4,8 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { AuthCard } from "@/components/auth-card";
+import { EyeIcon, EyeOffIcon } from "@/components/icons";
 
 export default function LoginPage() {
   return (
@@ -20,6 +22,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -59,81 +62,82 @@ function LoginForm() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
-      <Link
-        prefetch={false}
-        href="/"
-        className="focus-ring mb-8 flex items-center gap-2 self-start"
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="" className="h-8 w-8" />
-        <span className="font-display text-base font-semibold text-ink">
-          Ариг Академи
-        </span>
-      </Link>
-      <h1 className="font-display text-2xl font-semibold text-ink">Нэвтрэх</h1>
-
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+    <AuthCard
+      title="Нэвтрэх"
+      subtitle="Ариг академийн цахим сургалтын платформд тавтай морил"
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>
-          <label className="block text-sm font-medium text-ink" htmlFor="email">
-            И-мэйл
+          <label className="block text-sm text-ink" htmlFor="email">
+            Имэйл хаяг
           </label>
           <input
             id="email"
             type="email"
             required
+            placeholder="Имэйл хаягаа оруулна уу"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="focus-ring mt-1 w-full rounded-md border border-ink/15 px-3 py-2"
+            className="focus-ring mt-2 h-12 w-full rounded-md border border-ink/20 px-4 text-ink placeholder:text-ink/40"
           />
         </div>
         <div>
-          <label
-            className="block text-sm font-medium text-ink"
-            htmlFor="password"
-          >
+          <label className="block text-sm text-ink" htmlFor="password">
             Нууц үг
           </label>
-          <input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="focus-ring mt-1 w-full rounded-md border border-ink/15 px-3 py-2"
-          />
+          <div className="relative mt-2">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              required
+              placeholder="Нууц үгээ оруулна уу"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="focus-ring h-12 w-full rounded-md border border-ink/20 px-4 pr-11 text-ink placeholder:text-ink/40"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
+              className="focus-ring absolute right-3.5 top-1/2 -translate-y-1/2 text-ink/50 hover:text-ink"
+            >
+              {showPassword ? (
+                <EyeOffIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="flex flex-col gap-4">
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="focus-ring w-full rounded-md bg-brand-500 px-4 py-2.5 font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
-        >
-          {loading ? "Нэвтэрч байна..." : "Нэвтрэх"}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="focus-ring w-full rounded-md bg-brand-500 py-3.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+          >
+            {loading ? "Нэвтэрч байна..." : "Нэвтрэх"}
+          </button>
+        </div>
       </form>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-ink/40">
-        <div className="h-px flex-1 bg-ink/10" />
-        эсвэл
-        <div className="h-px flex-1 bg-ink/10" />
-      </div>
+      <div className="my-7 h-px w-full bg-ink/10" />
 
       <button
         onClick={handleGoogleLogin}
-        className="focus-ring w-full rounded-md border border-ink/15 px-4 py-2.5 font-medium text-ink transition hover:border-ink/30"
+        className="focus-ring w-full rounded-md border border-ink/15 py-3 text-sm font-medium text-ink transition hover:border-ink/30"
       >
         Google-ээр нэвтрэх
       </button>
 
-      <p className="mt-6 text-center text-sm text-ink/60">
+      <p className="mt-6 text-center text-sm text-ink/50">
         Бүртгэлгүй юу?{" "}
-        <Link prefetch={false} href="/register" className="font-medium text-brand-500">
+        <Link prefetch={false} href="/register" className="font-semibold text-brand-500">
           Бүртгүүлэх
         </Link>
       </p>
-    </main>
+    </AuthCard>
   );
 }

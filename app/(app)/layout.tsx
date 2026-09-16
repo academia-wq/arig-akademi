@@ -1,5 +1,5 @@
 import { createClient, getUser } from "@/lib/supabase/server";
-import { AppHeader } from "@/components/app-header";
+import { AppShell } from "@/components/app-shell";
 
 export default async function AppLayout({
   children,
@@ -11,27 +11,29 @@ export default async function AppLayout({
   let isStaff = false;
   let fullName: string | null = null;
   let avatarUrl: string | null = null;
+  let position: string | null = null;
   if (user) {
     const supabase = createClient();
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, full_name, avatar_url")
+      .select("role, full_name, avatar_url, position")
       .eq("id", user.id)
       .single();
     isStaff = profile?.role === "admin" || profile?.role === "instructor";
     fullName = profile?.full_name ?? null;
     avatarUrl = profile?.avatar_url ?? null;
+    position = profile?.position ?? null;
   }
 
   return (
-    <div className="min-h-screen bg-paper">
-      <AppHeader
-        fullName={fullName}
-        email={user?.email ?? null}
-        avatarUrl={avatarUrl}
-        isStaff={isStaff}
-      />
-      <div className="mx-auto max-w-6xl px-6 py-10">{children}</div>
-    </div>
+    <AppShell
+      isStaff={isStaff}
+      fullName={fullName}
+      email={user?.email ?? null}
+      position={position}
+      avatarUrl={avatarUrl}
+    >
+      {children}
+    </AppShell>
   );
 }

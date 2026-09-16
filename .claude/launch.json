@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "-H", "127.0.0.1"],
       "port": 3000
+    },
+    {
+      "name": "survey-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Users\\user\\AppData\\Local\\Temp\\claude\\C--Users-user-Downloads-arig-akademi-arig-akademi\\ee2c18e2-3e4d-4432-b05b-42ec92ae79d6\\scratchpad\\survey\\serve.js"],
+      "port": 4173
     }
   ]
 }

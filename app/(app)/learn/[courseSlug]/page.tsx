@@ -24,7 +24,7 @@ export default async function CourseCurriculumPage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, slug, description, thumbnail_url, modules(id, title, position, visible_positions, category, lessons(id, title, position))"
+      "id, title, slug, description, thumbnail_url, modules(id, title, position, visible_positions, category, lessons(id, title, position, image_url))"
     )
     .eq("slug", decodeURIComponent(params.courseSlug))
     .single();
@@ -89,6 +89,13 @@ export default async function CourseCurriculumPage({
               src={course.thumbnail_url}
               alt=""
               className="h-full w-full object-cover"
+            />
+          ) : courseIcon.illustration ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={courseIcon.illustration}
+              alt=""
+              className="h-full w-full object-contain p-2"
             />
           ) : (
             <courseIcon.icon className={`h-10 w-10 ${courseIcon.tone}`} />

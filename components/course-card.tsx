@@ -27,7 +27,7 @@ export function CourseCard({
   const duration = formatDuration(durationSeconds);
   const started = progress > 0;
   const done = progress >= 100;
-  const { icon: TopicIcon, tint, tone } = getCourseIcon(title, tintIndex);
+  const { icon: TopicIcon, tint, tone, illustration } = getCourseIcon(title, tintIndex);
 
   return (
     <Link
@@ -47,6 +47,15 @@ export function CourseCard({
             alt=""
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
+        ) : illustration ? (
+          <div className="flex h-full w-full items-center justify-center p-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={illustration}
+              alt=""
+              className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
+            />
+          </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <TopicIcon className={`h-11 w-11 ${tone}`} />

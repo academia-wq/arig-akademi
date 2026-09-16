@@ -116,7 +116,15 @@ export default async function LessonPage({
               <div
                 className={`mt-6 flex h-40 items-center justify-center rounded-lg ${courseIcon.tint}`}
               >
-                <courseIcon.icon className={`h-14 w-14 ${courseIcon.tone}`} />
+                {courseIcon.illustration ? (
+                  <img
+                    src={courseIcon.illustration}
+                    alt=""
+                    className="h-full max-w-xs object-contain p-3"
+                  />
+                ) : (
+                  <courseIcon.icon className={`h-14 w-14 ${courseIcon.tone}`} />
+                )}
               </div>
             );
           })()

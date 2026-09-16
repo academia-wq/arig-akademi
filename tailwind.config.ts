@@ -8,17 +8,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#151417",
-        paper: "#FAF9F6",
+        ink: "#485353",
+        paper: "#FFFBF6",
         brand: {
-          50: "#FBF3EC",
-          100: "#F4DECB",
-          300: "#E4A672",
-          500: "#C9702F", // primary — warm ochre, nod to Mongolian felt/leather craft
-          700: "#8F4A18",
-          900: "#4A250C",
+          50: "#FFF1EC",
+          100: "#FFDDD0",
+          300: "#FFAD8C",
+          500: "#FF7F56", // primary — Ариг Академи coral
+          700: "#E35F37",
+          900: "#7A2F14",
         },
-        accent: "#2E6E5E", // deep juniper green
+        accent: "#2E6E5E", // deep juniper green — success/progress indicators
       },
       fontFamily: {
         display: ["var(--font-display)"],
