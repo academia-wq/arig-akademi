@@ -10,7 +10,7 @@ export function AppFooter() {
             <img src="/logo.png" alt="" className="h-[50px] w-[50px]" />
             <div>
               <p className="font-display text-lg font-semibold uppercase tracking-wide text-ink">
-                <span className="text-brand-500">Ариг</span> академи
+                Ариг <span className="text-brand-500">академи</span>
               </p>
               <p className="text-sm text-ink">Хөгжлөөр үйлчилнэ</p>
             </div>

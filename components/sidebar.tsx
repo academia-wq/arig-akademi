@@ -51,7 +51,7 @@ export function Sidebar({
           <img src="/logo.png" alt="" className="h-[50px] w-[50px] flex-shrink-0" />
           <div>
             <p className="font-display text-lg font-semibold uppercase tracking-wide text-paper">
-              <span className="text-brand-500">Ариг</span> академи
+              Ариг <span className="text-brand-500">академи</span>
             </p>
             <p className="text-sm text-paper">Хөгжлөөр үйлчилнэ</p>
           </div>
