@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function AppFooter() {
   return (
-    <footer className="border-t border-ink/10 bg-paper px-8 py-9">
+    <footer className="border-t border-ink/10 bg-paper py-9 pl-8 pr-8 lg:pr-[120px]">
       <div className="flex flex-col justify-between gap-8 md:flex-row">
         <div className="max-w-sm">
           <Link prefetch={false} href="/" className="focus-ring flex items-center gap-2.5">

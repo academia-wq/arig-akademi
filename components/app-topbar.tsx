@@ -107,7 +107,7 @@ export function AppTopBar({
   const hasResults = results.courses.length > 0 || results.lessons.length > 0;
 
   return (
-    <header className="relative z-20 flex h-[80px] items-center justify-between gap-3 border-b border-ink/10 bg-white px-4 sm:px-8">
+    <header className="relative z-20 flex h-[80px] items-center justify-between gap-3 border-b border-ink/10 bg-white px-4 sm:pl-8 sm:pr-8 lg:pr-[120px]">
       <button
         type="button"
         onClick={onMenuClick}
