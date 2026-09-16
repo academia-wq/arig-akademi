@@ -45,11 +45,14 @@ export function Sidebar({
           prefetch={false}
           href="/"
           onClick={onNavigate}
-          className="focus-ring-dark flex flex-col items-start gap-1"
+          className="focus-ring-dark flex items-center"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-full.svg" alt="Ариг Академи" className="h-auto w-[178px]" />
-          <p className="text-sm text-paper">Хөгжлөөр үйлчилнэ</p>
+          <img
+            src="/logo-full.svg"
+            alt="Ариг Академи — Хөгжлөөр үйлчилнэ"
+            className="h-auto w-[178px]"
+          />
         </Link>
         <button
           type="button"
