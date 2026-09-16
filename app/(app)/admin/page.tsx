@@ -2,10 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 import { formatDuration, initialsOf } from "@/lib/format";
-import { AdminTabs } from "@/components/admin-tabs";
+import { AdminStatTabs } from "@/components/admin-stat-tabs";
 import { AddEmployeeButton } from "@/components/add-employee-modal";
 import { AddCourseButton } from "@/components/add-course-modal";
-import { DownloadIcon, EditIcon, PlusIcon } from "@/components/icons";
+import { DownloadIcon, EditIcon } from "@/components/icons";
 
 export default async function AdminOverviewPage() {
   const supabase = createClient();
@@ -92,6 +92,23 @@ export default async function AdminOverviewPage() {
 
   const courseOptions = (courses || []).map((c) => ({ id: c.id, title: c.title }));
 
+  const courseById = new Map((courses || []).map((c) => [c.id, c]));
+  const certificateRows = (enrollments || [])
+    .filter((e) => {
+      const total = totalLessonsByCourse.get(e.course_id) || 0;
+      const completed = completedByUserCourse.get(`${e.user_id}:${e.course_id}`) || 0;
+      return total > 0 && completed >= total;
+    })
+    .map((e) => {
+      const person = profileById.get(e.user_id);
+      return {
+        id: `${e.user_id}-${e.course_id}`,
+        name: person?.full_name || emailById.get(e.user_id) || "Нэргүй хэрэглэгч",
+        courseTitle: courseById.get(e.course_id)?.title || "Сургалт",
+      };
+    })
+    .slice(0, 6);
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-brand-500 bg-paper p-5">
@@ -112,112 +129,15 @@ export default async function AdminOverviewPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-ink/15 bg-white p-5">
-          <p className="text-sm font-medium text-ink">Нийт ажилтан</p>
-          <p className="mt-2 text-[28px] leading-9 text-ink">{profiles?.length || 0}</p>
-        </div>
-        <Link
-          prefetch={false}
-          href="/admin/courses"
-          className="focus-ring rounded-2xl bg-brand-500 p-5 transition hover:bg-brand-700"
-        >
-          <p className="text-sm font-medium text-paper">Нийт сургалт</p>
-          <p className="mt-2 text-[28px] leading-9 text-paper">{courses?.length || 0}</p>
-        </Link>
-        <div className="rounded-2xl border border-ink/15 bg-white p-5">
-          <p className="text-sm font-medium text-ink">Гэрчилгээнүүд</p>
-          <p className="mt-2 text-[28px] leading-9 text-ink">{certificatesEarned}</p>
-        </div>
-      </div>
-
       <div className="mt-6">
-        <AdminTabs
+        <AdminStatTabs
           tabs={[
             {
-              label: "Тойм",
+              label: "Нийт ажилтан",
+              value: profiles?.length || 0,
               content: (
                 <div className="overflow-hidden rounded-2xl border border-ink/15 bg-white">
-                  <div className="p-6 pb-0">
-                    <p className="text-ink">Нийт сургалт</p>
-                  </div>
-                  <div className="mt-5 overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-brand-500 text-xs uppercase text-paper">
-                          <th className="px-4 py-3 font-medium">Сургалтын нэр</th>
-                          <th className="px-4 py-3 text-right font-medium">Нийт хичээл</th>
-                          <th className="px-4 py-3 text-right font-medium"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {coursePreview.map((c: any) => {
-                          const instructor = profileById.get(c.instructor_id);
-                          const duration = formatDuration(totalDurationByCourse.get(c.id) || 0);
-                          return (
-                            <tr key={c.id} className="border-b border-ink/10 last:border-0">
-                              <td className="px-4 py-4">
-                                <Link
-                                  prefetch={false}
-                                  href={`/admin/courses/${c.id}/edit`}
-                                  className="flex items-center gap-3 hover:text-brand-500"
-                                >
-                                  <span className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-ink/5">
-                                    {c.thumbnail_url && (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img
-                                        src={c.thumbnail_url}
-                                        alt=""
-                                        className="h-full w-full object-cover"
-                                      />
-                                    )}
-                                  </span>
-                                  <span>
-                                    <span className="block text-sm font-medium text-ink">
-                                      {c.title}
-                                    </span>
-                                    <span className="block text-xs text-ink/50">
-                                      {instructor?.full_name || "Багш тодорхойгүй"}
-                                      {duration ? ` · Нийт цаг | ${duration}` : ""}
-                                    </span>
-                                  </span>
-                                </Link>
-                              </td>
-                              <td className="px-4 py-4 text-right text-sm text-ink/50">
-                                {totalLessonsByCourse.get(c.id) || 0}
-                              </td>
-                              <td className="px-4 py-4 text-right">
-                                <Link
-                                  prefetch={false}
-                                  href={`/admin/courses/${c.id}/edit`}
-                                  aria-label="Засах"
-                                  className="focus-ring inline-flex text-ink/40 hover:text-brand-500"
-                                >
-                                  <EditIcon className="h-4 w-4" />
-                                </Link>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {coursePreview.length === 0 && (
-                          <tr>
-                            <td colSpan={3} className="px-4 py-8 text-center text-sm text-ink/50">
-                              Сургалт алга байна.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ),
-            },
-            {
-              label: "Ажилтан",
-              content: (
-                <div className="overflow-hidden rounded-2xl border border-ink/15 bg-white">
-                  <div className="flex items-center justify-between p-6 pb-0">
-                    <p className="text-ink">Нийт ажилтан</p>
+                  <div className="flex items-center justify-end p-6 pb-0">
                     <Link
                       prefetch={false}
                       href="/admin/students"
@@ -296,58 +216,125 @@ export default async function AdminOverviewPage() {
               ),
             },
             {
-              label: "Сургалт",
+              label: "Нийт сургалт",
+              value: courses?.length || 0,
+              content: (
+                <div className="overflow-hidden rounded-2xl border border-ink/15 bg-white">
+                  <div className="flex items-center justify-end p-6 pb-0">
+                    <Link
+                      prefetch={false}
+                      href="/admin/courses"
+                      className="focus-ring text-sm font-medium text-brand-500"
+                    >
+                      Бүгдийг харах
+                    </Link>
+                  </div>
+                  <div className="mt-5 overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-brand-500 text-xs uppercase text-paper">
+                          <th className="px-4 py-3 font-medium">Сургалтын нэр</th>
+                          <th className="px-4 py-3 text-center font-medium">Төлөв</th>
+                          <th className="px-4 py-3 text-center font-medium">Үнэ</th>
+                          <th className="px-4 py-3 text-right font-medium">Нийт хичээл</th>
+                          <th className="px-4 py-3 text-right font-medium"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {coursePreview.map((c: any) => {
+                          const instructor = profileById.get(c.instructor_id);
+                          const duration = formatDuration(totalDurationByCourse.get(c.id) || 0);
+                          return (
+                            <tr key={c.id} className="border-b border-ink/10 last:border-0">
+                              <td className="px-4 py-4">
+                                <Link
+                                  prefetch={false}
+                                  href={`/admin/courses/${c.id}/edit`}
+                                  className="flex items-center gap-3 hover:text-brand-500"
+                                >
+                                  <span className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-ink/5">
+                                    {c.thumbnail_url && (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img
+                                        src={c.thumbnail_url}
+                                        alt=""
+                                        className="h-full w-full object-cover"
+                                      />
+                                    )}
+                                  </span>
+                                  <span>
+                                    <span className="block text-sm font-medium text-ink">
+                                      {c.title}
+                                    </span>
+                                    <span className="block text-xs text-ink/50">
+                                      {instructor?.full_name || "Багш тодорхойгүй"}
+                                      {duration ? ` · Нийт цаг | ${duration}` : ""}
+                                    </span>
+                                  </span>
+                                </Link>
+                              </td>
+                              <td className="px-4 py-4 text-center">
+                                <span
+                                  className={
+                                    c.is_published
+                                      ? "rounded-sm bg-accent/20 px-2 py-0.5 text-xs text-emerald-700"
+                                      : "rounded-sm bg-ink/10 px-2 py-0.5 text-xs text-ink/50"
+                                  }
+                                >
+                                  {c.is_published ? "Нийтэлсэн" : "Ноорог"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 text-center text-sm text-ink/50">
+                                {c.price > 0 ? `${c.price}₮` : "Үнэгүй"}
+                              </td>
+                              <td className="px-4 py-4 text-right text-sm text-ink/50">
+                                {totalLessonsByCourse.get(c.id) || 0}
+                              </td>
+                              <td className="px-4 py-4 text-right">
+                                <Link
+                                  prefetch={false}
+                                  href={`/admin/courses/${c.id}/edit`}
+                                  aria-label="Засах"
+                                  className="focus-ring inline-flex text-ink/40 hover:text-brand-500"
+                                >
+                                  <EditIcon className="h-4 w-4" />
+                                </Link>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {coursePreview.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-8 text-center text-sm text-ink/50">
+                              Сургалт алга байна.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              label: "Гэрчилгээнүүд",
+              value: certificatesEarned,
               content: (
                 <div className="rounded-2xl border border-ink/15 bg-white p-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-ink">Нийт сургалт</p>
-                    <div className="flex items-center gap-3">
-                      <Link
-                        prefetch={false}
-                        href="/admin/courses"
-                        className="focus-ring text-sm font-medium text-brand-500"
-                      >
-                        Бүгдийг харах
-                      </Link>
-                      <Link
-                        prefetch={false}
-                        href="/admin/courses"
-                        className="focus-ring flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)] hover:bg-brand-700"
-                      >
-                        Сургалт нэмэх
-                        <PlusIcon className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {coursePreview.map((c) => (
-                      <Link
-                        prefetch={false}
-                        key={c.id}
-                        href={`/admin/courses/${c.id}/edit`}
-                        className="focus-ring flex flex-col gap-2 rounded-xl border border-ink/15 p-4 transition hover:border-brand-300"
-                      >
-                        <p className="font-medium text-ink">{c.title}</p>
-                        <div className="flex items-center justify-between text-sm">
-                          <span
-                            className={
-                              c.is_published
-                                ? "rounded-sm bg-accent/20 px-2 py-0.5 text-emerald-700"
-                                : "rounded-sm bg-ink/10 px-2 py-0.5 text-ink/50"
-                            }
-                          >
-                            {c.is_published ? "Нийтэлсэн" : "Ноорог"}
-                          </span>
-                          <span className="text-ink/50">
-                            {c.price > 0 ? `${c.price}₮` : "Үнэгүй"}
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                    {coursePreview.length === 0 && (
-                      <p className="text-sm text-ink/50">Сургалт алга байна.</p>
+                  <p className="text-ink">Сүүлд авсан гэрчилгээнүүд</p>
+                  <div className="mt-5 flex flex-col gap-3">
+                    {certificateRows.length === 0 && (
+                      <p className="text-sm text-ink/50">Одоогоор гэрчилгээ авсан хэрэглэгч алга байна.</p>
                     )}
+                    {certificateRows.map((row) => (
+                      <div
+                        key={row.id}
+                        className="flex items-center justify-between border-b border-ink/10 pb-2 text-sm last:border-0"
+                      >
+                        <p className="font-medium text-ink">{row.name}</p>
+                        <p className="flex-shrink-0 text-ink/50">{row.courseTitle}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ),
