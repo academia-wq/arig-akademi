@@ -89,7 +89,7 @@ export default async function HomePage() {
             <ArrowRightCircleIcon className="h-4 w-4" />
           </Link>
 
-          <div className="mt-10 flex flex-wrap gap-3">
+          <div className="mt-10 flex flex-wrap gap-0">
             {PATTERN_ICONS.map((icon) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
