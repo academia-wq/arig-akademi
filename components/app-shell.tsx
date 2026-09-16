@@ -46,7 +46,7 @@ export function AppShell({
           avatarUrl={avatarUrl}
           onMenuClick={() => setMobileNavOpen(true)}
         />
-        <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
+        <main className="flex-1 px-4 py-6 sm:py-8 sm:pl-8 sm:pr-8 lg:pr-[120px]">{children}</main>
         <AppFooter />
       </div>
     </div>
