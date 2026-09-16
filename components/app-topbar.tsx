@@ -124,7 +124,7 @@ export function AppTopBar({
           className="focus-ring flex w-full items-center gap-2 rounded-lg border border-ink/15 bg-paper px-4 py-2.5 text-left text-sm text-ink/50"
         >
           <SearchIcon className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">Search courses, topics, skills...</span>
+          <span className="truncate">Сургалт, сэдэв, ур чадвар хайх...</span>
         </button>
 
         {searchOpen && (
