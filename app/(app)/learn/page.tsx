@@ -4,7 +4,7 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { computeCourseProgress, mostCommonCategory } from "@/lib/course-progress";
 import { getCourseIcon } from "@/lib/course-icon";
 import { AdminTabs } from "@/components/admin-tabs";
-import { ArrowRightIcon } from "@/components/icons";
+import { ArrowRightIcon, BrandMarkIcon } from "@/components/icons";
 
 export default async function LearnCoursesPage() {
   const supabase = createClient();
@@ -52,13 +52,20 @@ export default async function LearnCoursesPage() {
   const doneCourses = coursesWithProgress.filter((c) => c.progress >= 100);
 
   const enrolledIds = courses.map((c: any) => c.id);
-  const { data: newlyAdded } = await supabase
+  const { data: newlyAddedCourses } = await supabase
     .from("courses")
     .select("id, title, slug, thumbnail_url")
     .eq("is_published", true)
     .not("id", "in", `(${enrolledIds.length ? enrolledIds.join(",") : "00000000-0000-0000-0000-000000000000"})`)
     .order("created_at", { ascending: false })
     .limit(3);
+
+  const newlyAdded = await Promise.all(
+    (newlyAddedCourses || []).map(async (course) => {
+      const { totalLessons } = await computeCourseProgress(supabase, user.id, course);
+      return { ...course, totalLessons };
+    })
+  );
 
   const featured =
     activeCourses.find((c) => c.progress > 0) || activeCourses[0] || doneCourses[0];
@@ -127,7 +134,7 @@ export default async function LearnCoursesPage() {
           <Link
             prefetch={false}
             href={`/learn/${course.slug}`}
-            className="focus-ring rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
+            className="focus-ring rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] hover:bg-brand-700"
           >
             {done ? "Дахин үзэх" : "Үргэлжлүүлэх"}
           </Link>
@@ -147,7 +154,7 @@ export default async function LearnCoursesPage() {
           <Link
             prefetch={false}
             href={`/learn/${featured.course.slug}`}
-            className="focus-ring flex flex-shrink-0 items-center gap-2 rounded-md bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
+            className="focus-ring flex flex-shrink-0 items-center gap-2 rounded-md bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] hover:bg-brand-700"
           >
             {featured.progress >= 100
               ? "Дахин үзэх"
@@ -205,7 +212,7 @@ export default async function LearnCoursesPage() {
         )}
       </div>
 
-      {newlyAdded && newlyAdded.length > 0 && (
+      {newlyAdded.length > 0 && (
         <div className="mt-8">
           <p className="text-ink">Шинээр нэмэгдсэн</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -214,25 +221,32 @@ export default async function LearnCoursesPage() {
                 prefetch={false}
                 key={course.id}
                 href={`/learn/${course.slug}`}
-                className="focus-ring group flex flex-col overflow-hidden rounded-xl bg-brand-500 p-5 text-white transition hover:bg-brand-700"
+                className="focus-ring group flex flex-col overflow-hidden rounded-2xl border border-brand-500 bg-paper transition hover:shadow-md"
               >
-                {course.thumbnail_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={course.thumbnail_url}
-                    alt=""
-                    className="mb-3 h-16 w-16 rounded-full object-cover"
-                  />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src="/logo.png" alt="" className="mb-3 h-16 w-16" />
-                )}
-                <p className="text-xs text-white/70">Ариг Академи</p>
-                <p className="mt-1 font-medium">{course.title}</p>
-                <p className="mt-4 flex items-center gap-1.5 text-sm font-medium">
-                  Дэлгэрэнгүй
-                  <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                </p>
+                <div className="h-24 flex-shrink-0 bg-brand-500" />
+                <div className="flex flex-1 flex-col px-5 pb-5">
+                  <div className="-mt-8 flex items-center gap-3">
+                    {course.thumbnail_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={course.thumbnail_url}
+                        alt=""
+                        className="h-16 w-16 flex-shrink-0 rounded-full object-cover ring-4 ring-paper"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-[#FEF8F1] ring-4 ring-paper">
+                        <BrandMarkIcon className="h-8 w-8 text-ink" />
+                      </div>
+                    )}
+                    <p className="mt-6 text-xs text-ink/40">Ариг Академи</p>
+                  </div>
+                  <p className="mt-3 font-medium text-ink">{course.title}</p>
+                  <p className="mt-1 text-xs text-ink/40">{course.totalLessons} хичээл</p>
+                  <p className="mt-4 flex items-center gap-1.5 text-sm font-medium text-brand-500">
+                    Дэлгэрэнгүй
+                    <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                  </p>
+                </div>
               </Link>
             ))}
           </div>
