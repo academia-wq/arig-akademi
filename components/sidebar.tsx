@@ -28,7 +28,7 @@ export function Sidebar({
     isStaff
       ? { href: "/admin", label: "Админ панель", icon: LayoutDashboardIcon }
       : { href: "/dashboard", label: "Хяналтын самбар", icon: LayoutDashboardIcon },
-    { href: "/learn", label: "Миний сургалт", icon: BookIcon },
+    { href: "/learn", label: "Миний сургалт", icon: BookIcon, iconClassName: "h-6 w-6 -m-0.5", strokeWidth: 2 },
     { href: "/certificates", label: "Гэрчилгээнүүд", icon: AwardIcon },
     { href: "/settings", label: "Профайл", icon: UserIcon },
   ];
@@ -83,7 +83,10 @@ export function Sidebar({
                 active ? "bg-brand-500 text-paper" : "text-paper hover:bg-white/5"
               )}
             >
-              <Icon className="h-5 w-5 flex-shrink-0" />
+              <Icon
+                className={clsx("flex-shrink-0", item.iconClassName || "h-5 w-5")}
+                {...(item.strokeWidth ? { strokeWidth: item.strokeWidth } : {})}
+              />
               {item.label}
             </Link>
           );

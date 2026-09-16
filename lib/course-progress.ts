@@ -52,3 +52,22 @@ export async function getLastCompletedDatesByCourse(
   }
   return result;
 }
+
+// Курсийн модулиуд өөр өөр ангилалтай байж болох тул хамгийн олон
+// модульд давтагдсан ангиллыг курсийн төлөөлөл болгон буцаана.
+export function mostCommonCategory(modules: { category: string | null }[] | undefined) {
+  const counts = new Map<string, number>();
+  for (const m of modules || []) {
+    if (!m.category) continue;
+    counts.set(m.category, (counts.get(m.category) || 0) + 1);
+  }
+  let best: string | null = null;
+  let bestCount = 0;
+  for (const [category, count] of counts) {
+    if (count > bestCount) {
+      best = category;
+      bestCount = count;
+    }
+  }
+  return best;
+}

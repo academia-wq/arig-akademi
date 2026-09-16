@@ -1,29 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
-import { computeCourseProgress, getLastCompletedDatesByCourse } from "@/lib/course-progress";
+import {
+  computeCourseProgress,
+  getLastCompletedDatesByCourse,
+  mostCommonCategory,
+} from "@/lib/course-progress";
 import { formatCompletedDate } from "@/lib/format";
 import { getCourseIcon } from "@/lib/course-icon";
 import { AwardIcon, ArrowRightIcon } from "@/components/icons";
-
-// Курсийн модулиуд өөр өөр ангилалтай байж болох тул хамгийн олон
-// модульд давтагдсан ангиллыг курсийн төлөөлөл болгон харуулна.
-function mostCommonCategory(modules: { category: string | null }[] | undefined) {
-  const counts = new Map<string, number>();
-  for (const m of modules || []) {
-    if (!m.category) continue;
-    counts.set(m.category, (counts.get(m.category) || 0) + 1);
-  }
-  let best: string | null = null;
-  let bestCount = 0;
-  for (const [category, count] of counts) {
-    if (count > bestCount) {
-      best = category;
-      bestCount = count;
-    }
-  }
-  return best;
-}
 
 export default async function CertificatesPage() {
   const supabase = createClient();
