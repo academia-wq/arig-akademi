@@ -17,6 +17,7 @@ export type Database = {
           full_name: string | null;
           avatar_url: string | null;
           position: string | null;
+          department: string | null;
           role: "student" | "instructor" | "admin";
           created_at: string;
         };
@@ -80,6 +81,7 @@ export type Database = {
           mux_playback_id: string | null;
           mux_asset_id: string | null;
           image_url: string | null;
+          material_urls: string[] | null;
           duration_seconds: number | null;
           position: number;
           is_free_preview: boolean;

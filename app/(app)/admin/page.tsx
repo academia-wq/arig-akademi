@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 import { formatDuration, initialsOf } from "@/lib/format";
 import { AdminTabs } from "@/components/admin-tabs";
+import { AddEmployeeButton } from "@/components/add-employee-modal";
+import { AddCourseButton } from "@/components/add-course-modal";
 import { DownloadIcon, EditIcon, PlusIcon } from "@/components/icons";
 
 export default async function AdminOverviewPage() {
@@ -22,7 +24,7 @@ export default async function AdminOverviewPage() {
 
   const { data: profiles } = await admin
     .from("profiles")
-    .select("id, full_name, role, position, avatar_url, created_at")
+    .select("id, full_name, role, position, department, avatar_url, created_at")
     .order("created_at", { ascending: false });
 
   const { data: courses } = await admin
@@ -80,6 +82,16 @@ export default async function AdminOverviewPage() {
 
   const coursePreview = (courses || []).slice(0, 6);
 
+  const pendingProfiles = (profiles || [])
+    .filter((p) => !p.position)
+    .map((p) => ({
+      id: p.id,
+      full_name: p.full_name,
+      email: emailById.get(p.id) || "",
+    }));
+
+  const courseOptions = (courses || []).map((c) => ({ id: c.id, title: c.title }));
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-brand-500 bg-paper p-5">
@@ -87,13 +99,17 @@ export default async function AdminOverviewPage() {
           <p className="text-base text-brand-500">Удирдлагын самбар</p>
           <p className="mt-1 text-ink">Админ панель</p>
         </div>
-        <button
-          type="button"
-          className="focus-ring flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)] hover:bg-brand-700"
-        >
-          Тайлан
-          <DownloadIcon className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <AddEmployeeButton pendingProfiles={pendingProfiles} />
+          <AddCourseButton courses={courseOptions} />
+          <button
+            type="button"
+            className="focus-ring flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)] hover:bg-brand-700"
+          >
+            Тайлан
+            <DownloadIcon className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -217,7 +233,8 @@ export default async function AdminOverviewPage() {
                         <th className="px-4 py-3 font-medium">Ажилтны нэр</th>
                         <th className="px-4 py-3 text-center font-medium">Имэйл</th>
                         <th className="px-4 py-3 text-center font-medium">Албан тушаал</th>
-                        <th className="px-4 py-3 text-right font-medium">Эрх</th>
+                        <th className="px-4 py-3 text-center font-medium">Хэлтэс</th>
+                        <th className="px-4 py-3 text-right font-medium"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -227,9 +244,9 @@ export default async function AdminOverviewPage() {
                             <Link
                               prefetch={false}
                               href={`/admin/students/${p.id}`}
-                              className="focus-ring flex items-center gap-3 hover:text-brand-500"
+                              className="flex items-center gap-3 hover:text-brand-500"
                             >
-                              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-brand-500 bg-brand-50 font-display text-xs font-semibold text-brand-700">
+                              <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-brand-50 font-display text-sm font-semibold text-brand-700">
                                 {p.avatar_url ? (
                                   // eslint-disable-next-line @next/next/no-img-element
                                   <img
@@ -250,6 +267,9 @@ export default async function AdminOverviewPage() {
                           <td className="px-4 py-4 text-center text-sm text-ink/50">
                             {p.position || "—"}
                           </td>
+                          <td className="px-4 py-4 text-center text-sm text-ink/50">
+                            {p.department || "—"}
+                          </td>
                           <td className="px-4 py-4 text-right">
                             <Link
                               prefetch={false}
@@ -264,7 +284,7 @@ export default async function AdminOverviewPage() {
                       ))}
                       {employeePreview.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-sm text-ink/50">
+                          <td colSpan={5} className="px-4 py-8 text-center text-sm text-ink/50">
                             Ажилтан алга байна.
                           </td>
                         </tr>
