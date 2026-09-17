@@ -66,7 +66,11 @@ export default async function CertificatesPage() {
         <div className="rounded-2xl border border-ink/15 bg-white p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-ink">Нийт гэрчилгээ</p>
-            <span className="h-2.5 w-2.5 rounded-full bg-brand-500" />
+            <span
+              className={`h-2.5 w-2.5 rounded-full ${
+                completedCourses.length > 0 ? "bg-brand-500" : "bg-ink/20"
+              }`}
+            />
           </div>
           <p className="mt-1.5 text-[28px] leading-9 text-ink">{completedCourses.length}</p>
           <p className="text-xs text-ink/40">Амжилттай дуусгасан</p>
@@ -74,7 +78,11 @@ export default async function CertificatesPage() {
         <div className="rounded-2xl border border-ink/15 bg-white p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-ink">Энэ сард авсан</p>
-            <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+            <span
+              className={`h-2.5 w-2.5 rounded-full ${
+                earnedThisMonth > 0 ? "bg-brand-500" : "bg-ink/20"
+              }`}
+            />
           </div>
           <p className="mt-1.5 text-[28px] leading-9 text-ink">{earnedThisMonth}</p>
           <p className="text-xs text-ink/40">Шинэ амжилтууд</p>
@@ -82,7 +90,11 @@ export default async function CertificatesPage() {
         <div className="rounded-2xl border border-ink/15 bg-white p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-ink">Явагдаж буй</p>
-            <span className="h-2.5 w-2.5 rounded-full bg-ink/30" />
+            <span
+              className={`h-2.5 w-2.5 rounded-full ${
+                inProgressCourses.length > 0 ? "bg-brand-500" : "bg-ink/20"
+              }`}
+            />
           </div>
           <p className="mt-1.5 text-[28px] leading-9 text-ink">{inProgressCourses.length}</p>
           <p className="text-xs text-ink/40">Дуусгаагүй сургалт</p>
