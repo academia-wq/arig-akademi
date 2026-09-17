@@ -81,7 +81,7 @@ export function LessonCurriculumList({
                   )}
                 >
                   {done
-                    ? `${completed} / ${total} Дуусан`
+                    ? `${completed} / ${total} Дууссан`
                     : inProgress
                     ? `Явагдаж байна (${completed}/${total})`
                     : `${total} хичээл`}

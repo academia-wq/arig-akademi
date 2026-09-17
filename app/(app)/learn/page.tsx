@@ -195,7 +195,7 @@ export default async function LearnCoursesPage() {
                 ),
               },
               {
-                label: "Дуусан",
+                label: "Дууссан",
                 content: (
                   <div className="flex flex-col gap-4">
                     {doneCourses.length === 0 && (
