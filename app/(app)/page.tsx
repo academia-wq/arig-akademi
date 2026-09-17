@@ -115,10 +115,10 @@ export default async function HomePage() {
       <div className="mt-12 grid grid-cols-3 divide-x divide-paper rounded-2xl bg-ink px-6 py-8">
         {stats.map((stat) => (
           <div key={stat.label} className="text-center">
-            <p className="font-display text-3xl font-bold tracking-wide text-paper">
+            <p className="font-display text-4xl font-bold tracking-wide text-paper">
               {stat.value}
             </p>
-            <p className="mt-1.5 text-ink/40 sm:text-base">{stat.label}</p>
+            <p className="mt-1.5 text-base text-ink/40 sm:text-xl">{stat.label}</p>
           </div>
         ))}
       </div>
