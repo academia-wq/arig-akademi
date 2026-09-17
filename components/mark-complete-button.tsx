@@ -6,9 +6,13 @@ import { useRouter } from "next/navigation";
 export function MarkCompleteButton({
   lessonId,
   initiallyCompleted,
+  label = "Дуусгах",
+  className,
 }: {
   lessonId: string;
   initiallyCompleted: boolean;
+  label?: string;
+  className?: string;
 }) {
   const router = useRouter();
   const [completed, setCompleted] = useState(initiallyCompleted);
@@ -30,16 +34,16 @@ export function MarkCompleteButton({
   }
 
   return (
-    <div className="mt-6 flex items-center gap-3">
+    <div className={className || "mt-6 flex items-center gap-3"}>
       {completed ? (
         <span className="text-sm font-medium text-accent">✓ Энэ хичээлийг дуусгасан</span>
       ) : (
         <button
           onClick={handleClick}
           disabled={saving}
-          className="focus-ring rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+          className="focus-ring w-full rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700 disabled:opacity-50"
         >
-          {saving ? "Хадгалж байна..." : "Дуусгах"}
+          {saving ? "Хадгалж байна..." : label}
         </button>
       )}
     </div>
