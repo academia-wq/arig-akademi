@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient, getUser } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 import { computeCourseProgress, mostCommonCategory } from "@/lib/course-progress";
 import { getCourseIcon } from "@/lib/course-icon";
+import { initialsOf } from "@/lib/format";
 import { AdminTabs } from "@/components/admin-tabs";
-import { ArrowRightIcon, BrandMarkIcon } from "@/components/icons";
+import { ArrowRightIcon } from "@/components/icons";
 
 export default async function LearnCoursesPage() {
   const supabase = createClient();
@@ -48,19 +49,34 @@ export default async function LearnCoursesPage() {
   const activeCourses = coursesWithProgress.filter((c) => c.progress < 100);
   const doneCourses = coursesWithProgress.filter((c) => c.progress >= 100);
 
-  const enrolledIds = courses.map((c: any) => c.id);
   const { data: newlyAddedCourses } = await supabase
     .from("courses")
-    .select("id, title, slug, thumbnail_url")
+    .select("id, title, slug, thumbnail_url, instructor_id")
     .eq("is_published", true)
-    .not("id", "in", `(${enrolledIds.length ? enrolledIds.join(",") : "00000000-0000-0000-0000-000000000000"})`)
     .order("created_at", { ascending: false })
     .limit(3);
+
+  // Сурагч бусдын profile-г RLS-ээр харж чадахгүй тул зөвхөн багшийн нэр,
+  // зургийг (full_name, avatar_url) service role-оор нарийн сонгож авна.
+  const instructorIds = Array.from(
+    new Set((newlyAddedCourses || []).map((c) => c.instructor_id).filter(Boolean))
+  ) as string[];
+  const { data: instructorRows } = instructorIds.length
+    ? await createServiceRoleClient()
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", instructorIds)
+    : { data: [] as { id: string; full_name: string | null; avatar_url: string | null }[] };
+  const instructorById = new Map((instructorRows || []).map((p) => [p.id, p]));
 
   const newlyAdded = await Promise.all(
     (newlyAddedCourses || []).map(async (course) => {
       const { totalLessons } = await computeCourseProgress(supabase, user.id, course);
-      return { ...course, totalLessons };
+      return {
+        ...course,
+        totalLessons,
+        instructor: course.instructor_id ? instructorById.get(course.instructor_id) : undefined,
+      };
     })
   );
 
@@ -223,27 +239,40 @@ export default async function LearnCoursesPage() {
                 prefetch={false}
                 key={course.id}
                 href={`/learn/${course.slug}`}
-                className="focus-ring group flex flex-col overflow-hidden rounded-2xl border border-brand-500 bg-paper transition hover:shadow-md"
+                className="focus-ring group flex flex-col overflow-hidden rounded-2xl border border-[#F87B4F] bg-paper transition hover:shadow-md"
               >
-                <div className="h-24 flex-shrink-0 bg-brand-500" />
+                <div className="relative flex h-[140px] flex-shrink-0 items-center justify-center overflow-hidden bg-brand-500">
+                  {course.thumbnail_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={course.thumbnail_url}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-multiply"
+                    />
+                  )}
+                  <p className="relative px-6 text-center text-lg font-semibold text-paper">
+                    {course.title}
+                  </p>
+                </div>
                 <div className="flex flex-1 flex-col px-5 pb-5">
                   <div className="-mt-8 flex items-center gap-3">
-                    {course.thumbnail_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={course.thumbnail_url}
-                        alt=""
-                        className="h-16 w-16 flex-shrink-0 rounded-full object-cover ring-4 ring-paper"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-[#FEF8F1] ring-4 ring-paper">
-                        <BrandMarkIcon className="h-8 w-8 text-ink" />
-                      </div>
-                    )}
-                    <p className="mt-6 text-xs text-ink/40">Ариг Академи</p>
+                    <span className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#FEF8F1] font-display text-sm font-semibold text-brand-700 ring-4 ring-paper">
+                      {course.instructor?.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={course.instructor.avatar_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        initialsOf(course.instructor?.full_name ?? null, null)
+                      )}
+                    </span>
+                    <p className="mt-8 text-xs text-[#8A9DA2]">
+                      {course.instructor?.full_name || "Ариг Академи"}
+                    </p>
                   </div>
-                  <p className="mt-3 font-medium text-ink">{course.title}</p>
-                  <p className="mt-1 text-xs text-ink/40">{course.totalLessons} хичээл</p>
+                  <p className="mt-3 text-xs text-ink/40">{course.totalLessons} хичээл</p>
                   <p className="mt-4 flex items-center gap-1.5 text-sm font-medium text-brand-500">
                     Дэлгэрэнгүй
                     <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
