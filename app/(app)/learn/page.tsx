@@ -255,7 +255,7 @@ export default async function LearnCoursesPage() {
                   </p>
                 </div>
                 <div className="flex flex-1 flex-col px-5 pb-5">
-                  <div className="-mt-8 flex items-center gap-3">
+                  <div className="relative z-10 -mt-8 flex items-center gap-3">
                     <span className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#FEF8F1] font-display text-sm font-semibold text-brand-700 ring-4 ring-paper">
                       {course.instructor?.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
