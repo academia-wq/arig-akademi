@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMarkIcon } from "@/components/icons";
 
 export function AppFooter() {
   return (
@@ -6,8 +7,9 @@ export function AppFooter() {
       <div className="flex flex-col justify-between gap-8 md:flex-row">
         <div className="max-w-sm">
           <Link prefetch={false} href="/" className="focus-ring flex items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" className="h-[50px] w-[50px]" />
+            <span className="flex h-[50px] w-[50px] flex-shrink-0 items-center justify-center rounded-full bg-ink">
+              <BrandMarkIcon className="h-[30px] w-[30px] text-paper" />
+            </span>
             <div>
               <p className="font-display text-lg font-semibold uppercase tracking-wide text-ink">
                 Ариг <span className="text-brand-500">академи</span>
