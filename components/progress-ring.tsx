@@ -1,5 +1,5 @@
-export function ProgressRing({ percent, size = 96 }: { percent: number; size?: number }) {
-  const stroke = 8;
+export function ProgressRing({ percent, size = 104 }: { percent: number; size?: number }) {
+  const stroke = 10;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (Math.min(100, Math.max(0, percent)) / 100) * circumference;
@@ -14,7 +14,7 @@ export function ProgressRing({ percent, size = 96 }: { percent: number; size?: n
           fill="none"
           stroke="currentColor"
           strokeWidth={stroke}
-          className="text-ink/10"
+          className="text-[#E3E9F3]"
         />
         <circle
           cx={size / 2}

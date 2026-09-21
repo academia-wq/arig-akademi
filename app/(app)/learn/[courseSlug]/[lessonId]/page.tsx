@@ -2,10 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { LessonPlayer } from "@/components/lesson-player";
-import { MarkCompleteButton } from "@/components/mark-complete-button";
-import { LessonTabs } from "@/components/lesson-tabs";
+import { CompleteModuleButton } from "@/components/complete-module-button";
 import { LessonCurriculumList } from "@/components/lesson-curriculum-list";
 import { ProgressRing } from "@/components/progress-ring";
+import { ChevronRightIcon } from "@/components/icons";
 import { isModuleVisible } from "@/lib/module-visibility";
 import { getCourseIcon } from "@/lib/course-icon";
 import { formatDuration } from "@/lib/format";
@@ -52,6 +52,9 @@ export default async function LessonPage({
   const currentIndex = allLessons.findIndex((l: any) => l.id === params.lessonId);
   const prevLesson = allLessons[currentIndex - 1];
   const nextLesson = allLessons[currentIndex + 1];
+  const currentModule = modules.find((m: any) =>
+    m.lessons.some((l: any) => l.id === params.lessonId)
+  );
 
   const progressByLesson = new Map((progressRows || []).map((p) => [p.lesson_id, p]));
   const currentProgress = progressByLesson.get(currentLesson.id);
@@ -67,128 +70,105 @@ export default async function LessonPage({
   const totalDuration = formatDuration(
     allLessons.reduce((sum: number, l: any) => sum + (l.duration_seconds || 0), 0)
   );
+  const moduleCompleted =
+    currentModule.lessons.length > 0 &&
+    currentModule.lessons.every((l: any) => completedSet.has(l.id));
 
-  const materials = allLessons.flatMap((l: any) =>
-    (l.material_urls || []).map((url: string) => ({ lessonTitle: l.title, url }))
-  );
+  const materials: string[] = currentLesson.material_urls || [];
+  const description = currentLesson.content_text || course.description;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
       <main className="min-w-0">
-        <div className="flex items-center gap-1.5 text-sm text-ink/50">
+        <div className="flex items-center gap-2 text-sm text-ink/50">
           <Link prefetch={false} href="/learn" className="focus-ring hover:text-brand-500">
             Миний сургалт
           </Link>
-          <span>/</span>
+          <ChevronRightIcon className="h-3.5 w-3.5 flex-shrink-0" />
           <Link
             prefetch={false}
             href={`/learn/${course.slug}`}
-            className="focus-ring hover:text-brand-500"
+            className="focus-ring truncate text-ink hover:text-brand-500"
           >
             {course.title}
           </Link>
         </div>
 
-        <h1 className="mt-3 font-display text-2xl font-semibold text-ink">
-          {currentLesson.title}
-        </h1>
-
-        {currentLesson.mux_playback_id ? (
-          <div className="mt-6">
+        <div className="mt-5">
+          {currentLesson.mux_playback_id ? (
             <LessonPlayer
               lessonId={currentLesson.id}
               playbackId={currentLesson.mux_playback_id}
               startTime={currentProgress?.last_position_seconds || 0}
               initiallyCompleted={currentProgress?.is_completed || false}
             />
-          </div>
-        ) : currentLesson.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={currentLesson.image_url}
-            alt={currentLesson.title}
-            className="mt-6 max-w-full rounded-lg border border-ink/10"
-          />
-        ) : (
-          (() => {
-            const courseIcon = getCourseIcon(course.title);
-            return (
-              <div
-                className={`mt-6 flex h-40 items-center justify-center rounded-lg ${courseIcon.tint}`}
-              >
-                {courseIcon.illustration ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={courseIcon.illustration}
-                    alt=""
-                    className="h-full max-w-xs object-contain p-3"
-                  />
-                ) : (
-                  <courseIcon.icon className={`h-14 w-14 ${courseIcon.tone}`} />
-                )}
-              </div>
-            );
-          })()
-        )}
-
-        {course.description && (
-          <p className="mt-6 text-sm text-ink/60">{course.description}</p>
-        )}
-
-        <div className="mt-8">
-          <LessonTabs
-            tabs={[
-              {
-                label: "Модулиуд",
-                content: (
-                  <LessonCurriculumList
-                    courseSlug={course.slug}
-                    modules={modules}
-                    currentLessonId={currentLesson.id}
-                    completedLessonIds={completedLessonIds}
-                  />
-                ),
-              },
-              {
-                label: "Тойм",
-                content: currentLesson.content_text ? (
-                  <article className="prose prose-neutral max-w-none whitespace-pre-line text-sm text-ink/80">
-                    {currentLesson.content_text}
-                  </article>
-                ) : (
-                  <p className="text-sm text-ink/50">Энэ хичээлд тойм мэдээлэл алга байна.</p>
-                ),
-              },
-              {
-                label: "Нөөцүүд",
-                content:
-                  materials.length > 0 ? (
-                    <ul className="flex flex-col gap-2">
-                      {materials.map((m: { lessonTitle: string; url: string }) => (
-                        <li key={m.url}>
-                          <a
-                            href={m.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="focus-ring flex items-center gap-2 text-sm text-brand-500 hover:underline"
-                          >
-                            {decodeURIComponent(m.url.split("/").pop() || m.url)}
-                            <span className="text-ink/40">— {m.lessonTitle}</span>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
+          ) : currentLesson.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={currentLesson.image_url}
+              alt={currentLesson.title}
+              className="aspect-video w-full rounded-xl border border-ink/10 object-cover"
+            />
+          ) : (
+            (() => {
+              const courseIcon = getCourseIcon(course.title);
+              return (
+                <div
+                  className={`flex aspect-video w-full items-center justify-center rounded-xl ${courseIcon.tint}`}
+                >
+                  {courseIcon.illustration ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={courseIcon.illustration}
+                      alt=""
+                      className="h-full max-h-[70%] object-contain"
+                    />
                   ) : (
-                    <p className="text-sm text-ink/50">Одоогоор материал хавсаргаагүй байна.</p>
-                  ),
-              },
-              {
-                label: "Хэлэлцүүлэг",
-                content: (
-                  <p className="text-sm text-ink/50">Энэ хэсэг тун удахгүй нэмэгдэнэ.</p>
-                ),
-              },
-            ]}
+                    <courseIcon.icon className={`h-16 w-16 ${courseIcon.tone}`} />
+                  )}
+                </div>
+              );
+            })()
+          )}
+        </div>
+
+        <h1 className="mt-6 font-display text-xl font-semibold text-ink">
+          {currentLesson.title}
+        </h1>
+
+        {description && (
+          <p className="mt-3 whitespace-pre-line text-sm text-ink/70">{description}</p>
+        )}
+
+        {materials.length > 0 && (
+          <ul className="mt-4 flex flex-col gap-1.5">
+            {materials.map((url) => (
+              <li key={url}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="focus-ring text-sm text-brand-500 hover:underline"
+                >
+                  {decodeURIComponent(url.split("/").pop() || url)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="mt-6 border-b border-ink/10">
+          <span className="-mb-px inline-block border-b-2 border-brand-500 py-3 text-sm font-medium text-brand-500">
+            Модулиуд
+          </span>
+        </div>
+
+        <div className="mt-5">
+          <LessonCurriculumList
+            courseSlug={course.slug}
+            modules={modules}
+            currentLessonId={currentLesson.id}
+            completedLessonIds={completedLessonIds}
           />
         </div>
       </main>
@@ -199,21 +179,14 @@ export default async function LessonPage({
           <div className="mt-4 flex items-center justify-center">
             <ProgressRing percent={percent} />
           </div>
-          {!currentProgress?.is_completed && (
-            <p className="mt-4 text-center text-xs text-ink/50">
-              {nextLesson
-                ? `Дараагийн: ${nextLesson.title}`
-                : "Энэ бол сүүлийн хичээл"}
-            </p>
-          )}
-          {!currentLesson.mux_playback_id && (
-            <MarkCompleteButton
-              lessonId={currentLesson.id}
-              initiallyCompleted={currentProgress?.is_completed || false}
-              label="Хичээлийг дуусгах"
-              className="mt-4"
-            />
-          )}
+          <p className="mt-4 text-xs text-ink/50">
+            {nextLesson ? `Дараагийн: ${nextLesson.title}` : "Энэ бол сүүлийн хичээл"}
+          </p>
+          <CompleteModuleButton
+            moduleId={currentModule.id}
+            courseSlug={course.slug}
+            initiallyCompleted={moduleCompleted}
+          />
         </div>
 
         <div className="rounded-2xl border border-ink/15 bg-white p-5">
@@ -227,7 +200,7 @@ export default async function LessonPage({
             )}
             <div className="flex items-center justify-between">
               <span className="text-ink/50">Хичээлүүд</span>
-              <span className="font-medium text-ink">{totalLessons} хичээл</span>
+              <span className="font-medium text-ink">{totalLessons} Хичээл</span>
             </div>
           </div>
         </div>
@@ -237,7 +210,7 @@ export default async function LessonPage({
             <Link
               prefetch={false}
               href={`/learn/${course.slug}/${prevLesson.id}`}
-              className="focus-ring flex-1 rounded-md border border-ink/15 px-4 py-2.5 text-center text-sm font-medium text-ink transition hover:border-ink/30"
+              className="focus-ring flex-1 rounded-md border border-[#8A9DA2] px-4 py-2.5 text-center text-sm font-medium text-[#8A9DA2] transition hover:border-ink hover:text-ink"
             >
               Өмнөх
             </Link>

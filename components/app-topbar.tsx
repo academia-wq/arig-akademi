@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { SearchIcon, BellIcon, MenuIcon } from "@/components/icons";
 import { SignOutButton } from "@/components/sign-out-button";
 import { initialsOf } from "@/lib/format";
@@ -19,6 +19,14 @@ type SearchResults = {
 
 const EMPTY_RESULTS: SearchResults = { courses: [], lessons: [] };
 
+const PAGE_TITLES: { prefix: string; title: string }[] = [
+  { prefix: "/admin", title: "Админ панель" },
+  { prefix: "/learn", title: "Миний сургалт" },
+  { prefix: "/dashboard", title: "Хяналтын самбар" },
+  { prefix: "/certificates", title: "Гэрчилгээнүүд" },
+  { prefix: "/settings", title: "Профайл" },
+];
+
 export function AppTopBar({
   fullName,
   email,
@@ -33,6 +41,8 @@ export function AppTopBar({
   onMenuClick: () => void;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const pageTitle = PAGE_TITLES.find((t) => pathname?.startsWith(t.prefix))?.title;
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -117,6 +127,10 @@ export function AppTopBar({
         <MenuIcon className="h-6 w-6" />
       </button>
 
+      <div className="flex min-w-0 flex-1 items-center gap-8">
+      {pageTitle && (
+        <p className="hidden flex-shrink-0 text-base text-ink md:block">{pageTitle}</p>
+      )}
       <div className="relative min-w-0 max-w-[320px] flex-1" ref={searchRef}>
         <button
           type="button"
@@ -196,6 +210,7 @@ export function AppTopBar({
             </div>
           </div>
         )}
+      </div>
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">

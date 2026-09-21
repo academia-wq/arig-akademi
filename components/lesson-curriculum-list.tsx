@@ -61,7 +61,10 @@ export function LessonCurriculumList({
             <button
               type="button"
               onClick={() => toggle(mod.id)}
-              className="focus-ring flex w-full items-center justify-between gap-3 bg-white px-4 py-3.5 text-left hover:bg-ink/[0.02]"
+              className={clsx(
+                "focus-ring flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left",
+                done ? "bg-[#F1F4F8]" : inProgress ? "bg-[#EEF4FC]" : "bg-white"
+              )}
             >
               <span className="flex items-center gap-2.5">
                 {done ? (
