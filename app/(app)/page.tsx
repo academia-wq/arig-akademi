@@ -118,7 +118,7 @@ export default async function HomePage() {
             <p className="font-display text-4xl font-bold tracking-wide text-paper">
               {stat.value}
             </p>
-            <p className="mt-1.5 text-base text-ink/40 sm:text-xl">{stat.label}</p>
+            <p className="mt-1.5 text-base text-paper sm:text-xl">{stat.label}</p>
           </div>
         ))}
       </div>
