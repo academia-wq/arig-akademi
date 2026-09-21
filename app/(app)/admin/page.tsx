@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
-import { formatDuration, initialsOf } from "@/lib/format";
-import { AdminStatTabs } from "@/components/admin-stat-tabs";
+import { formatDuration, formatRelativeTime } from "@/lib/format";
+import { AdminTabs } from "@/components/admin-tabs";
+import { AdminEmployeeList } from "@/components/admin-employee-list";
 import { AddEmployeeButton } from "@/components/add-employee-modal";
 import { AddCourseButton } from "@/components/add-course-modal";
-import { DownloadIcon, EditIcon } from "@/components/icons";
+import { AwardIcon, BookIcon, DownloadIcon, EditIcon, UsersIcon } from "@/components/icons";
 
 export default async function AdminOverviewPage() {
   const supabase = createClient();
@@ -39,7 +40,7 @@ export default async function AdminOverviewPage() {
       .select("id, title, is_published, price, thumbnail_url, instructor_id, created_at")
       .order("created_at", { ascending: false }),
     admin.auth.admin.listUsers({ perPage: 1000 }),
-    admin.from("enrollments").select("user_id, course_id"),
+    admin.from("enrollments").select("user_id, course_id, enrolled_at"),
     admin.from("lessons").select("id, duration_seconds, modules!inner(course_id)"),
     admin.from("lesson_progress").select("user_id, lesson_id").eq("is_completed", true),
   ]);
@@ -73,9 +74,13 @@ export default async function AdminOverviewPage() {
     if (total > 0 && completed >= total) certificatesEarned++;
   }
 
-  const employeePreview = (profiles || []).slice(0, 6).map((p) => ({
-    ...p,
+  const employeeList = (profiles || []).map((p) => ({
+    id: p.id,
+    full_name: p.full_name,
     email: emailById.get(p.id) || "",
+    position: p.position,
+    department: p.department,
+    avatar_url: p.avatar_url,
   }));
 
   const coursePreview = (courses || []).slice(0, 6);
@@ -91,21 +96,25 @@ export default async function AdminOverviewPage() {
   const courseOptions = (courses || []).map((c) => ({ id: c.id, title: c.title }));
 
   const courseById = new Map((courses || []).map((c) => [c.id, c]));
-  const certificateRows = (enrollments || [])
-    .filter((e) => {
-      const total = totalLessonsByCourse.get(e.course_id) || 0;
-      const completed = completedByUserCourse.get(`${e.user_id}:${e.course_id}`) || 0;
-      return total > 0 && completed >= total;
-    })
-    .map((e) => {
-      const person = profileById.get(e.user_id);
-      return {
-        id: `${e.user_id}-${e.course_id}`,
-        name: person?.full_name || emailById.get(e.user_id) || "Нэргүй хэрэглэгч",
-        courseTitle: courseById.get(e.course_id)?.title || "Сургалт",
-      };
-    })
-    .slice(0, 6);
+  const nameOf = (userId: string) =>
+    profileById.get(userId)?.full_name || emailById.get(userId) || "Нэргүй хэрэглэгч";
+
+  const recentActivity = [
+    ...(profiles || []).map((p) => ({
+      id: `p-${p.id}`,
+      at: p.created_at,
+      text: `${nameOf(p.id)} шинэ ажилтнаар нэмэгдлээ`,
+    })),
+    ...(enrollments || []).map((e) => ({
+      id: `e-${e.user_id}-${e.course_id}`,
+      at: e.enrolled_at,
+      text: `${nameOf(e.user_id)} "${courseById.get(e.course_id)?.title || "сургалт"}" сургалтад элслээ`,
+    })),
+  ]
+    .filter((e) => e.at)
+    .sort((a, b) => (b.at as string).localeCompare(a.at as string))
+    .slice(0, 5)
+    .map((e) => ({ id: e.id, text: e.text, time: formatRelativeTime(e.at as string) }));
 
   return (
     <div>
@@ -127,98 +136,63 @@ export default async function AdminOverviewPage() {
         </div>
       </div>
 
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {[
+          { label: "Нийт ажилтан", value: profiles?.length || 0, icon: UsersIcon },
+          { label: "Нийт сургалт", value: courses?.length || 0, icon: BookIcon },
+          { label: "Гэрчилгээнүүд", value: certificatesEarned, icon: AwardIcon },
+        ].map(({ label, value, icon: Icon }) => (
+          <div
+            key={label}
+            className="relative flex items-center gap-[18px] rounded-2xl border border-[#D9D9D9] bg-white px-6 py-[28px]"
+          >
+            <span className="flex h-[47px] w-[47px] flex-shrink-0 items-center justify-center border border-brand-500 text-brand-500">
+              <Icon className="h-6 w-6" />
+            </span>
+            <div>
+              <p className="text-sm font-medium text-ink">{label}</p>
+              <p className="mt-1 text-[28px] leading-9 text-ink">{value}</p>
+            </div>
+            <span className="absolute right-5 top-[22px] h-2.5 w-2.5 rounded-full bg-brand-500" />
+          </div>
+        ))}
+      </div>
+
       <div className="mt-6">
-        <AdminStatTabs
+        <AdminTabs
           tabs={[
             {
-              label: "Нийт ажилтан",
-              value: profiles?.length || 0,
+              label: "Тойм",
               content: (
-                <div className="overflow-hidden rounded-2xl border border-ink/15 bg-white">
-                  <div className="flex items-center justify-end p-6 pb-0">
-                    <Link
-                      prefetch={false}
-                      href="/admin/students"
-                      className="focus-ring text-sm font-medium text-brand-500"
-                    >
-                      Бүгдийг харах
-                    </Link>
-                  </div>
-                  <div className="mt-5 overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-brand-500 text-xs uppercase text-paper">
-                        <th className="px-4 py-3 font-medium">Ажилтны нэр</th>
-                        <th className="px-4 py-3 text-center font-medium">Имэйл</th>
-                        <th className="px-4 py-3 text-center font-medium">Албан тушаал</th>
-                        <th className="px-4 py-3 text-center font-medium">Хэлтэс</th>
-                        <th className="px-4 py-3 text-right font-medium"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {employeePreview.map((p) => (
-                        <tr key={p.id} className="border-b border-ink/10 last:border-0">
-                          <td className="px-4 py-4 text-sm font-medium text-ink">
-                            <Link
-                              prefetch={false}
-                              href={`/admin/students/${p.id}`}
-                              className="flex items-center gap-3 hover:text-brand-500"
-                            >
-                              <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-brand-50 font-display text-sm font-semibold text-brand-700">
-                                {p.avatar_url ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img
-                                    src={p.avatar_url}
-                                    alt=""
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  initialsOf(p.full_name, p.email)
-                                )}
-                              </span>
-                              {p.full_name || "Нэргүй"}
-                            </Link>
-                          </td>
-                          <td className="px-4 py-4 text-center text-sm text-ink/50">
-                            {p.email}
-                          </td>
-                          <td className="px-4 py-4 text-center text-sm text-ink/50">
-                            {p.position || "—"}
-                          </td>
-                          <td className="px-4 py-4 text-center text-sm text-ink/50">
-                            {p.department || "—"}
-                          </td>
-                          <td className="px-4 py-4 text-right">
-                            <Link
-                              prefetch={false}
-                              href={`/admin/students/${p.id}`}
-                              aria-label="Засах"
-                              className="focus-ring inline-flex text-ink/40 hover:text-brand-500"
-                            >
-                              <EditIcon className="h-4 w-4" />
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                      {employeePreview.length === 0 && (
-                        <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-sm text-ink/50">
-                            Ажилтан алга байна.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6">
+                  <p className="text-ink">Сүүлийн үйл явдал</p>
+                  <div className="mt-4 flex flex-col">
+                    {recentActivity.length === 0 && (
+                      <p className="py-4 text-sm text-ink/50">Одоогоор үйл явдал алга байна.</p>
+                    )}
+                    {recentActivity.map((a) => (
+                      <div
+                        key={a.id}
+                        className="flex items-center justify-between gap-4 border-b border-ink/10 py-3 text-sm last:border-0"
+                      >
+                        <p className="text-ink">{a.text}</p>
+                        <p className="flex-shrink-0 text-[#8A9DA2]">{a.time}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ),
             },
             {
-              label: "Нийт сургалт",
-              value: courses?.length || 0,
+              label: "Ажилтан",
+              content: <AdminEmployeeList employees={employeeList} />,
+            },
+            {
+              label: "Сургалт",
               content: (
-                <div className="overflow-hidden rounded-2xl border border-ink/15 bg-white">
-                  <div className="flex items-center justify-end p-6 pb-0">
+                <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white">
+                  <div className="flex items-center justify-between p-6 pb-0">
+                    <p className="text-ink">Нийт сургалт</p>
                     <Link
                       prefetch={false}
                       href="/admin/courses"
@@ -227,7 +201,7 @@ export default async function AdminOverviewPage() {
                       Бүгдийг харах
                     </Link>
                   </div>
-                  <div className="mt-5 overflow-x-auto">
+                  <div className="mt-5 overflow-x-auto px-4 pb-4">
                     <table className="w-full text-left">
                       <thead>
                         <tr className="bg-brand-500 text-xs uppercase text-paper">
@@ -310,29 +284,6 @@ export default async function AdminOverviewPage() {
                         )}
                       </tbody>
                     </table>
-                  </div>
-                </div>
-              ),
-            },
-            {
-              label: "Гэрчилгээнүүд",
-              value: certificatesEarned,
-              content: (
-                <div className="rounded-2xl border border-ink/15 bg-white p-6">
-                  <p className="text-ink">Сүүлд авсан гэрчилгээнүүд</p>
-                  <div className="mt-5 flex flex-col gap-3">
-                    {certificateRows.length === 0 && (
-                      <p className="text-sm text-ink/50">Одоогоор гэрчилгээ авсан хэрэглэгч алга байна.</p>
-                    )}
-                    {certificateRows.map((row) => (
-                      <div
-                        key={row.id}
-                        className="flex items-center justify-between border-b border-ink/10 pb-2 text-sm last:border-0"
-                      >
-                        <p className="font-medium text-ink">{row.name}</p>
-                        <p className="flex-shrink-0 text-ink/50">{row.courseTitle}</p>
-                      </div>
-                    ))}
                   </div>
                 </div>
               ),
