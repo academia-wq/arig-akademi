@@ -7,6 +7,10 @@
   --font-body: "Montserrat", sans-serif;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   @apply bg-paper text-ink font-body antialiased;
 }

@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
-import { computeCourseProgress } from "@/lib/course-progress";
+import { createClient, getUser } from "@/lib/supabase/server";
+import { computeCourseProgress, mostCommonCategory } from "@/lib/course-progress";
 import { getCourseIcon } from "@/lib/course-icon";
-import { formatDuration } from "@/lib/format";
 import { AdminTabs } from "@/components/admin-tabs";
-import { ArrowRightIcon, BrandMarkIcon, PlayCircleIcon } from "@/components/icons";
+import { ArrowRightIcon, BrandMarkIcon } from "@/components/icons";
 
 export default async function LearnCoursesPage() {
   const supabase = createClient();
@@ -16,7 +15,7 @@ export default async function LearnCoursesPage() {
     supabase.from("profiles").select("full_name").eq("id", user.id).single(),
     supabase
       .from("enrollments")
-      .select("course_id, courses(id, title, slug, description, thumbnail_url, instructor_id)")
+      .select("course_id, courses(id, title, slug, description, thumbnail_url, modules(id, category))")
       .eq("user_id", user.id),
   ]);
 
@@ -27,7 +26,7 @@ export default async function LearnCoursesPage() {
   if (courses.length === 0) {
     const { data: freeCourses } = await supabase
       .from("courses")
-      .select("id, title, slug, description, thumbnail_url, instructor_id")
+      .select("id, title, slug, description, thumbnail_url, modules(id, category)")
       .eq("is_published", true)
       .eq("price", 0);
 
@@ -48,21 +47,6 @@ export default async function LearnCoursesPage() {
 
   const activeCourses = coursesWithProgress.filter((c) => c.progress < 100);
   const doneCourses = coursesWithProgress.filter((c) => c.progress >= 100);
-
-  // Сурагч бусдын profile-г RLS-ээр харж чадахгүй тул зөвхөн багшийн нэрийг
-  // (full_name) service role-оор нарийн сонгож авна.
-  const instructorIds = Array.from(
-    new Set(courses.map((c: any) => c.instructor_id).filter(Boolean))
-  ) as string[];
-  const { data: instructorRows } = instructorIds.length
-    ? await createServiceRoleClient()
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", instructorIds)
-    : { data: [] as { id: string; full_name: string | null }[] };
-  const instructorNameById = new Map(
-    (instructorRows || []).map((p) => [p.id, p.full_name])
-  );
 
   const enrolledIds = courses.map((c: any) => c.id);
   const { data: newlyAddedCourses } = await supabase
@@ -93,7 +77,7 @@ export default async function LearnCoursesPage() {
       : `"${featured.course.title}" сургалт танд бэлэн байна. Өнөөдрөөс эхлээрэй!`
     : "Танд одоогоор идэвхтэй сургалт байхгүй байна.";
 
-  function CoursesTable({
+  function CourseRows({
     entries,
     done,
   }: {
@@ -101,73 +85,68 @@ export default async function LearnCoursesPage() {
     done: boolean;
   }) {
     return (
-      <div className="overflow-hidden rounded-2xl border border-ink/15 bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-brand-500 text-xs uppercase text-paper">
-                <th className="px-4 py-3 font-medium">Сургалтын нэр</th>
-                <th className="px-4 py-3 text-center font-medium">Нийт хичээл</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map(({ course, totalLessons, durationSeconds }: any) => {
-                const { tint, illustration, icon: TopicIcon, tone } = getCourseIcon(course.title);
-                const instructor = instructorNameById.get(course.instructor_id);
-                const duration = formatDuration(durationSeconds);
-                return (
-                  <tr key={course.id} className="border-b border-ink/10 last:border-0">
-                    <td className="px-4 py-4">
-                      <Link
-                        prefetch={false}
-                        href={`/learn/${course.slug}`}
-                        className="focus-ring flex items-center gap-3 hover:text-brand-500"
-                      >
-                        <span
-                          className={`flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded ${
-                            course.thumbnail_url ? "bg-ink/5" : tint
-                          }`}
-                        >
-                          {course.thumbnail_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={course.thumbnail_url} alt="" className="h-full w-full object-cover" />
-                          ) : illustration ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={illustration} alt="" className="h-full w-full object-contain p-1.5" />
-                          ) : (
-                            <TopicIcon className={`h-6 w-6 ${tone}`} />
-                          )}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block text-sm font-medium text-ink">{course.title}</span>
-                          {(instructor || duration) && (
-                            <span className="block text-xs text-ink/50">
-                              {instructor}
-                              {instructor && duration ? " · " : ""}
-                              {duration ? `Хичээлийн нийт цаг | ${duration}` : ""}
-                            </span>
-                          )}
-                        </span>
-                      </Link>
-                    </td>
-                    <td className="px-4 py-4 text-center text-sm text-ink">{totalLessons}</td>
-                    <td className="px-4 py-4 text-right">
-                      <Link
-                        prefetch={false}
-                        href={`/learn/${course.slug}`}
-                        aria-label={done ? "Дахин үзэх" : "Үргэлжлүүлэх"}
-                        className="focus-ring inline-flex text-brand-500 hover:text-brand-700"
-                      >
-                        <PlayCircleIcon className="h-6 w-6" />
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <div className="flex flex-col gap-6">
+        {entries.map(({ course, progress, totalLessons, completedLessons }: any) => {
+          const category = mostCommonCategory(course.modules);
+          const { tint, illustration, icon: TopicIcon, tone } = getCourseIcon(course.title);
+          return (
+            <div
+              key={course.id}
+              className="flex flex-col gap-4 rounded-2xl border border-[#D9D9D9] bg-white py-[15px] pl-[15px] pr-6 sm:flex-row sm:gap-[18px]"
+            >
+              <div
+                className={`flex h-[116px] w-[116px] flex-shrink-0 items-center justify-center overflow-hidden rounded-lg ${
+                  course.thumbnail_url ? "bg-ink/5" : tint
+                }`}
+              >
+                {course.thumbnail_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={course.thumbnail_url} alt="" className="h-full w-full object-cover" />
+                ) : illustration ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={illustration} alt="" className="h-full w-full object-contain p-2" />
+                ) : (
+                  <TopicIcon className={`h-10 w-10 ${tone}`} />
+                )}
+              </div>
+
+              <div className="flex min-w-0 flex-1 flex-col">
+                <div className="h-[22px]">
+                  {category && (
+                    <span className="inline-block rounded bg-brand-500 px-2 py-[3px] text-xs font-medium uppercase leading-4 text-ink">
+                      {category}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-[19px] text-base leading-6 text-ink">{course.title}</p>
+                <div className="mt-auto h-2 rounded-full bg-[#D9D9D9] p-px">
+                  <div
+                    className="h-full rounded-full bg-[#F87B4F]"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-shrink-0 flex-col items-start sm:box-content sm:w-[152px] sm:items-end sm:pl-[13px]">
+                <p className="text-[28px] leading-9 text-ink">{progress}%</p>
+                <p className="mt-1.5 text-xs text-[#8A9DA2]">
+                  {completedLessons}/{totalLessons} хичээл
+                </p>
+                <Link
+                  prefetch={false}
+                  href={`/learn/${course.slug}`}
+                  className={`focus-ring mt-4 flex h-[37px] w-[152px] items-center justify-center rounded-[7.5px] text-sm font-medium transition sm:mt-auto ${
+                    done
+                      ? "border border-[#8A9DA2] bg-paper text-[#8A9DA2] hover:border-ink hover:text-ink"
+                      : "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)] hover:bg-brand-700"
+                  }`}
+                >
+                  {done ? "Дахин үзэх" : "Үргэлжлүүлэх"}
+                </Link>
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -216,7 +195,7 @@ export default async function LearnCoursesPage() {
                   activeCourses.length === 0 ? (
                     <p className="text-sm text-ink/50">Идэвхтэй сургалт алга байна.</p>
                   ) : (
-                    <CoursesTable entries={activeCourses} done={false} />
+                    <CourseRows entries={activeCourses} done={false} />
                   )
                 ),
               },
@@ -226,7 +205,7 @@ export default async function LearnCoursesPage() {
                   doneCourses.length === 0 ? (
                     <p className="text-sm text-ink/50">Дуусгасан сургалт алга байна.</p>
                   ) : (
-                    <CoursesTable entries={doneCourses} done={true} />
+                    <CourseRows entries={doneCourses} done={true} />
                   )
                 ),
               },
