@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AuthCard } from "@/components/auth-card";
@@ -16,9 +16,12 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/learn";
+  const requestedRedirect = searchParams.get("redirect");
+  const redirectTo =
+    requestedRedirect && requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
+      ? requestedRedirect
+      : "/learn";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,28 +31,33 @@ function LoginForm() {
 
   const supabase = createClient();
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
+    // Chrome-ийн autofill нь утгыг хэрэглэгч хуудсыг дармагц л React-ийн
+    // onChange-д дамжуулдаг тул state хоосон үлдэж болно. Тиймээс бодит
+    // талбарын утгыг form-оос шууд уншина.
+    const formData = new FormData(e.currentTarget);
+    const emailValue = String(formData.get("email") || email).trim();
+    const passwordValue = String(formData.get("password") || password);
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: emailValue,
+      password: passwordValue,
     });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       setError("И-мэйл эсвэл нууц үг буруу байна.");
       return;
     }
 
-    // router.push нэг л удаа target route-г серверээс дуудна; үүнтэй зэрэг
-    // router.refresh()-г дуудвал ижил route руу 2 дахь давхар server
-    // request зэрэг явж, хоёулаа Supabase session-г зэрэг рефреш хийхийг
-    // оролдоод "Invalid Refresh Token: Already Used" алдаа өгдөг байсан.
-    router.push(redirectTo);
+    // Амжилттай нэвтэрсний дараа бүрэн шинэ ачаалалтаар шилжинэ: client
+    // router-ийн cache-д нэвтрээгүй үеийн redirect үлдэж, шилжилт гацахаас
+    // сэргийлнэ. Шилжиж дуустал товч "Нэвтэрч байна..." төлөвтөө үлдэнэ.
+    window.location.assign(redirectTo);
   }
 
   async function handleGoogleLogin() {
@@ -73,6 +81,7 @@ function LoginForm() {
           </label>
           <input
             id="email"
+            name="email"
             type="email"
             required
             placeholder="Имэйл хаягаа оруулна уу"
@@ -88,6 +97,7 @@ function LoginForm() {
           <div className="relative mt-2">
             <input
               id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
               required
               placeholder="Нууц үгээ оруулна уу"
