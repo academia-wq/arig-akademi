@@ -19,19 +19,20 @@ export default async function LessonPage({
   const user = await getUser();
   if (!user) redirect(`/login?redirect=/learn/${params.courseSlug}/${params.lessonId}`);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("position")
-    .eq("id", user.id)
-    .single();
-
-  const { data: course } = await supabase
-    .from("courses")
-    .select(
-      "id, title, slug, description, thumbnail_url, modules(id, title, position, visible_positions, category, lessons(id, title, content_text, mux_playback_id, image_url, material_urls, duration_seconds, position))"
-    )
-    .eq("slug", decodeURIComponent(params.courseSlug))
-    .single();
+  const [{ data: profile }, { data: course }, { data: progressRows }] = await Promise.all([
+    supabase.from("profiles").select("position").eq("id", user.id).single(),
+    supabase
+      .from("courses")
+      .select(
+        "id, title, slug, description, thumbnail_url, modules(id, title, position, visible_positions, category, lessons(id, title, content_text, mux_playback_id, image_url, material_urls, duration_seconds, position))"
+      )
+      .eq("slug", decodeURIComponent(params.courseSlug))
+      .single(),
+    supabase
+      .from("lesson_progress")
+      .select("lesson_id, is_completed, last_position_seconds")
+      .eq("user_id", user.id),
+  ]);
 
   if (!course) notFound();
 
@@ -51,11 +52,6 @@ export default async function LessonPage({
   const currentIndex = allLessons.findIndex((l: any) => l.id === params.lessonId);
   const prevLesson = allLessons[currentIndex - 1];
   const nextLesson = allLessons[currentIndex + 1];
-
-  const { data: progressRows } = await supabase
-    .from("lesson_progress")
-    .select("lesson_id, is_completed, last_position_seconds")
-    .eq("user_id", user.id);
 
   const progressByLesson = new Map((progressRows || []).map((p) => [p.lesson_id, p]));
   const currentProgress = progressByLesson.get(currentLesson.id);

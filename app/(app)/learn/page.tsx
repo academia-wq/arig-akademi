@@ -11,16 +11,13 @@ export default async function LearnCoursesPage() {
   const user = await getUser();
   if (!user) redirect("/login?redirect=/learn");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .single();
-
-  const { data: enrollments } = await supabase
-    .from("enrollments")
-    .select("course_id, courses(id, title, slug, description, thumbnail_url, modules(id, category))")
-    .eq("user_id", user.id);
+  const [{ data: profile }, { data: enrollments }] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+    supabase
+      .from("enrollments")
+      .select("course_id, courses(id, title, slug, description, thumbnail_url, modules(id, category))")
+      .eq("user_id", user.id),
+  ]);
 
   let courses = (enrollments || []).map((e: any) => e.courses).filter(Boolean);
 

@@ -22,26 +22,29 @@ export default async function AdminOverviewPage() {
 
   const admin = createServiceRoleClient();
 
-  const { data: profiles } = await admin
-    .from("profiles")
-    .select("id, full_name, role, position, department, avatar_url, created_at")
-    .order("created_at", { ascending: false });
+  const [
+    { data: profiles },
+    { data: courses },
+    { data: authUsers },
+    { data: enrollments },
+    { data: lessons },
+    { data: completedRows },
+  ] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("id, full_name, role, position, department, avatar_url, created_at")
+      .order("created_at", { ascending: false }),
+    admin
+      .from("courses")
+      .select("id, title, is_published, price, thumbnail_url, instructor_id, created_at")
+      .order("created_at", { ascending: false }),
+    admin.auth.admin.listUsers({ perPage: 1000 }),
+    admin.from("enrollments").select("user_id, course_id"),
+    admin.from("lessons").select("id, duration_seconds, modules!inner(course_id)"),
+    admin.from("lesson_progress").select("user_id, lesson_id").eq("is_completed", true),
+  ]);
 
-  const { data: courses } = await admin
-    .from("courses")
-    .select("id, title, is_published, price, thumbnail_url, instructor_id, created_at")
-    .order("created_at", { ascending: false });
-
-  const { data: authUsers } = await admin.auth.admin.listUsers({ perPage: 1000 });
   const emailById = new Map((authUsers?.users || []).map((u) => [u.id, u.email]));
-
-  const { data: enrollments } = await admin
-    .from("enrollments")
-    .select("user_id, course_id");
-
-  const { data: lessons } = await admin
-    .from("lessons")
-    .select("id, duration_seconds, modules!inner(course_id)");
   const courseIdByLesson = new Map((lessons || []).map((l: any) => [l.id, l.modules.course_id]));
   const totalLessonsByCourse = new Map<string, number>();
   const totalDurationByCourse = new Map<string, number>();
@@ -54,11 +57,6 @@ export default async function AdminOverviewPage() {
     );
   }
   const profileById = new Map((profiles || []).map((p) => [p.id, p]));
-
-  const { data: completedRows } = await admin
-    .from("lesson_progress")
-    .select("user_id, lesson_id")
-    .eq("is_completed", true);
 
   const completedByUserCourse = new Map<string, number>();
   for (const row of completedRows || []) {
