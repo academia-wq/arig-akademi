@@ -10,6 +10,9 @@ import {
   AwardIcon,
   UserIcon,
   XIcon,
+  FolderIcon,
+  ChatBubbleIcon,
+  EyeIcon,
 } from "@/components/icons";
 
 export function Sidebar({
@@ -30,6 +33,13 @@ export function Sidebar({
       : { href: "/dashboard", label: "Хяналтын самбар", icon: LayoutDashboardIcon },
     { href: "/learn", label: "Миний сургалт", icon: BookIcon, iconClassName: "h-6 w-6 -m-0.5", strokeWidth: 2 },
     { href: "/certificates", label: "Гэрчилгээнүүд", icon: AwardIcon },
+    ...(isStaff
+      ? [
+          { href: "/admin/structure", label: "Бүтэц", icon: FolderIcon },
+          { href: "/admin/onboarding", label: "Хөөрөх зурвас", icon: ChatBubbleIcon },
+          { href: "/admin/mystery-shopper", label: "Нууц үйлчлүүлэгч", icon: EyeIcon },
+        ]
+      : []),
     { href: "/settings", label: "Профайл", icon: UserIcon },
   ];
 

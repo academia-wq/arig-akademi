@@ -176,7 +176,11 @@ export default async function AdminOverviewPage() {
               <p className="text-sm font-medium text-ink">{label}</p>
               <p className="mt-1 text-[28px] leading-9 text-ink">{value}</p>
             </div>
-            <span className="absolute right-5 top-[22px] h-2.5 w-2.5 rounded-full bg-brand-500" />
+            <span
+              className={`absolute right-5 top-[22px] h-2.5 w-2.5 rounded-full ${
+                value > 0 ? "bg-brand-500" : "bg-ink/15"
+              }`}
+            />
           </div>
         ))}
       </div>

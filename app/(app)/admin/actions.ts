@@ -78,6 +78,11 @@ export async function createModuleWithLesson(
   const moduleTitle = ((formData.get("moduleTitle") as string) || "").trim();
   const category = ((formData.get("category") as string) || "").trim();
   const durationText = (formData.get("duration") as string) || "";
+  const parsedLessonCount = parseInt((formData.get("lessonCount") as string) || "1", 10);
+  const lessonCount =
+    Number.isFinite(parsedLessonCount) && parsedLessonCount > 0
+      ? Math.min(parsedLessonCount, 50)
+      : 1;
 
   if (!moduleTitle) return { success: false, error: "Сургалтын нэрээ оруулна уу." };
   if (!existingCourseId && !newCourseTitle) {
@@ -121,19 +126,21 @@ export async function createModuleWithLesson(
     return { success: false, error: moduleError?.message || "Бүлэг үүсгэж чадсангүй." };
   }
 
-  const { data: newLesson, error: lessonError } = await supabase
+  const lessonRows = Array.from({ length: lessonCount }, (_, i) => ({
+    module_id: newModule.id,
+    title: lessonCount > 1 ? `${moduleTitle} ${i + 1}` : moduleTitle,
+    duration_seconds: i === 0 ? parseDurationToSeconds(durationText) : null,
+    position: i,
+  }));
+
+  const { data: newLessons, error: lessonError } = await supabase
     .from("lessons")
-    .insert({
-      module_id: newModule.id,
-      title: moduleTitle,
-      duration_seconds: parseDurationToSeconds(durationText),
-      position: 0,
-    })
-    .select("id")
-    .single();
-  if (lessonError || !newLesson) {
+    .insert(lessonRows)
+    .select("id, position");
+  if (lessonError || !newLessons?.length) {
     return { success: false, error: lessonError?.message || "Хичээл үүсгэж чадсангүй." };
   }
+  const newLesson = newLessons.find((l) => l.position === 0) || newLessons[0];
 
   revalidatePath("/admin");
   revalidatePath(`/admin/courses/${courseId}/edit`);

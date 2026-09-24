@@ -72,6 +72,7 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
     formData.set("moduleTitle", moduleTitle.trim());
     formData.set("category", category);
     formData.set("duration", duration);
+    formData.set("lessonCount", lessonCount);
 
     const result = await createModuleWithLesson(formData);
     setSubmitting(false);

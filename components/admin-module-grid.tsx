@@ -121,8 +121,11 @@ export function AdminModuleGrid({
               >
                 {m.isPublished ? "Нийтлэгдсэн" : "Ноорог"}
               </span>
-              <div className="absolute -bottom-5 left-4 flex items-center gap-2">
-                <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-brand-500 text-xs font-semibold text-white">
+            </div>
+
+            <div className="p-4">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-500 text-[10px] font-semibold text-white">
                   {m.instructorAvatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={m.instructorAvatar} alt="" className="h-full w-full object-cover" />
@@ -130,14 +133,11 @@ export function AdminModuleGrid({
                     initialsOf(m.instructorName, null)
                   )}
                 </span>
-                <span className="rounded-md bg-white/90 px-2 py-1 text-xs font-medium text-ink shadow-sm">
+                <span className="truncate text-xs font-medium text-ink/60">
                   {m.instructorName}
                 </span>
               </div>
-            </div>
-
-            <div className="p-4 pt-7">
-              <p className="font-display font-semibold text-ink">{m.title}</p>
+              <p className="mt-2 font-display font-semibold text-ink">{m.title}</p>
               <p className="mt-1 text-xs text-ink/50">
                 {m.lessonCount} хичээл
                 {m.durationSeconds > 0 ? ` | ${formatDuration(m.durationSeconds)}` : ""}
