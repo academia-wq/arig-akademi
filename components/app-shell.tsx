@@ -11,6 +11,7 @@ export function AppShell({
   email,
   position,
   avatarUrl,
+  unreadNotifications,
   children,
 }: {
   isStaff: boolean;
@@ -18,6 +19,7 @@ export function AppShell({
   email: string | null;
   position: string | null;
   avatarUrl: string | null;
+  unreadNotifications: number;
   children: React.ReactNode;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -44,6 +46,7 @@ export function AppShell({
           email={email}
           position={position}
           avatarUrl={avatarUrl}
+          unreadNotifications={unreadNotifications}
           onMenuClick={() => setMobileNavOpen(true)}
         />
         <main className="flex-1 px-4 py-6 sm:py-8 sm:pl-8 sm:pr-8 lg:pr-[120px]">{children}</main>

@@ -27,6 +27,22 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: "lesson_added" | "certificate_ready" | "employee_added";
+          title: string;
+          body: string;
+          course_id: string | null;
+          related_user_id: string | null;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["notifications"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["notifications"]["Row"]>;
+        Relationships: [];
+      };
       courses: {
         Row: {
           id: string;

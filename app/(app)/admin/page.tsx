@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
-import { formatDuration, formatRelativeTime } from "@/lib/format";
+import { formatRelativeTime } from "@/lib/format";
 import { AdminTabs } from "@/components/admin-tabs";
 import { AdminEmployeeList } from "@/components/admin-employee-list";
 import { AddEmployeeButton } from "@/components/add-employee-modal";
 import { AddCourseButton } from "@/components/add-course-modal";
-import { AwardIcon, BookIcon, DownloadIcon, EditIcon, UsersIcon } from "@/components/icons";
+import { AdminModuleGrid, type ModuleCard } from "@/components/admin-module-grid";
+import { AwardIcon, BookIcon, DownloadIcon, UsersIcon } from "@/components/icons";
 
 export default async function AdminOverviewPage() {
   const supabase = createClient();
@@ -30,6 +31,7 @@ export default async function AdminOverviewPage() {
     { data: enrollments },
     { data: lessons },
     { data: completedRows },
+    { data: modules },
   ] = await Promise.all([
     admin
       .from("profiles")
@@ -41,21 +43,31 @@ export default async function AdminOverviewPage() {
       .order("created_at", { ascending: false }),
     admin.auth.admin.listUsers({ perPage: 1000 }),
     admin.from("enrollments").select("user_id, course_id, enrolled_at"),
-    admin.from("lessons").select("id, duration_seconds, modules!inner(course_id)"),
+    admin
+      .from("lessons")
+      .select("id, module_id, duration_seconds, image_url, modules!inner(course_id)"),
     admin.from("lesson_progress").select("user_id, lesson_id").eq("is_completed", true),
+    admin.from("modules").select("id, title, category, course_id, position").order("position"),
   ]);
 
   const emailById = new Map((authUsers?.users || []).map((u) => [u.id, u.email]));
   const courseIdByLesson = new Map((lessons || []).map((l: any) => [l.id, l.modules.course_id]));
   const totalLessonsByCourse = new Map<string, number>();
-  const totalDurationByCourse = new Map<string, number>();
+  const lessonCountByModule = new Map<string, number>();
+  const durationByModule = new Map<string, number>();
+  const thumbnailByModule = new Map<string, string>();
   for (const l of lessons || []) {
     const courseId = (l as any).modules.course_id;
+    const moduleId = (l as any).module_id;
     totalLessonsByCourse.set(courseId, (totalLessonsByCourse.get(courseId) || 0) + 1);
-    totalDurationByCourse.set(
-      courseId,
-      (totalDurationByCourse.get(courseId) || 0) + ((l as any).duration_seconds || 0)
+    lessonCountByModule.set(moduleId, (lessonCountByModule.get(moduleId) || 0) + 1);
+    durationByModule.set(
+      moduleId,
+      (durationByModule.get(moduleId) || 0) + ((l as any).duration_seconds || 0)
     );
+    if ((l as any).image_url && !thumbnailByModule.has(moduleId)) {
+      thumbnailByModule.set(moduleId, (l as any).image_url);
+    }
   }
   const profileById = new Map((profiles || []).map((p) => [p.id, p]));
 
@@ -83,8 +95,6 @@ export default async function AdminOverviewPage() {
     avatar_url: p.avatar_url,
   }));
 
-  const coursePreview = (courses || []).slice(0, 6);
-
   const pendingProfiles = (profiles || [])
     .filter((p) => !p.position)
     .map((p) => ({
@@ -96,6 +106,25 @@ export default async function AdminOverviewPage() {
   const courseOptions = (courses || []).map((c) => ({ id: c.id, title: c.title }));
 
   const courseById = new Map((courses || []).map((c) => [c.id, c]));
+
+  const moduleCards: ModuleCard[] = (modules || []).map((m: any) => {
+    const course = courseById.get(m.course_id);
+    const instructor = course?.instructor_id ? profileById.get(course.instructor_id) : null;
+    return {
+      id: m.id,
+      title: m.title,
+      category: m.category,
+      courseId: m.course_id,
+      courseTitle: course?.title || "",
+      isPublished: !!course?.is_published,
+      instructorName: instructor?.full_name || "Багш тодорхойгүй",
+      instructorAvatar: instructor?.avatar_url || null,
+      thumbnailUrl: thumbnailByModule.get(m.id) || null,
+      lessonCount: lessonCountByModule.get(m.id) || 0,
+      durationSeconds: durationByModule.get(m.id) || 0,
+    };
+  });
+
   const nameOf = (userId: string) =>
     profileById.get(userId)?.full_name || emailById.get(userId) || "Нэргүй хэрэглэгч";
 
@@ -190,100 +219,19 @@ export default async function AdminOverviewPage() {
             {
               label: "Сургалт",
               content: (
-                <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white">
-                  <div className="flex items-center justify-between p-6 pb-0">
+                <div>
+                  <div className="flex items-center justify-between">
                     <p className="text-ink">Нийт сургалт</p>
                     <Link
                       prefetch={false}
                       href="/admin/courses"
                       className="focus-ring text-sm font-medium text-brand-500"
                     >
-                      Бүгдийг харах
+                      Бүлгүүдийг удирдах
                     </Link>
                   </div>
-                  <div className="mt-5 overflow-x-auto px-4 pb-4">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-brand-500 text-xs uppercase text-paper">
-                          <th className="px-4 py-3 font-medium">Сургалтын нэр</th>
-                          <th className="px-4 py-3 text-center font-medium">Төлөв</th>
-                          <th className="px-4 py-3 text-center font-medium">Үнэ</th>
-                          <th className="px-4 py-3 text-right font-medium">Нийт хичээл</th>
-                          <th className="px-4 py-3 text-right font-medium"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {coursePreview.map((c: any) => {
-                          const instructor = profileById.get(c.instructor_id);
-                          const duration = formatDuration(totalDurationByCourse.get(c.id) || 0);
-                          return (
-                            <tr key={c.id} className="border-b border-ink/10 last:border-0">
-                              <td className="px-4 py-4">
-                                <Link
-                                  prefetch={false}
-                                  href={`/admin/courses/${c.id}/edit`}
-                                  className="flex items-center gap-3 hover:text-brand-500"
-                                >
-                                  <span className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-ink/5">
-                                    {c.thumbnail_url && (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img
-                                        src={c.thumbnail_url}
-                                        alt=""
-                                        className="h-full w-full object-cover"
-                                      />
-                                    )}
-                                  </span>
-                                  <span>
-                                    <span className="block text-sm font-medium text-ink">
-                                      {c.title}
-                                    </span>
-                                    <span className="block text-xs text-ink/50">
-                                      {instructor?.full_name || "Багш тодорхойгүй"}
-                                      {duration ? ` · Нийт цаг | ${duration}` : ""}
-                                    </span>
-                                  </span>
-                                </Link>
-                              </td>
-                              <td className="px-4 py-4 text-center">
-                                <span
-                                  className={
-                                    c.is_published
-                                      ? "rounded-sm bg-accent/20 px-2 py-0.5 text-xs text-emerald-700"
-                                      : "rounded-sm bg-ink/10 px-2 py-0.5 text-xs text-ink/50"
-                                  }
-                                >
-                                  {c.is_published ? "Нийтэлсэн" : "Ноорог"}
-                                </span>
-                              </td>
-                              <td className="px-4 py-4 text-center text-sm text-ink/50">
-                                {c.price > 0 ? `${c.price}₮` : "Үнэгүй"}
-                              </td>
-                              <td className="px-4 py-4 text-right text-sm text-ink/50">
-                                {totalLessonsByCourse.get(c.id) || 0}
-                              </td>
-                              <td className="px-4 py-4 text-right">
-                                <Link
-                                  prefetch={false}
-                                  href={`/admin/courses/${c.id}/edit`}
-                                  aria-label="Засах"
-                                  className="focus-ring inline-flex text-ink/40 hover:text-brand-500"
-                                >
-                                  <EditIcon className="h-4 w-4" />
-                                </Link>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {coursePreview.length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="px-4 py-8 text-center text-sm text-ink/50">
-                              Сургалт алга байна.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                  <div className="mt-4">
+                    <AdminModuleGrid modules={moduleCards} courseOptions={courseOptions} />
                   </div>
                 </div>
               ),

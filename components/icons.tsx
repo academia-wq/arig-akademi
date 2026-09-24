@@ -487,6 +487,18 @@ export function XIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function TrashIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path
+        d="M2.5 5h15M7.5 5V3.3A1.3 1.3 0 0 1 8.8 2h2.4a1.3 1.3 0 0 1 1.3 1.3V5m2.5 0-.7 10.5A2 2 0 0 1 12.3 17H7.7a2 2 0 0 1-2-1.5L5 5m3.3 3.5v5m3.4-5v5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function CartIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>

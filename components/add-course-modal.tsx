@@ -8,7 +8,7 @@ import { VideoUploader } from "@/components/video-uploader";
 import { ImageUploader } from "@/components/image-uploader";
 import { PdfMaterialUploader } from "@/components/pdf-material-uploader";
 
-const CATEGORIES = [
+export const CATEGORIES = [
   "Менежмент",
   "Санхүу",
   "Технологи",

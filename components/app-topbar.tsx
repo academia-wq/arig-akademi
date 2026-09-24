@@ -24,6 +24,7 @@ const PAGE_TITLES: { prefix: string; title: string }[] = [
   { prefix: "/learn", title: "Миний сургалт" },
   { prefix: "/dashboard", title: "Хяналтын самбар" },
   { prefix: "/certificates", title: "Гэрчилгээнүүд" },
+  { prefix: "/notifications", title: "Мэдэгдэл" },
   { prefix: "/settings", title: "Профайл" },
 ];
 
@@ -32,12 +33,14 @@ export function AppTopBar({
   email,
   position,
   avatarUrl,
+  unreadNotifications,
   onMenuClick,
 }: {
   fullName: string | null;
   email: string | null;
   position: string | null;
   avatarUrl: string | null;
+  unreadNotifications: number;
   onMenuClick: () => void;
 }) {
   const router = useRouter();
@@ -214,14 +217,17 @@ export function AppTopBar({
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">
-        <button
-          type="button"
+        <Link
+          prefetch={false}
+          href="/notifications"
           aria-label="Мэдэгдэл"
           className="focus-ring relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-ink/60 transition hover:bg-ink/5 hover:text-ink"
         >
           <BellIcon className="h-[22px] w-[22px]" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-sm bg-brand-500" />
-        </button>
+          {unreadNotifications > 0 && (
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-sm bg-brand-500" />
+          )}
+        </Link>
 
         {email ? (
           <div className="relative" ref={menuRef}>

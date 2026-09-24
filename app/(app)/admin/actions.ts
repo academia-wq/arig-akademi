@@ -140,6 +140,76 @@ export async function createModuleWithLesson(
   return { success: true, courseId, moduleId: newModule.id, lessonId: newLesson.id };
 }
 
+export async function updateModule(
+  moduleId: string,
+  formData: FormData
+): Promise<{ success: true } | { success: false; error: string }> {
+  const staff = await requireStaff();
+  if (!staff.ok) return { success: false, error: staff.error };
+
+  const supabase = createServiceRoleClient();
+  const existingCourseId = (formData.get("courseId") as string) || "";
+  const newCourseTitle = ((formData.get("newCourseTitle") as string) || "").trim();
+  const moduleTitle = ((formData.get("moduleTitle") as string) || "").trim();
+  const category = ((formData.get("category") as string) || "").trim();
+
+  if (!moduleTitle) return { success: false, error: "Сургалтын нэрээ оруулна уу." };
+  if (!existingCourseId && !newCourseTitle) {
+    return { success: false, error: "Бүлгээ сонгоно уу." };
+  }
+
+  let courseId = existingCourseId;
+  if (!courseId) {
+    const { data: newCourse, error: courseError } = await supabase
+      .from("courses")
+      .insert({
+        title: newCourseTitle,
+        slug: slugify(newCourseTitle),
+        instructor_id: staff.userId,
+        is_published: false,
+      })
+      .select("id")
+      .single();
+    if (courseError || !newCourse) {
+      return { success: false, error: courseError?.message || "Бүлэг үүсгэж чадсангүй." };
+    }
+    courseId = newCourse.id;
+  }
+
+  const { error } = await supabase
+    .from("modules")
+    .update({ title: moduleTitle, category: category || null, course_id: courseId })
+    .eq("id", moduleId);
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+  return { success: true };
+}
+
+export async function deleteModuleAdmin(
+  moduleId: string
+): Promise<{ success: true } | { success: false; error: string }> {
+  const staff = await requireStaff();
+  if (!staff.ok) return { success: false, error: staff.error };
+
+  const supabase = createServiceRoleClient();
+  const { data: lessons } = await supabase
+    .from("lessons")
+    .select("id")
+    .eq("module_id", moduleId);
+  const lessonIds = (lessons || []).map((l) => l.id);
+  if (lessonIds.length) {
+    await supabase.from("lesson_progress").delete().in("lesson_id", lessonIds);
+    await supabase.from("lessons").delete().in("id", lessonIds);
+  }
+  const { error } = await supabase.from("modules").delete().eq("id", moduleId);
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/admin");
+  return { success: true };
+}
+
 export async function uploadLessonMaterial(
   lessonId: string,
   courseId: string,
