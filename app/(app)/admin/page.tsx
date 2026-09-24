@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 import { formatRelativeTime } from "@/lib/format";
-import { AdminTabs } from "@/components/admin-tabs";
+import { AdminOverviewTabs } from "@/components/admin-overview-tabs";
 import { AdminActiveTabProvider } from "@/components/admin-active-tab-context";
 import { AdminHeaderActions } from "@/components/admin-header-actions";
 import { AdminEmployeeList } from "@/components/admin-employee-list";
@@ -186,7 +186,7 @@ export default async function AdminOverviewPage() {
       </div>
 
       <div className="mt-6">
-        <AdminTabs
+        <AdminOverviewTabs
           tabs={[
             {
               label: "Тойм",

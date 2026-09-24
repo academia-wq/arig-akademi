@@ -1,14 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { useAdminActiveTab } from "@/components/admin-active-tab-context";
 
 export function AdminTabs({
   tabs,
+  onActiveChange,
 }: {
   tabs: { label: string; content: React.ReactNode }[];
+  onActiveChange?: (index: number) => void;
 }) {
-  const { active, setActive } = useAdminActiveTab();
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    onActiveChange?.(active);
+  }, [active, onActiveChange]);
 
   return (
     <div>
