@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { EditIcon, SearchIcon } from "@/components/icons";
+import { SearchIcon } from "@/components/icons";
 import { initialsOf } from "@/lib/format";
+import { EditEmployeeButton } from "@/components/edit-employee-modal";
 
 type Employee = {
   id: string;
@@ -125,14 +126,12 @@ export function AdminEmployeeList({ employees }: { employees: Employee[] }) {
                     {p.department || "—"}
                   </td>
                   <td className="px-4 py-4 text-right">
-                    <Link
-                      prefetch={false}
-                      href={`/admin/students/${p.id}`}
-                      aria-label="Засах"
-                      className="focus-ring inline-flex text-ink/40 hover:text-brand-500"
-                    >
-                      <EditIcon className="h-4 w-4" />
-                    </Link>
+                    <EditEmployeeButton
+                      profileId={p.id}
+                      name={p.full_name || p.email}
+                      department={p.department}
+                      position={p.position}
+                    />
                   </td>
                 </tr>
               ))}

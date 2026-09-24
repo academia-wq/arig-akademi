@@ -217,18 +217,6 @@ export function AppTopBar({
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">
-        <Link
-          prefetch={false}
-          href="/notifications"
-          aria-label="Мэдэгдэл"
-          className="focus-ring relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-ink/60 transition hover:bg-ink/5 hover:text-ink"
-        >
-          <BellIcon className="h-[22px] w-[22px]" />
-          {unreadNotifications > 0 && (
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-sm bg-brand-500" />
-          )}
-        </Link>
-
         {email ? (
           <div className="relative" ref={menuRef}>
             <button
@@ -294,6 +282,18 @@ export function AppTopBar({
             </Link>
           </div>
         )}
+
+        <Link
+          prefetch={false}
+          href="/notifications"
+          aria-label="Мэдэгдэл"
+          className="focus-ring relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-ink/60 transition hover:bg-ink/5 hover:text-ink"
+        >
+          <BellIcon className="h-[22px] w-[22px]" />
+          {unreadNotifications > 0 && (
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-500" />
+          )}
+        </Link>
       </div>
     </header>
   );

@@ -1,13 +1,14 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 import { formatRelativeTime } from "@/lib/format";
 import { AdminTabs } from "@/components/admin-tabs";
+import { AdminActiveTabProvider } from "@/components/admin-active-tab-context";
+import { AdminHeaderActions } from "@/components/admin-header-actions";
 import { AdminEmployeeList } from "@/components/admin-employee-list";
 import { AddEmployeeButton } from "@/components/add-employee-modal";
 import { AddCourseButton } from "@/components/add-course-modal";
 import { AdminModuleGrid, type ModuleCard } from "@/components/admin-module-grid";
-import { AwardIcon, BookIcon, DownloadIcon, UsersIcon } from "@/components/icons";
+import { AwardIcon, BookIcon, UsersIcon } from "@/components/icons";
 
 export default async function AdminOverviewPage() {
   const supabase = createClient();
@@ -146,23 +147,16 @@ export default async function AdminOverviewPage() {
     .map((e) => ({ id: e.id, text: e.text, time: formatRelativeTime(e.at as string) }));
 
   return (
-    <div>
+    <AdminActiveTabProvider>
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-brand-500 bg-paper p-5">
         <div>
           <p className="text-base text-brand-500">Удирдлагын самбар</p>
           <p className="mt-1 text-ink">Админ панель</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <AddEmployeeButton pendingProfiles={pendingProfiles} />
-          <AddCourseButton courses={courseOptions} />
-          <button
-            type="button"
-            className="focus-ring flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)] hover:bg-brand-700"
-          >
-            Тайлан
-            <DownloadIcon className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <AdminHeaderActions
+          addEmployeeButton={<AddEmployeeButton pendingProfiles={pendingProfiles} />}
+          addCourseButton={<AddCourseButton courses={courseOptions} />}
+        />
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -218,27 +212,11 @@ export default async function AdminOverviewPage() {
             },
             {
               label: "Сургалт",
-              content: (
-                <div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-ink">Нийт сургалт</p>
-                    <Link
-                      prefetch={false}
-                      href="/admin/courses"
-                      className="focus-ring text-sm font-medium text-brand-500"
-                    >
-                      Бүлгүүдийг удирдах
-                    </Link>
-                  </div>
-                  <div className="mt-4">
-                    <AdminModuleGrid modules={moduleCards} courseOptions={courseOptions} />
-                  </div>
-                </div>
-              ),
+              content: <AdminModuleGrid modules={moduleCards} courseOptions={courseOptions} />,
             },
           ]}
         />
       </div>
-    </div>
+    </AdminActiveTabProvider>
   );
 }
