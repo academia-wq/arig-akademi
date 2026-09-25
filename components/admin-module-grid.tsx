@@ -98,11 +98,11 @@ export function AdminModuleGrid({
         <p className="text-sm text-[#8A9DA2] sm:ml-auto">{filtered.length} сургалт</p>
       </div>
 
-      <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((m) => (
           <div
             key={m.id}
-            className="flex h-[360px] flex-col overflow-hidden rounded-2xl border border-ink/15 bg-white"
+            className="flex h-[330px] flex-col overflow-hidden rounded-2xl border border-ink/15 bg-white"
           >
             <div className="relative h-[40%] flex-shrink-0 overflow-hidden bg-gradient-to-br from-brand-100 to-brand-50">
               {m.thumbnailUrl ? (
