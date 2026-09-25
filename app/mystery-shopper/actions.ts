@@ -130,6 +130,6 @@ export async function submitMysteryShopperEvaluation(formData: FormData): Promis
     return { success: false, error: insertError.message };
   }
 
-  revalidatePath("/admin/mystery-shopper");
+  revalidatePath("/admin");
   return { success: true, totalScore, maxScore };
 }

@@ -43,6 +43,6 @@ export async function saveStructure(
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/admin/structure");
+  revalidatePath("/admin");
   return { success: true };
 }

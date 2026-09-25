@@ -8,6 +8,9 @@ import { AdminEmployeeList } from "@/components/admin-employee-list";
 import { AddEmployeeButton } from "@/components/add-employee-modal";
 import { AddCourseButton } from "@/components/add-course-modal";
 import { AdminModuleGrid, type ModuleCard } from "@/components/admin-module-grid";
+import { AdminOnboardingSection } from "@/components/admin-onboarding-section";
+import { AdminStructureSection } from "@/components/admin-structure-section";
+import { AdminMysteryShopperSection } from "@/components/admin-mystery-shopper-section";
 import { AwardIcon, BookIcon, UsersIcon } from "@/components/icons";
 
 export default async function AdminOverviewPage() {
@@ -218,6 +221,9 @@ export default async function AdminOverviewPage() {
               label: "Сургалт",
               content: <AdminModuleGrid modules={moduleCards} courseOptions={courseOptions} />,
             },
+            { label: "Хөөрөх зурвас", content: <AdminOnboardingSection /> },
+            { label: "Бүтэц", content: <AdminStructureSection /> },
+            { label: "Нууц үйлчлүүлэгч", content: <AdminMysteryShopperSection /> },
           ]}
         />
       </div>
