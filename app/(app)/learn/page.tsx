@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 import { computeCourseProgress, mostCommonCategory } from "@/lib/course-progress";
 import { getCourseIcon } from "@/lib/course-icon";
-import { initialsOf } from "@/lib/format";
+import { formatDuration, initialsOf } from "@/lib/format";
+import { isModuleVisible } from "@/lib/module-visibility";
 import { AdminTabs } from "@/components/admin-tabs";
-import { ArrowRightIcon } from "@/components/icons";
+import { ArrowRightIcon, BookIcon, PlayCircleIcon } from "@/components/icons";
 
 export default async function LearnCoursesPage() {
   const supabase = createClient();
@@ -13,10 +14,12 @@ export default async function LearnCoursesPage() {
   if (!user) redirect("/login?redirect=/learn");
 
   const [{ data: profile }, { data: enrollments }] = await Promise.all([
-    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+    supabase.from("profiles").select("full_name, position").eq("id", user.id).single(),
     supabase
       .from("enrollments")
-      .select("course_id, courses(id, title, slug, description, thumbnail_url, modules(id, category))")
+      .select(
+        "course_id, courses(id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, category, lessons(id, position, duration_seconds, image_url)))"
+      )
       .eq("user_id", user.id),
   ]);
 
@@ -27,7 +30,9 @@ export default async function LearnCoursesPage() {
   if (courses.length === 0) {
     const { data: freeCourses } = await supabase
       .from("courses")
-      .select("id, title, slug, description, thumbnail_url, modules(id, category)")
+      .select(
+        "id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, category, lessons(id, position, duration_seconds, image_url))"
+      )
       .eq("is_published", true)
       .eq("price", 0);
 
@@ -59,7 +64,9 @@ export default async function LearnCoursesPage() {
   // Сурагч бусдын profile-г RLS-ээр харж чадахгүй тул зөвхөн багшийн нэр,
   // зургийг (full_name, avatar_url) service role-оор нарийн сонгож авна.
   const instructorIds = Array.from(
-    new Set((newlyAddedCourses || []).map((c) => c.instructor_id).filter(Boolean))
+    new Set(
+      [...(newlyAddedCourses || []), ...courses].map((c: any) => c.instructor_id).filter(Boolean)
+    )
   ) as string[];
   const { data: instructorRows } = instructorIds.length
     ? await createServiceRoleClient()
@@ -105,11 +112,39 @@ export default async function LearnCoursesPage() {
         {entries.map(({ course, progress, totalLessons, completedLessons }: any) => {
           const category = mostCommonCategory(course.modules);
           const { tint, illustration, icon: TopicIcon, tone } = getCourseIcon(course.title);
+
+          const notStarted = !done && completedLessons === 0;
+          const instructorName =
+            (course.instructor_id && instructorById.get(course.instructor_id)?.full_name) ||
+            "Ариг Академи";
+          const moduleRows = notStarted
+            ? (course.modules || [])
+                .filter((m: any) => isModuleVisible(m.visible_positions, profile?.position))
+                .sort((a: any, b: any) => a.position - b.position)
+                .map((m: any) => {
+                  const lessons = [...(m.lessons || [])].sort(
+                    (a: any, b: any) => a.position - b.position
+                  );
+                  return {
+                    id: m.id as string,
+                    title: m.title as string,
+                    firstLessonId: lessons[0]?.id as string | undefined,
+                    lessonCount: lessons.length,
+                    seconds: lessons.reduce(
+                      (sum: number, l: any) => sum + (l.duration_seconds || 0),
+                      0
+                    ),
+                    image: (lessons.find((l: any) => l.image_url)?.image_url ?? null) as
+                      | string
+                      | null,
+                  };
+                })
+                .filter((m: any) => m.firstLessonId)
+            : [];
+
           return (
-            <div
-              key={course.id}
-              className="flex flex-col gap-4 rounded-2xl border border-[#D9D9D9] bg-white py-[15px] pl-[15px] pr-6 sm:flex-row sm:gap-[18px]"
-            >
+            <div key={course.id} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 rounded-2xl border border-[#D9D9D9] bg-white py-[15px] pl-[15px] pr-6 sm:flex-row sm:gap-[18px]">
               <div
                 className={`flex h-[116px] w-[116px] flex-shrink-0 items-center justify-center overflow-hidden rounded-lg ${
                   course.thumbnail_url ? "bg-ink/5" : tint
@@ -160,6 +195,49 @@ export default async function LearnCoursesPage() {
                   {done ? "Дахин үзэх" : "Үргэлжлүүлэх"}
                 </Link>
               </div>
+            </div>
+
+            {moduleRows.length > 0 && (
+              <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6">
+                <p className="text-ink">Нийт сургалт</p>
+                <div className="mt-5 overflow-hidden rounded-lg">
+                  <div className="flex items-center justify-between bg-brand-500 px-4 py-3 text-xs font-medium uppercase text-paper">
+                    <span>Сургалтын нэр</span>
+                    <span className="pr-14">Нийт хичээл</span>
+                  </div>
+                  <div className="max-h-[288px] overflow-y-auto">
+                    {moduleRows.map((m: any) => (
+                      <Link
+                        prefetch={false}
+                        key={m.id}
+                        href={`/learn/${course.slug}/${m.firstLessonId}`}
+                        className="focus-ring flex items-center gap-4 border-b border-ink/10 px-4 py-3 last:border-0 hover:bg-brand-50/50"
+                      >
+                        <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-brand-50">
+                          {m.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={m.image} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <BookIcon className="h-5 w-5 text-brand-300" />
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-ink">{m.title}</span>
+                          <span className="block truncate text-xs text-[#8A9DA2]">
+                            {instructorName}
+                            {m.seconds > 0 ? ` · Хичээлийн нийт цаг | ${formatDuration(m.seconds)}` : ""}
+                          </span>
+                        </span>
+                        <span className="w-16 flex-shrink-0 text-center text-sm text-ink">
+                          {m.lessonCount}
+                        </span>
+                        <PlayCircleIcon className="h-6 w-6 flex-shrink-0 text-brand-500" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
             </div>
           );
         })}
