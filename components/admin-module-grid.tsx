@@ -102,9 +102,9 @@ export function AdminModuleGrid({
         {filtered.map((m) => (
           <div
             key={m.id}
-            className="flex flex-col overflow-hidden rounded-2xl border border-ink/15 bg-white"
+            className="flex h-[360px] flex-col overflow-hidden rounded-2xl border border-ink/15 bg-white"
           >
-            <div className="relative aspect-[16/10] flex-shrink-0 overflow-hidden bg-gradient-to-br from-brand-100 to-brand-50">
+            <div className="relative h-[40%] flex-shrink-0 overflow-hidden bg-gradient-to-br from-brand-100 to-brand-50">
               {m.thumbnailUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -127,7 +127,7 @@ export function AdminModuleGrid({
               </span>
             </div>
 
-            <div className="flex flex-1 flex-col p-4">
+            <div className="flex h-[60%] min-h-0 flex-col p-4">
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-500 text-[10px] font-semibold text-white">
                   {m.instructorAvatar ? (
