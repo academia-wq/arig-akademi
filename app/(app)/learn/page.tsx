@@ -113,7 +113,7 @@ export default async function LearnCoursesPage() {
           const category = mostCommonCategory(course.modules);
           const { tint, illustration, icon: TopicIcon, tone } = getCourseIcon(course.title);
 
-          const notStarted = !done && completedLessons === 0;
+          const notStarted = !done;
           const instructorName =
             (course.instructor_id && instructorById.get(course.instructor_id)?.full_name) ||
             "Ариг Академи";
