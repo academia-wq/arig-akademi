@@ -104,12 +104,16 @@ export function AdminModuleGrid({
             key={m.id}
             className="flex flex-col overflow-hidden rounded-2xl border border-ink/15 bg-white"
           >
-            <div className="relative aspect-[16/10] bg-gradient-to-br from-brand-100 to-brand-50">
+            <div className="relative aspect-[16/10] flex-shrink-0 overflow-hidden bg-gradient-to-br from-brand-100 to-brand-50">
               {m.thumbnailUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={m.thumbnailUrl}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               ) : (
-                <div className="flex h-full items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center">
                   <BookIcon className="h-10 w-10 text-brand-300" />
                 </div>
               )}
@@ -137,7 +141,9 @@ export function AdminModuleGrid({
                   {m.instructorName}
                 </span>
               </div>
-              <p className="mt-2 line-clamp-2 font-display font-semibold text-ink">{m.title}</p>
+              <p className="mt-2 line-clamp-2 min-h-[3rem] font-display font-semibold leading-6 text-ink">
+                {m.title}
+              </p>
               <p className="mt-1 text-xs text-ink/50">
                 {m.lessonCount} хичээл
                 {m.durationSeconds > 0 ? ` | ${formatDuration(m.durationSeconds)}` : ""}
