@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import clsx from "clsx";
-import { SearchIcon } from "@/components/icons";
-import { NOTIFICATION_META } from "@/lib/notification-meta";
-import { formatRelativeTime } from "@/lib/format";
+import { SearchIcon, CalendarIcon, ChevronRightIcon } from "@/components/icons";
+import { NOTIFICATION_META, type NotificationType } from "@/lib/notification-meta";
+import { formatRelativeTime, formatMonthRange } from "@/lib/format";
 import { NotificationDetailModal, type NotificationItem } from "@/components/notification-detail-modal";
 import { markNotificationRead } from "@/app/(app)/notifications/actions";
 
@@ -14,19 +14,32 @@ type ListItem = NotificationItem & {
   dateGroup: string;
 };
 
+type FilterValue = "all" | "unread" | NotificationType;
+
 export function NotificationsList({ items }: { items: ListItem[] }) {
   const [query, setQuery] = useState("");
-  const [onlyUnread, setOnlyUnread] = useState(false);
+  const [filter, setFilter] = useState<FilterValue>("all");
+  const [monthOffset, setMonthOffset] = useState(0);
   const [active, setActive] = useState<ListItem | null>(null);
+
+  const monthDate = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  }, [monthOffset]);
+  const monthStart = monthDate.getTime();
+  const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1).getTime();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return items.filter((n) => {
-      if (onlyUnread && n.is_read) return false;
+      const createdAt = new Date(n.created_at).getTime();
+      if (createdAt < monthStart || createdAt >= monthEnd) return false;
+      if (filter === "unread" && n.is_read) return false;
+      if (filter !== "all" && filter !== "unread" && n.type !== filter) return false;
       if (!q) return true;
       return n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q);
     });
-  }, [items, query, onlyUnread]);
+  }, [items, query, filter, monthStart, monthEnd]);
 
   const groups = useMemo(() => {
     const map = new Map<string, ListItem[]>();
@@ -45,7 +58,30 @@ export function NotificationsList({ items }: { items: ListItem[] }) {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex justify-end">
+        <div className="flex items-center gap-1 rounded-[7.5px] border border-[#D9D9D9] bg-paper px-3 py-2 text-sm text-ink">
+          <CalendarIcon className="h-4 w-4 flex-shrink-0 text-[#8A9DA2]" />
+          <button
+            type="button"
+            onClick={() => setMonthOffset((v) => v - 1)}
+            aria-label="Өмнөх сар"
+            className="focus-ring rounded p-0.5 hover:bg-ink/5"
+          >
+            <ChevronRightIcon className="h-3.5 w-3.5 rotate-180 text-ink/50" />
+          </button>
+          <span className="whitespace-nowrap px-1">{formatMonthRange(monthDate)}</span>
+          <button
+            type="button"
+            onClick={() => setMonthOffset((v) => v + 1)}
+            aria-label="Дараах сар"
+            className="focus-ring rounded p-0.5 hover:bg-ink/5"
+          >
+            <ChevronRightIcon className="h-3.5 w-3.5 text-ink/50" />
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3">
         <div className="relative w-full sm:w-[319px]">
           <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A9DA2]" />
           <input
@@ -56,31 +92,29 @@ export function NotificationsList({ items }: { items: ListItem[] }) {
             className="focus-ring h-[39px] w-full rounded-[7.5px] border border-[#D9D9D9] bg-paper pl-10 pr-3 text-sm text-ink placeholder:text-[#8A9DA2]"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setOnlyUnread(false)}
-            className={clsx(
-              "focus-ring h-[39px] rounded-[7.5px] px-5 text-sm font-medium transition",
-              !onlyUnread
-                ? "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)]"
-                : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-ink/30"
-            )}
-          >
-            Бүгд
-          </button>
-          <button
-            type="button"
-            onClick={() => setOnlyUnread(true)}
-            className={clsx(
-              "focus-ring h-[39px] rounded-[7.5px] px-5 text-sm font-medium transition",
-              onlyUnread
-                ? "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)]"
-                : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-ink/30"
-            )}
-          >
-            Уншаагүй
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {(
+            [
+              ["all", "Бүгд"],
+              ["unread", "Уншаагүй"],
+              ["lesson_added", "Сургалт"],
+              ["certificate_ready", "Гэрчилгээ"],
+            ] as [FilterValue, string][]
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setFilter(value)}
+              className={clsx(
+                "focus-ring h-[39px] rounded-[7.5px] px-5 text-sm font-medium transition",
+                filter === value
+                  ? "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)]"
+                  : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-ink/30"
+              )}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
