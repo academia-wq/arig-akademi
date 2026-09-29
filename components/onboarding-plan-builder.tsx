@@ -12,8 +12,8 @@ export function OnboardingPlanBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [sentOk, setSentOk] = useState(false);
 
+  const companyName = "Ариг Академи";
   const [employeeEmail, setEmployeeEmail] = useState("");
-  const [companyName, setCompanyName] = useState("");
   const [jobTitle, setJobTitle] = useState("");
 
   function handleGenerate(e: React.FormEvent<HTMLFormElement>) {
@@ -21,6 +21,8 @@ export function OnboardingPlanBuilder() {
     setError(null);
     setSentOk(false);
     const formData = new FormData(e.currentTarget);
+
+    formData.set("companyName", companyName);
 
     startGenerating(async () => {
       const result = await generatePlan(formData);
@@ -71,27 +73,15 @@ export function OnboardingPlanBuilder() {
               className="focus-ring mt-1 w-full rounded-md border border-ink/15 px-3 py-2"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-ink">Компанийн нэр</label>
-              <input
-                name="companyName"
-                required
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                className="focus-ring mt-1 w-full rounded-md border border-ink/15 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-ink">Албан тушаал</label>
-              <input
-                name="jobTitle"
-                required
-                value={jobTitle}
-                onChange={(e) => setJobTitle(e.target.value)}
-                className="focus-ring mt-1 w-full rounded-md border border-ink/15 px-3 py-2"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-ink">Албан тушаал</label>
+            <input
+              name="jobTitle"
+              required
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              className="focus-ring mt-1 w-full rounded-md border border-ink/15 px-3 py-2"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-ink">
@@ -118,7 +108,7 @@ export function OnboardingPlanBuilder() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="font-display font-semibold text-ink">
-              Урьдчилан харах — {jobTitle} ({companyName})
+              Урьдчилан харах — {jobTitle}
             </h2>
             <span className="text-sm text-ink/50">{employeeEmail}</span>
           </div>

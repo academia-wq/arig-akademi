@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { XIcon, EditIcon, PlusIcon } from "@/components/icons";
 import { updateModule } from "@/app/(app)/admin/actions";
 import { CATEGORIES } from "@/components/add-course-modal";
+import { VideoUploader } from "@/components/video-uploader";
+import { ImageUploader } from "@/components/image-uploader";
+import { PdfMaterialUploader } from "@/components/pdf-material-uploader";
 
 export function EditModuleButton({
   moduleId,
@@ -12,12 +15,18 @@ export function EditModuleButton({
   category,
   courseId,
   courses,
+  firstLessonId,
+  firstLessonHasVideo,
+  firstLessonImageUrl,
 }: {
   moduleId: string;
   title: string;
   category: string | null;
   courseId: string;
   courses: { id: string; title: string }[];
+  firstLessonId?: string | null;
+  firstLessonHasVideo?: boolean;
+  firstLessonImageUrl?: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -167,6 +176,41 @@ export function EditModuleButton({
                   ))}
                 </select>
               </div>
+
+              {firstLessonId && (
+                <div className="flex flex-col gap-4 border-t border-ink/10 pt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-ink">
+                      Видео файл (MP4, MOV — макс 2GB)
+                    </label>
+                    <div className="mt-1.5">
+                      {firstLessonHasVideo ? (
+                        <p className="text-sm text-accent">✓ Видео холбогдсон байна</p>
+                      ) : (
+                        <VideoUploader lessonId={firstLessonId} />
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-ink">Зураг оруулах</label>
+                    <div className="mt-1.5">
+                      <ImageUploader
+                        lessonId={firstLessonId}
+                        courseId={courseId}
+                        imageUrl={firstLessonImageUrl ?? null}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-ink">PDF материал</label>
+                    <div className="mt-1.5">
+                      <PdfMaterialUploader lessonId={firstLessonId} courseId={courseId} />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {error && <p className="text-sm text-red-600">{error}</p>}
 

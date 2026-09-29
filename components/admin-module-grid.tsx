@@ -20,6 +20,9 @@ export type ModuleCard = {
   thumbnailUrl: string | null;
   lessonCount: number;
   durationSeconds: number;
+  firstLessonId: string | null;
+  firstLessonHasVideo: boolean;
+  firstLessonImageUrl: string | null;
 };
 
 export function AdminModuleGrid({
@@ -155,6 +158,9 @@ export function AdminModuleGrid({
                   category={m.category}
                   courseId={m.courseId}
                   courses={courseOptions}
+                  firstLessonId={m.firstLessonId}
+                  firstLessonHasVideo={m.firstLessonHasVideo}
+                  firstLessonImageUrl={m.firstLessonImageUrl}
                 />
                 <button
                   type="button"

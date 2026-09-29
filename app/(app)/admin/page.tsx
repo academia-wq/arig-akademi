@@ -49,7 +49,9 @@ export default async function AdminOverviewPage() {
     admin.from("enrollments").select("user_id, course_id, enrolled_at"),
     admin
       .from("lessons")
-      .select("id, module_id, duration_seconds, image_url, modules!inner(course_id)"),
+      .select(
+        "id, module_id, position, duration_seconds, image_url, mux_playback_id, modules!inner(course_id)"
+      ),
     admin.from("lesson_progress").select("user_id, lesson_id").eq("is_completed", true),
     admin.from("modules").select("id, title, category, course_id, position").order("position"),
   ]);
@@ -60,6 +62,10 @@ export default async function AdminOverviewPage() {
   const lessonCountByModule = new Map<string, number>();
   const durationByModule = new Map<string, number>();
   const thumbnailByModule = new Map<string, string>();
+  const firstLessonByModule = new Map<
+    string,
+    { id: string; position: number; imageUrl: string | null; hasVideo: boolean }
+  >();
   for (const l of lessons || []) {
     const courseId = (l as any).modules.course_id;
     const moduleId = (l as any).module_id;
@@ -71,6 +77,15 @@ export default async function AdminOverviewPage() {
     );
     if ((l as any).image_url && !thumbnailByModule.has(moduleId)) {
       thumbnailByModule.set(moduleId, (l as any).image_url);
+    }
+    const existingFirst = firstLessonByModule.get(moduleId);
+    if (!existingFirst || (l as any).position < existingFirst.position) {
+      firstLessonByModule.set(moduleId, {
+        id: (l as any).id,
+        position: (l as any).position,
+        imageUrl: (l as any).image_url || null,
+        hasVideo: !!(l as any).mux_playback_id,
+      });
     }
   }
   const profileById = new Map((profiles || []).map((p) => [p.id, p]));
@@ -126,6 +141,9 @@ export default async function AdminOverviewPage() {
       thumbnailUrl: thumbnailByModule.get(m.id) || null,
       lessonCount: lessonCountByModule.get(m.id) || 0,
       durationSeconds: durationByModule.get(m.id) || 0,
+      firstLessonId: firstLessonByModule.get(m.id)?.id || null,
+      firstLessonHasVideo: firstLessonByModule.get(m.id)?.hasVideo || false,
+      firstLessonImageUrl: firstLessonByModule.get(m.id)?.imageUrl || null,
     };
   });
 
