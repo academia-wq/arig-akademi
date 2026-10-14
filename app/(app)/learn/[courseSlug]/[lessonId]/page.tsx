@@ -74,6 +74,16 @@ export default async function LessonPage({
     currentModule.lessons.length > 0 &&
     currentModule.lessons.every((l: any) => completedSet.has(l.id));
 
+  // Баярын цонхонд: энэ хичээл / модуль дууссаны дараах явц, дараагийн алхам.
+  const doneAfterLesson = completedCount + (completedSet.has(currentLesson.id) ? 0 : 1);
+  const doneAfterModule =
+    completedCount + currentModule.lessons.filter((l: any) => !completedSet.has(l.id)).length;
+  const nextLessonHref = nextLesson ? `/learn/${course.slug}/${nextLesson.id}` : null;
+  const nextModule = modules[modules.indexOf(currentModule) + 1];
+  const nextModuleHref = nextModule?.lessons[0]
+    ? `/learn/${course.slug}/${nextModule.lessons[0].id}`
+    : null;
+
   const materials: string[] = currentLesson.material_urls || [];
   const description = currentLesson.content_text || course.description;
 
@@ -101,6 +111,9 @@ export default async function LessonPage({
               playbackId={currentLesson.mux_playback_id}
               startTime={currentProgress?.last_position_seconds || 0}
               initiallyCompleted={currentProgress?.is_completed || false}
+              courseDone={doneAfterLesson}
+              courseTotal={totalLessons}
+              nextHref={nextLessonHref}
             />
           ) : currentLesson.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -186,6 +199,9 @@ export default async function LessonPage({
             moduleId={currentModule.id}
             courseSlug={course.slug}
             initiallyCompleted={moduleCompleted}
+            courseDone={doneAfterModule}
+            courseTotal={totalLessons}
+            nextHref={nextModuleHref}
           />
         </div>
 

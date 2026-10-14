@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import MuxPlayer from "@mux/mux-player-react";
+import { LessonCelebration } from "@/components/lesson-celebration";
 
 const COMPLETION_THRESHOLD = 0.9; // 90%+ үзвэл дууссанд тооцно (спек 4.3.4)
 const SAVE_INTERVAL_MS = 10_000; // 10 секунд тутамд хадгална (спек 4.3.3)
@@ -11,15 +13,34 @@ export function LessonPlayer({
   playbackId,
   startTime,
   initiallyCompleted,
+  courseDone,
+  courseTotal,
+  nextHref,
 }: {
   lessonId: string;
   playbackId: string;
   startTime: number;
   initiallyCompleted: boolean;
+  // Энэ хичээл дууссаны дараах сургалтын явц (баярын цонхонд харуулна).
+  courseDone: number;
+  courseTotal: number;
+  nextHref: string | null;
 }) {
+  const router = useRouter();
   const [completed, setCompleted] = useState(initiallyCompleted);
+  const [celebrating, setCelebrating] = useState(false);
   const lastSavedAt = useRef(0);
   const hasMarkedComplete = useRef(initiallyCompleted);
+
+  // Хичээл анх удаа дуусахад нэг л удаа дуудагдана.
+  function markCompleteOnce(positionSeconds: number) {
+    if (hasMarkedComplete.current) return false;
+    hasMarkedComplete.current = true;
+    setCompleted(true);
+    setCelebrating(true);
+    saveProgress(positionSeconds, true).then(() => router.refresh());
+    return true;
+  }
 
   const saveProgress = useCallback(
     async (positionSeconds: number, isCompleted: boolean) => {
@@ -48,20 +69,13 @@ export function LessonPlayer({
     lastSavedAt.current = now;
 
     const ratio = media.duration > 0 ? media.currentTime / media.duration : 0;
-    const justCompleted = !hasMarkedComplete.current && ratio >= COMPLETION_THRESHOLD;
-
-    if (justCompleted) {
-      hasMarkedComplete.current = true;
-      setCompleted(true);
-    }
+    if (ratio >= COMPLETION_THRESHOLD && markCompleteOnce(media.currentTime)) return;
 
     saveProgress(media.currentTime, hasMarkedComplete.current);
   }
 
   function handleMarkComplete() {
-    hasMarkedComplete.current = true;
-    setCompleted(true);
-    saveProgress(0, true);
+    markCompleteOnce(0);
   }
 
   return (
@@ -73,9 +87,7 @@ export function LessonPlayer({
         metadata={{ video_id: lessonId }}
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => {
-          hasMarkedComplete.current = true;
-          setCompleted(true);
-          saveProgress(0, true);
+          if (!markCompleteOnce(0)) saveProgress(0, true);
         }}
         style={{ aspectRatio: "16/9", width: "100%", borderRadius: "8px" }}
       />
@@ -92,6 +104,15 @@ export function LessonPlayer({
           </button>
         )}
       </div>
+
+      {celebrating && (
+        <LessonCelebration
+          done={courseDone}
+          total={courseTotal}
+          nextHref={nextHref}
+          onClose={() => setCelebrating(false)}
+        />
+      )}
     </div>
   );
 }

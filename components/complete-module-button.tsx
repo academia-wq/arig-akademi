@@ -3,22 +3,47 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { completeModule } from "@/app/(app)/learn/actions";
+import { LessonCelebration } from "@/components/lesson-celebration";
 
 export function CompleteModuleButton({
   moduleId,
   courseSlug,
   initiallyCompleted,
+  courseDone,
+  courseTotal,
+  nextHref,
 }: {
   moduleId: string;
   courseSlug: string;
   initiallyCompleted: boolean;
+  // Модуль дууссаны дараах сургалтын явц (баярын цонхонд харуулна).
+  courseDone: number;
+  courseTotal: number;
+  nextHref: string | null;
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
+
+  const celebration = celebrating && (
+    <LessonCelebration
+      title="Модуль дууслаа!"
+      done={courseDone}
+      total={courseTotal}
+      nextHref={nextHref}
+      nextLabel="Дараагийн модуль"
+      onClose={() => setCelebrating(false)}
+    />
+  );
 
   if (initiallyCompleted) {
-    return <p className="mt-4 text-center text-sm font-medium text-accent">✓ Модуль дууссан</p>;
+    return (
+      <>
+        <p className="mt-4 text-center text-sm font-medium text-accent">✓ Модуль дууссан</p>
+        {celebration}
+      </>
+    );
   }
 
   async function handleClick() {
@@ -26,8 +51,10 @@ export function CompleteModuleButton({
     setError(null);
     const result = await completeModule(moduleId, courseSlug);
     setSaving(false);
-    if (result.success) router.refresh();
-    else setError(result.error);
+    if (result.success) {
+      setCelebrating(true);
+      router.refresh();
+    } else setError(result.error);
   }
 
   return (
@@ -41,6 +68,7 @@ export function CompleteModuleButton({
         {saving ? "Хадгалж байна..." : "Модулийг дуусгах"}
       </button>
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {celebration}
     </div>
   );
 }
