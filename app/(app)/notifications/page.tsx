@@ -57,17 +57,32 @@ export default async function NotificationsPage() {
 
   const unreadCount = items.filter((n) => !n.is_read).length;
 
-  return (
-    <div>
-      <h1 className="font-display text-2xl font-semibold text-ink">Мэдэгдэл</h1>
-      <p className="mt-1 text-sm text-ink/50">
-        Нийт {items.length} мэдэгдэлтэй,{" "}
-        <span className="font-medium text-brand-500">{unreadCount} Уншаагүй</span>
-      </p>
+  // Ажилтны нийт тоо — зөвхөн admin/instructor-т харагдана (профайлын RLS тул service role).
+  const { data: myProfile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const isStaff = myProfile?.role === "admin" || myProfile?.role === "instructor";
+  const { count: employeeCount } = isStaff
+    ? await createServiceRoleClient()
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+    : { count: null };
 
-      <div className="mt-6">
-        <NotificationsList items={items} />
-      </div>
-    </div>
+  return (
+    <NotificationsList
+      items={items}
+      employeeCount={employeeCount}
+      header={
+        <div>
+          <h1 className="text-xl leading-8 text-ink">Мэдэгдэл</h1>
+          <p className="mt-1 text-base text-[#8A9DA2]">
+            Нийт {items.length} мэдэгдэлтэй,{" "}
+            <span className="text-brand-500">{unreadCount} Уншаагүй</span>
+          </p>
+        </div>
+      }
+    />
   );
 }

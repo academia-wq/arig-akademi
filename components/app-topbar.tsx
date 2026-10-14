@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { SearchIcon, BellIcon, MenuIcon } from "@/components/icons";
 import { SignOutButton } from "@/components/sign-out-button";
+import { NotificationsDropdown } from "@/components/notifications-dropdown";
 import { initialsOf } from "@/lib/format";
 
 type SearchResults = {
@@ -45,7 +46,10 @@ export function AppTopBar({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const pageTitle = PAGE_TITLES.find((t) => pathname?.startsWith(t.prefix))?.title;
+  const pageTitle =
+    pathname === "/"
+      ? "Нүүр"
+      : PAGE_TITLES.find((t) => pathname?.startsWith(t.prefix))?.title;
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -120,7 +124,7 @@ export function AppTopBar({
   const hasResults = results.courses.length > 0 || results.lessons.length > 0;
 
   return (
-    <header className="relative z-20 flex h-[80px] items-center justify-between gap-3 border-b border-ink/10 bg-white px-4 sm:pl-8 sm:pr-8 lg:pr-[120px]">
+    <header className="relative z-20 flex h-[80px] items-center justify-between gap-3 border-b border-[#D9D9D9] bg-white px-4 sm:pl-8 sm:pr-8 lg:pr-[120px]">
       <button
         type="button"
         onClick={onMenuClick}
@@ -132,13 +136,13 @@ export function AppTopBar({
 
       <div className="flex min-w-0 flex-1 items-center gap-8">
       {pageTitle && (
-        <p className="hidden flex-shrink-0 text-base text-ink md:block">{pageTitle}</p>
+        <p className="hidden flex-shrink-0 text-base text-ink md:block md:w-[166px]">{pageTitle}</p>
       )}
       <div className="relative min-w-0 max-w-[320px] flex-1" ref={searchRef}>
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          className="focus-ring flex w-full items-center gap-2 rounded-lg border border-ink/15 bg-paper px-4 py-2.5 text-left text-sm text-ink/50"
+          className="focus-ring flex w-full items-center gap-2 rounded-lg border border-[#D9D9D9] bg-paper px-4 py-[9px] text-left text-sm text-[#8A9DA2]"
         >
           <SearchIcon className="h-4 w-4 flex-shrink-0" />
           <span className="truncate">Сургалт, сэдэв, ур чадвар хайх...</span>
@@ -216,7 +220,7 @@ export function AppTopBar({
       </div>
       </div>
 
-      <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">
+      <div className="flex flex-shrink-0 items-center gap-2 sm:gap-6">
         {email ? (
           <div className="relative" ref={menuRef}>
             <button
@@ -224,15 +228,15 @@ export function AppTopBar({
               onClick={() => setMenuOpen((v) => !v)}
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              className="focus-ring flex items-center gap-3"
+              className="focus-ring -mx-2 -my-1 flex items-center gap-3 rounded-lg px-2 py-1 transition hover:bg-ink/5 aria-expanded:bg-ink/5 sm:gap-6"
             >
               <div className="hidden text-right sm:block">
-                <p className="font-display text-sm font-semibold text-ink">
+                <p className="font-display text-sm font-semibold leading-5 text-ink">
                   {fullName || email}
                 </p>
-                <p className="text-xs text-ink/50">{position || "Ажилтан"}</p>
+                <p className="mt-0.5 text-xs font-medium leading-[18px] text-brand-500">{position || "Ажилтан"}</p>
               </div>
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-brand-500 bg-brand-50 font-display text-sm font-semibold text-brand-700">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-brand-500 bg-brand-50 font-display text-sm font-semibold text-brand-700">
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -283,17 +287,18 @@ export function AppTopBar({
           </div>
         )}
 
-        <Link
-          prefetch={false}
-          href="/notifications"
-          aria-label="Мэдэгдэл"
-          className="focus-ring relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-ink/60 transition hover:bg-ink/5 hover:text-ink"
-        >
-          <BellIcon className="h-[22px] w-[22px]" />
-          {unreadNotifications > 0 && (
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-500" />
-          )}
-        </Link>
+        {email ? (
+          <NotificationsDropdown unreadCount={unreadNotifications} />
+        ) : (
+          <Link
+            prefetch={false}
+            href="/notifications"
+            aria-label="Мэдэгдэл"
+            className="focus-ring relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-ink/60 transition hover:bg-ink/5 hover:text-ink"
+          >
+            <BellIcon className="h-[22px] w-[22px]" />
+          </Link>
+        )}
       </div>
     </header>
   );

@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { XIcon } from "@/components/icons";
-import { NOTIFICATION_META, type NotificationType } from "@/lib/notification-meta";
+import {
+  NOTIFICATION_META,
+  notificationHref,
+  type NotificationType,
+} from "@/lib/notification-meta";
 import { formatRelativeTime } from "@/lib/format";
 import { markNotificationRead, deleteNotification } from "@/app/(app)/notifications/actions";
 
@@ -31,16 +35,7 @@ export function NotificationDetailModal({
   const meta = NOTIFICATION_META[notification.type];
   const Icon = meta.icon;
 
-  const ctaHref =
-    notification.type === "employee_added"
-      ? notification.relatedUserId
-        ? `/admin/students/${notification.relatedUserId}`
-        : null
-      : notification.type === "certificate_ready"
-      ? "/certificates"
-      : notification.courseSlug
-      ? `/learn/${notification.courseSlug}`
-      : null;
+  const ctaHref = notificationHref(notification);
 
   async function handleMarkRead() {
     setBusy(true);

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import type { OnboardingPlan } from "@/lib/anthropic/onboarding-plan-schema";
 import { SUPPORTED_FILE_ACCEPT } from "@/lib/constants/file-upload";
 import { generatePlan, sendPlan } from "@/app/(admin)/admin/onboarding/actions";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export function OnboardingPlanBuilder() {
   const [isGenerating, startGenerating] = useTransition();
@@ -11,6 +12,7 @@ export function OnboardingPlanBuilder() {
   const [plan, setPlan] = useState<OnboardingPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sentOk, setSentOk] = useState(false);
+  const [confirm, confirmDialog] = useConfirm();
 
   const companyName = "Ариг Академи";
   const [employeeEmail, setEmployeeEmail] = useState("");
@@ -34,11 +36,13 @@ export function OnboardingPlanBuilder() {
     });
   }
 
-  function handleSend() {
+  async function handleSend() {
     if (!plan) return;
-    const confirmed = window.confirm(
-      `"${employeeEmail}" хаяг руу онбординг төлөвлөгөөг и-мэйлээр илгээх үү?`
-    );
+    const confirmed = await confirm({
+      title: "И-мэйл илгээх үү?",
+      message: `"${employeeEmail}" хаяг руу онбординг төлөвлөгөөг и-мэйлээр илгээнэ.`,
+      confirmLabel: "Илгээх",
+    });
     if (!confirmed) return;
 
     setError(null);
@@ -60,6 +64,7 @@ export function OnboardingPlanBuilder() {
 
   return (
     <div className="mt-6 rounded-lg border border-ink/10 bg-white p-4">
+      {confirmDialog}
       {!plan && (
         <form onSubmit={handleGenerate} className="space-y-4">
           <div>

@@ -28,7 +28,7 @@ export function Sidebar({
     isStaff
       ? { href: "/admin", label: "Админ панель", icon: LayoutDashboardIcon }
       : { href: "/dashboard", label: "Хяналтын самбар", icon: LayoutDashboardIcon },
-    { href: "/learn", label: "Миний сургалт", icon: BookIcon, iconClassName: "h-6 w-6 -m-0.5", strokeWidth: 2 },
+    { href: "/learn", label: isStaff ? "Сургалт" : "Миний сургалт", icon: BookIcon, iconClassName: "h-6 w-6 -m-0.5", strokeWidth: 2 },
     { href: "/certificates", label: "Гэрчилгээнүүд", icon: AwardIcon },
     { href: "/settings", label: "Профайл", icon: UserIcon },
   ];
@@ -36,7 +36,7 @@ export function Sidebar({
   return (
     <aside
       className={clsx(
-        "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-shrink-0 flex-col overflow-y-auto bg-ink px-6 py-6 transition-transform duration-200 md:static md:z-auto md:translate-x-0",
+        "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-shrink-0 flex-col overflow-y-auto bg-ink px-6 py-6 transition-transform duration-200 md:sticky md:top-0 md:z-auto md:h-screen md:translate-x-0",
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       )}
     >
@@ -51,7 +51,7 @@ export function Sidebar({
           <img
             src="/logo-full.svg"
             alt="Ариг Академи — Хөгжлөөр үйлчилнэ"
-            className="h-auto w-[178px]"
+            className="h-auto w-[178px] max-w-none md:-mx-2 md:w-[223px]"
           />
         </Link>
         <button
@@ -64,7 +64,7 @@ export function Sidebar({
         </button>
       </div>
 
-      <nav className="mt-8 flex flex-1 flex-col gap-2">
+      <nav className="mt-[76px] flex flex-1 flex-col gap-2">
         {navItems.map((item) => {
           const active =
             item.href === "/"
@@ -93,7 +93,7 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="mt-6 hidden sm:block">
+      <div className="mx-auto mb-6 mt-6 hidden w-[195px] sm:block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/icons/sidebar-illustration.svg"

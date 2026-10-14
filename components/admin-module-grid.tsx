@@ -7,6 +7,7 @@ import { SearchIcon, TrashIcon, BookIcon } from "@/components/icons";
 import { formatDuration, initialsOf } from "@/lib/format";
 import { EditModuleButton } from "@/components/edit-module-modal";
 import { deleteModuleAdmin } from "@/app/(app)/admin/actions";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export type ModuleCard = {
   id: string;
@@ -36,14 +37,27 @@ export function AdminModuleGrid({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "draft">("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirm, confirmDialog] = useConfirm();
 
   async function handleDelete(m: ModuleCard) {
-    if (!confirm(`"${m.title}" сургалтыг устгах уу? Доторх бүх хичээл устна.`)) return;
+    const ok = await confirm({
+      title: "Сургалт устгах уу?",
+      message: `"${m.title}" сургалт болон доторх бүх хичээл устна. Энэ үйлдлийг буцаах боломжгүй.`,
+      confirmLabel: "Устгах",
+      tone: "danger",
+    });
+    if (!ok) return;
     setDeletingId(m.id);
     const result = await deleteModuleAdmin(m.id);
     setDeletingId(null);
     if (result.success) router.refresh();
-    else alert(result.error);
+    else
+      await confirm({
+        title: "Устгаж чадсангүй",
+        message: result.error,
+        confirmLabel: "Ойлголоо",
+        showCancel: false,
+      });
   }
 
   const filtered = useMemo(() => {
@@ -79,7 +93,7 @@ export function AdminModuleGrid({
               "focus-ring h-[39px] rounded-[7.5px] px-5 text-sm font-medium transition",
               filter === "all"
                 ? "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)]"
-                : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-ink/30"
+                : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-brand-300 hover:bg-brand-50 hover:text-brand-500"
             )}
           >
             Бүгд
@@ -91,7 +105,7 @@ export function AdminModuleGrid({
               "focus-ring h-[39px] rounded-[7.5px] px-5 text-sm font-medium transition",
               filter === "draft"
                 ? "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)]"
-                : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-ink/30"
+                : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-brand-300 hover:bg-brand-50 hover:text-brand-500"
             )}
           >
             Ноорог
@@ -182,6 +196,8 @@ export function AdminModuleGrid({
           </p>
         )}
       </div>
+
+      {confirmDialog}
     </div>
   );
 }

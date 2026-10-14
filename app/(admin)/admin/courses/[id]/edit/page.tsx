@@ -226,7 +226,7 @@ export default async function EditCoursePage({
                   </button>
                 </form>
                 <form action={removeModule}>
-                  <DeleteButton confirmText={`"${mod.title}" бүлгийг устгах уу? Доторх бүх хичээл устна.`} />
+                  <DeleteButton title="Бүлэг устгах уу?" confirmText={`"${mod.title}" бүлэг болон доторх бүх хичээл устна. Энэ үйлдлийг буцаах боломжгүй.`} />
                 </form>
               </div>
 
@@ -298,7 +298,7 @@ export default async function EditCoursePage({
                         </div>
                       </form>
                       <form action={removeLesson} className="mt-2">
-                        <DeleteButton confirmText={`"${lesson.title}" хичээлийг устгах уу?`} />
+                        <DeleteButton title="Хичээл устгах уу?" confirmText={`"${lesson.title}" хичээл устна. Энэ үйлдлийг буцаах боломжгүй.`} />
                       </form>
                       <div className="mt-2">
                         {lesson.mux_playback_id ? (

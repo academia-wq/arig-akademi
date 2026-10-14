@@ -30,7 +30,8 @@ export default async function AppLayout({
     isStaff = profile?.role === "admin" || profile?.role === "instructor";
     fullName = profile?.full_name ?? null;
     avatarUrl = profile?.avatar_url ?? null;
-    position = profile?.position ?? null;
+    // Дизайнд админы нэрийн доор албан тушаалын оронд "Admin" гэж харагдана.
+    position = profile?.role === "admin" ? "Admin" : profile?.position ?? null;
     unreadNotifications = count || 0;
   }
 

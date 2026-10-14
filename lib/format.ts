@@ -44,13 +44,25 @@ export function formatRelativeTime(isoDate: string): string {
   const diffMs = Date.now() - new Date(isoDate).getTime();
   const diffMinutes = Math.floor(diffMs / 60000);
   if (diffMinutes < 1) return "дөнгөж сая";
-  if (diffMinutes < 60) return `${diffMinutes} минут өмнө`;
+  if (diffMinutes < 60) return `${diffMinutes} минутын өмнө`;
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} цаг өмнө`;
+  if (diffHours < 24) return `${diffHours} цагийн өмнө`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 30) return `${diffDays} өдөр өмнө`;
+  if (diffDays < 30) return `${diffDays} өдрийн өмнө`;
   const diffMonths = Math.floor(diffDays / 30);
-  return `${diffMonths} сар өмнө`;
+  return `${diffMonths} сарын өмнө`;
+}
+
+// Жижиг жагсаалтад зориулсан богино хэлбэр: "5 мин", "2 цаг", "3 өдөр".
+export function formatRelativeTimeShort(isoDate: string): string {
+  const diffMinutes = Math.floor((Date.now() - new Date(isoDate).getTime()) / 60000);
+  if (diffMinutes < 1) return "дөнгөж сая";
+  if (diffMinutes < 60) return `${diffMinutes} мин`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} цаг`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays} өдөр`;
+  return `${Math.floor(diffDays / 30)} сар`;
 }
 
 export function formatDuration(totalSeconds: number): string {

@@ -29,7 +29,7 @@ export function AdminTabs({
               "focus-ring whitespace-nowrap rounded-[6px] px-6 py-2 text-sm font-medium transition",
               active === i
                 ? "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)]"
-                : "text-ink/50"
+                : "text-ink/50 hover:bg-brand-50 hover:text-brand-500"
             )}
           >
             {tab.label}

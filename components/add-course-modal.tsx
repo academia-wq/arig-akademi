@@ -10,7 +10,7 @@ import { PdfMaterialUploader } from "@/components/pdf-material-uploader";
 
 export const CATEGORIES = [
   "Менежмент",
-  "Санхүу",
+  "Санхүү",
   "Технологи",
   "Гал тогоо",
   "Харилцагчийн үйлчилгээ",

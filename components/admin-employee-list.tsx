@@ -65,7 +65,7 @@ export function AdminEmployeeList({ employees }: { employees: Employee[] }) {
                 "focus-ring h-[39px] rounded-[7.5px] px-5 text-sm font-medium transition",
                 department === d
                   ? "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)]"
-                  : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-ink/30"
+                  : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-brand-300 hover:bg-brand-50 hover:text-brand-500"
               )}
             >
               {d ?? "Бүгд"}

@@ -34,7 +34,7 @@ export default async function AdminLayout({
       isStaff
       fullName={profile?.full_name ?? null}
       email={user.email ?? null}
-      position={profile?.position ?? null}
+      position={profile?.role === "admin" ? "Admin" : profile?.position ?? null}
       avatarUrl={profile?.avatar_url ?? null}
       unreadNotifications={count || 0}
     >

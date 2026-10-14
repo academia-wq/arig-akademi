@@ -3,19 +3,19 @@ import { BrandMarkIcon } from "@/components/icons";
 
 export function AppFooter() {
   return (
-    <footer className="border-t border-[#D9D9D9] bg-paper pb-16 pl-8 pr-8 pt-[35px] lg:pr-[120px]">
+    <footer className="border-t border-[#D9D9D9] bg-paper pb-16 pl-8 pr-8 pt-[35px] lg:pl-[60px] lg:pr-[192px]">
       <div className="flex flex-col justify-between gap-8 md:flex-row">
         <div>
           <Link prefetch={false} href="/" className="focus-ring flex items-center gap-4">
             <BrandMarkIcon className="h-[50px] w-[50px] flex-shrink-0 text-ink" />
             <div>
-              <p className="font-display text-lg font-semibold uppercase tracking-wide text-ink">
+              <p className="font-display text-lg font-semibold uppercase leading-7 text-ink">
                 Ариг <span className="text-brand-500">академи</span>
               </p>
               <p className="text-sm text-ink">Хөгжлөөр үйлчилнэ</p>
             </div>
           </Link>
-          <p className="mt-[18px] max-w-[250px] text-xs text-[#8A9DA2]">
+          <p className="mt-4 max-w-[250px] text-xs leading-[18px] text-[#8A9DA2]">
             Ажилтнуудынхаа мэдлэг, ур чадварыг тасралтгүй хөгжүүлэх цахим сургалтын
             платформ.
           </p>

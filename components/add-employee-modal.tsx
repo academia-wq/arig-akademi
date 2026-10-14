@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { XIcon } from "@/components/icons";
 import { assignEmployee } from "@/app/(app)/admin/actions";
 
-export const DEPARTMENTS = ["Санхүу", "Менежмент", "Технологи", "Гал тогоо"];
+export const DEPARTMENTS = ["Санхүү", "Менежмент", "Технологи", "Гал тогоо"];
 
 export const POSITIONS: Record<string, string[]> = {
-  "Санхүу": ["Нягтлан бодогч", "Санхүүгийн менежер", "Кассир"],
+  "Санхүү": ["Нягтлан бодогч", "Санхүүгийн менежер", "Кассир"],
   "Менежмент": ["Ерөнхий менежер", "Салбарын менежер", "Ээлжийн менежер"],
   "Технологи": ["IT инженер", "Систем администратор", "Дэмжлэгийн ажилтан"],
   "Гал тогоо": ["Тогооч", "Туслах тогооч", "Гал тогооны эрхлэгч"],
@@ -76,7 +76,7 @@ export function AddEmployeeButton({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            className="my-auto w-full max-w-md rounded-2xl bg-white p-6 text-left shadow-xl"
           >
             <div className="flex items-center justify-between border-b border-ink/10 pb-4">
               <p className="text-lg text-ink">Ажилтан нэмэх</p>
@@ -112,7 +112,7 @@ export function AddEmployeeButton({
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                 {DEPARTMENTS.map((d) => (
                   <button
                     key={d}
@@ -121,7 +121,7 @@ export function AddEmployeeButton({
                       setDepartment(d);
                       setPosition(POSITIONS[d][0]);
                     }}
-                    className={`focus-ring rounded-md border px-3 py-1.5 text-sm font-medium transition ${
+                    className={`focus-ring flex-auto whitespace-nowrap rounded-md border px-2 py-1.5 text-sm font-medium transition ${
                       department === d
                         ? "border-brand-500 bg-brand-500 text-white"
                         : "border-ink/15 text-ink/60 hover:border-ink/30"

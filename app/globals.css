@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-display: "Montserrat", sans-serif;
-  --font-body: "Montserrat", sans-serif;
-}
-
 html {
   scrollbar-gutter: stable;
 }

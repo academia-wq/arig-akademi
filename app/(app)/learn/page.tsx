@@ -6,6 +6,7 @@ import { getCourseIcon } from "@/lib/course-icon";
 import { formatDuration, initialsOf } from "@/lib/format";
 import { isModuleVisible } from "@/lib/module-visibility";
 import { AdminTabs } from "@/components/admin-tabs";
+import { Tooltip } from "@/components/tooltip";
 import { ArrowRightIcon, BookIcon, PlayCircleIcon } from "@/components/icons";
 
 export default async function LearnCoursesPage() {
@@ -201,11 +202,13 @@ export default async function LearnCoursesPage() {
               <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6">
                 <p className="text-ink">Нийт сургалт</p>
                 <div className="mt-5 overflow-hidden rounded-lg">
-                  <div className="flex items-center justify-between bg-brand-500 px-4 py-3 text-xs font-medium uppercase text-paper">
-                    <span>Сургалтын нэр</span>
-                    <span className="pr-14">Нийт хичээл</span>
+                  {/* Гарчиг болон мөрүүд ижил багана, ижил scrollbar-ийн зайтай тул тоо гарчгийн яг доор байрлана. */}
+                  <div className="flex items-center gap-4 overflow-hidden bg-brand-500 px-4 py-3 text-xs font-medium uppercase text-paper [scrollbar-gutter:stable]">
+                    <span className="flex-1">Сургалтын нэр</span>
+                    <span className="w-24 flex-shrink-0 text-center">Нийт хичээл</span>
+                    <span className="w-6 flex-shrink-0" />
                   </div>
-                  <div className="max-h-[288px] overflow-y-auto">
+                  <div className="max-h-[288px] overflow-y-auto [scrollbar-gutter:stable]">
                     {moduleRows.map((m: any) => (
                       <Link
                         prefetch={false}
@@ -228,10 +231,12 @@ export default async function LearnCoursesPage() {
                             {m.seconds > 0 ? ` · Хичээлийн нийт цаг | ${formatDuration(m.seconds)}` : ""}
                           </span>
                         </span>
-                        <span className="w-16 flex-shrink-0 text-center text-sm text-ink">
+                        <span className="w-24 flex-shrink-0 text-center text-sm text-ink">
                           {m.lessonCount}
                         </span>
-                        <PlayCircleIcon className="h-6 w-6 flex-shrink-0 text-brand-500" />
+                        <Tooltip label="Үзэх">
+                          <PlayCircleIcon className="h-6 w-6 flex-shrink-0 text-brand-500" />
+                        </Tooltip>
                       </Link>
                     ))}
                   </div>

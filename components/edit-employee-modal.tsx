@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { XIcon, EditIcon } from "@/components/icons";
+import { Tooltip } from "@/components/tooltip";
 import { assignEmployee } from "@/app/(app)/admin/actions";
 import { DEPARTMENTS, POSITIONS } from "@/components/add-employee-modal";
 
@@ -56,14 +57,16 @@ export function EditEmployeeButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Засах"
-        className="focus-ring inline-flex text-ink/40 hover:text-brand-500"
-      >
-        <EditIcon className="h-4 w-4" />
-      </button>
+      <Tooltip label="Засах">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Засах"
+          className="focus-ring inline-flex text-ink/40 hover:text-brand-500"
+        >
+          <EditIcon className="h-4 w-4" />
+        </button>
+      </Tooltip>
 
       {open && (
         <div
@@ -72,7 +75,7 @@ export function EditEmployeeButton({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            className="my-auto w-full max-w-md rounded-2xl bg-white p-6 text-left shadow-xl"
           >
             <div className="flex items-center justify-between border-b border-ink/10 pb-4">
               <p className="text-lg text-ink">Ажилтан засах</p>
@@ -94,7 +97,7 @@ export function EditEmployeeButton({
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                 {DEPARTMENTS.map((d) => (
                   <button
                     key={d}
@@ -103,7 +106,7 @@ export function EditEmployeeButton({
                       setSelectedDepartment(d);
                       setSelectedPosition(POSITIONS[d][0]);
                     }}
-                    className={`focus-ring rounded-md border px-3 py-1.5 text-sm font-medium transition ${
+                    className={`focus-ring flex-auto whitespace-nowrap rounded-md border px-2 py-1.5 text-sm font-medium transition ${
                       selectedDepartment === d
                         ? "border-brand-500 bg-brand-500 text-white"
                         : "border-ink/15 text-ink/60 hover:border-ink/30"
