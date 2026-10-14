@@ -38,7 +38,8 @@ export function LessonPlayer({
     hasMarkedComplete.current = true;
     setCompleted(true);
     setCelebrating(true);
-    saveProgress(positionSeconds, true).then(() => router.refresh());
+    // Хуудсыг (явцын дугуй г.м.) баярын цонх хаагдсаны дараа шинэчилнэ.
+    saveProgress(positionSeconds, true);
     return true;
   }
 
@@ -110,7 +111,10 @@ export function LessonPlayer({
           done={courseDone}
           total={courseTotal}
           nextHref={nextHref}
-          onClose={() => setCelebrating(false)}
+          onClose={() => {
+            setCelebrating(false);
+            router.refresh();
+          }}
         />
       )}
     </div>
