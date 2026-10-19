@@ -6,8 +6,12 @@ import MuxPlayer from "@mux/mux-player-react";
 import { LessonCelebration } from "@/components/lesson-celebration";
 import { PlayIcon } from "@/components/icons";
 
-const COMPLETION_THRESHOLD = 0.9; // 90%+ үзвэл дууссанд тооцно (спек 4.3.4)
+const COMPLETION_THRESHOLD = 0.9; // Видеоны 90%-ийг БОДИТООР үзвэл дууссанд тооцно (спек 4.3.4)
 const SAVE_INTERVAL_MS = 10_000; // 10 секунд тутамд хадгална (спек 4.3.3)
+// Энгийн тоглолтын үед timeupdate хооронд ~0.25с; үүнээс их үсрэлт = гүйлгэсэн (seek).
+const MAX_PLAYBACK_STEP = 1.5;
+// Урагш гүйлгэхэд хамгийн хол үзсэн цэгээс ийм хэмжээгээр л давахыг зөвшөөрнө.
+const SEEK_TOLERANCE = 2;
 
 export function LessonPlayer({
   lessonId,
@@ -33,6 +37,12 @@ export function LessonPlayer({
   const [started, setStarted] = useState(false);
   const lastSavedAt = useRef(0);
   const hasMarkedComplete = useRef(initiallyCompleted);
+  // Бодитоор тоглогдсон секундүүд (гүйлгэж алгассан хэсэг орохгүй). Урагш гүйлгэх хориотой тул
+  // өмнө нь хадгалсан байрлал хүртэлх хэсгийг үзсэнд тооцно.
+  const watchedSeconds = useRef(new Set<number>(Array.from({ length: Math.floor(startTime) }, (_, i) => i)));
+  const lastTime = useRef(startTime);
+  const maxReached = useRef(startTime);
+  const [watchedPercent, setWatchedPercent] = useState(0);
 
   // Хичээл анх удаа дуусахад нэг л удаа дуудагдана.
   function markCompleteOnce(positionSeconds: number) {
@@ -64,21 +74,56 @@ export function LessonPlayer({
     [lessonId]
   );
 
-  function handleTimeUpdate(e: Event) {
-    const media = e.currentTarget as HTMLMediaElement;
-    const now = Date.now();
-
-    if (now - lastSavedAt.current < SAVE_INTERVAL_MS) return;
-    lastSavedAt.current = now;
-
-    const ratio = media.duration > 0 ? media.currentTime / media.duration : 0;
-    if (ratio >= COMPLETION_THRESHOLD && markCompleteOnce(media.currentTime)) return;
-
-    saveProgress(media.currentTime, hasMarkedComplete.current);
+  function watchedRatio(duration: number) {
+    return duration > 0 ? Math.min(1, watchedSeconds.current.size / Math.floor(duration)) : 0;
   }
 
-  function handleMarkComplete() {
-    markCompleteOnce(0);
+  function handleTimeUpdate(e: Event) {
+    const media = e.currentTarget as HTMLMediaElement;
+    const time = media.currentTime;
+    const step = time - lastTime.current;
+
+    if (!hasMarkedComplete.current && time > maxReached.current + SEEK_TOLERANCE) {
+      // Урагш гүйлгэсэн — хамгийн хол үзсэн цэг рүү буцаана (дууссан хичээлд хязгааргүй).
+      media.currentTime = maxReached.current;
+      lastTime.current = maxReached.current;
+      return;
+    }
+
+    if (step > 0 && step <= MAX_PLAYBACK_STEP) {
+      // Энгийн тоглолт: энэ хооронд тоглогдсон секундүүдийг тэмдэглэнэ.
+      for (let s = Math.floor(lastTime.current); s < Math.floor(time); s++) watchedSeconds.current.add(s);
+      maxReached.current = Math.max(maxReached.current, time);
+    }
+    lastTime.current = time;
+
+    const ratio = watchedRatio(media.duration);
+    setWatchedPercent(Math.round(ratio * 100));
+    if (ratio >= COMPLETION_THRESHOLD && markCompleteOnce(time)) return;
+
+    const now = Date.now();
+    if (now - lastSavedAt.current < SAVE_INTERVAL_MS) return;
+    lastSavedAt.current = now;
+    saveProgress(Math.min(time, maxReached.current), hasMarkedComplete.current);
+  }
+
+  function handleEnded(e: Event) {
+    const media = e.currentTarget as HTMLMediaElement;
+    const reachedNormally = media.currentTime - lastTime.current <= MAX_PLAYBACK_STEP;
+    if (reachedNormally) {
+      // Сүүлийн секундүүдийг тоолно.
+      for (let s = Math.floor(lastTime.current); s < Math.ceil(media.duration); s++) watchedSeconds.current.add(s);
+      maxReached.current = media.duration;
+    } else if (!hasMarkedComplete.current) {
+      // Төгсгөл рүү гүйлгэсэн — тооцохгүй, хамгийн хол үзсэн цэг рүү буцаана.
+      media.currentTime = maxReached.current;
+      lastTime.current = maxReached.current;
+    }
+    const ratio = watchedRatio(media.duration);
+    setWatchedPercent(Math.round(ratio * 100));
+    if (ratio >= COMPLETION_THRESHOLD) markCompleteOnce(0);
+    // Хадгалах байрлал нь хамгийн хол БОДИТООР үзсэн цэгээс хэтрэхгүй.
+    else saveProgress(Math.min(media.currentTime, maxReached.current), hasMarkedComplete.current);
   }
 
   return (
@@ -93,9 +138,7 @@ export function LessonPlayer({
             autoPlay
             metadata={{ video_id: lessonId }}
             onTimeUpdate={handleTimeUpdate}
-            onEnded={() => {
-              if (!markCompleteOnce(0)) saveProgress(0, true);
-            }}
+            onEnded={handleEnded}
             style={
               {
                 width: "100%",
@@ -127,17 +170,16 @@ export function LessonPlayer({
           </button>
         )}
       </div>
-      <div className="mt-3 flex items-center justify-between">
-        <span className="text-sm text-ink/50">
-          {completed ? "Энэ хичээлийг дуусгасан" : "Явц хадгалагдаж байна..."}
-        </span>
-        {!completed && (
-          <button
-            onClick={handleMarkComplete}
-            className="focus-ring text-sm font-medium text-brand-500"
-          >
-            Дууссан гэж тэмдэглэх
-          </button>
+      <div className="mt-3 flex items-center justify-between gap-4 text-sm">
+        {completed ? (
+          <span className="text-accent">✓ Энэ хичээлийг дуусгасан</span>
+        ) : (
+          <>
+            <span className="text-ink/50">
+              Видеоны 90%-ийг үзэхэд хичээл дуусна. Урагш гүйлгэх боломжгүй.
+            </span>
+            <span className="flex-shrink-0 font-medium text-brand-500">Үзсэн: {watchedPercent}%</span>
+          </>
         )}
       </div>
 

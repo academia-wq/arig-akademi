@@ -6,6 +6,7 @@ import { CompleteModuleButton } from "@/components/complete-module-button";
 import { LessonCurriculumList } from "@/components/lesson-curriculum-list";
 import { ProgressRing } from "@/components/progress-ring";
 import { FigmaScale } from "@/components/figma-scale";
+import { LessonCompleteButton } from "@/components/lesson-complete-button";
 import { ChevronRightIcon } from "@/components/icons";
 import { isModuleVisible } from "@/lib/module-visibility";
 import { getCourseIcon } from "@/lib/course-icon";
@@ -146,6 +147,15 @@ export default async function LessonPage({
                 </div>
               );
             })()
+          )}
+          {!currentLesson.mux_playback_id && (
+            <LessonCompleteButton
+              lessonId={currentLesson.id}
+              initiallyCompleted={currentProgress?.is_completed || false}
+              courseDone={doneAfterLesson}
+              courseTotal={totalLessons}
+              nextHref={nextLessonHref}
+            />
           )}
         </div>
 
