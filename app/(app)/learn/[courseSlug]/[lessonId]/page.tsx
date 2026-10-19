@@ -88,7 +88,7 @@ export default async function LessonPage({
   const description = currentLesson.content_text || course.description;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+    <div className="grid gap-8 lg:-mr-[88px] lg:grid-cols-[minmax(0,1fr)_360px]">
       <main className="min-w-0">
         <div className="flex items-center gap-2 text-sm text-ink/50">
           <Link prefetch={false} href="/learn" className="focus-ring hover:text-brand-500">
@@ -120,14 +120,14 @@ export default async function LessonPage({
             <img
               src={currentLesson.image_url}
               alt={currentLesson.title}
-              className="aspect-video w-full rounded-xl border border-ink/10 object-cover"
+              className="aspect-[724/400] w-full rounded-2xl bg-ink/5 object-cover"
             />
           ) : (
             (() => {
               const courseIcon = getCourseIcon(course.title);
               return (
                 <div
-                  className={`flex aspect-video w-full items-center justify-center rounded-xl ${courseIcon.tint}`}
+                  className={`flex aspect-[724/400] w-full items-center justify-center rounded-2xl ${courseIcon.tint}`}
                 >
                   {courseIcon.illustration ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -145,12 +145,12 @@ export default async function LessonPage({
           )}
         </div>
 
-        <h1 className="mt-6 font-display text-xl font-semibold text-ink">
+        <h1 className="mt-8 text-xl leading-8 text-ink">
           {currentLesson.title}
         </h1>
 
         {description && (
-          <p className="mt-3 whitespace-pre-line text-sm text-ink/70">{description}</p>
+          <p className="mt-3 whitespace-pre-line text-sm leading-6 text-ink/80">{description}</p>
         )}
 
         {materials.length > 0 && (
@@ -186,13 +186,13 @@ export default async function LessonPage({
         </div>
       </main>
 
-      <aside className="flex flex-col gap-5">
-        <div className="rounded-2xl border border-ink/15 bg-white p-5">
-          <p className="text-sm font-medium text-ink">Таны явц</p>
+      <aside className="flex flex-col gap-6">
+        <div className="rounded-2xl bg-white p-6">
+          <p className="text-base text-ink">Таны явц</p>
           <div className="mt-4 flex items-center justify-center">
-            <ProgressRing percent={percent} />
+            <ProgressRing percent={percent} size={112} />
           </div>
-          <p className="mt-4 text-xs text-ink/50">
+          <p className="mt-6 text-sm text-[#8A9DA2]">
             {nextLesson ? `Дараагийн: ${nextLesson.title}` : "Энэ бол сүүлийн хичээл"}
           </p>
           <CompleteModuleButton
@@ -205,17 +205,17 @@ export default async function LessonPage({
           />
         </div>
 
-        <div className="rounded-2xl border border-ink/15 bg-white p-5">
-          <p className="text-sm font-medium text-ink">Сургалтын дэлгэрэнгүй</p>
+        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6">
+          <p className="text-base text-ink">Сургалтын дэлгэрэнгүй</p>
           <div className="mt-4 flex flex-col gap-3 text-sm">
             {totalDuration && (
               <div className="flex items-center justify-between">
-                <span className="text-ink/50">Хугацаа</span>
+                <span className="text-[#8A9DA2]">Хугацаа</span>
                 <span className="font-medium text-ink">{totalDuration}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-ink/50">Хичээлүүд</span>
+              <span className="text-[#8A9DA2]">Хичээлүүд</span>
               <span className="font-medium text-ink">{totalLessons} Хичээл</span>
             </div>
           </div>
@@ -226,12 +226,12 @@ export default async function LessonPage({
             <Link
               prefetch={false}
               href={`/learn/${course.slug}/${prevLesson.id}`}
-              className="focus-ring flex-1 rounded-md border border-[#8A9DA2] px-4 py-2.5 text-center text-sm font-medium text-[#8A9DA2] transition hover:border-ink hover:text-ink"
+              className="focus-ring flex-1 whitespace-nowrap rounded-md border border-ink/60 px-4 py-2.5 text-center text-sm font-medium text-ink/80 transition hover:border-ink hover:bg-ink/5 hover:text-ink"
             >
               Өмнөх
             </Link>
           ) : (
-            <span className="flex-1 rounded-md border border-ink/10 px-4 py-2.5 text-center text-sm font-medium text-ink/30">
+            <span className="flex-1 whitespace-nowrap rounded-md border border-ink/15 px-4 py-2.5 text-center text-sm font-medium text-ink/30">
               Өмнөх
             </span>
           )}
@@ -239,12 +239,12 @@ export default async function LessonPage({
             <Link
               prefetch={false}
               href={`/learn/${course.slug}/${nextLesson.id}`}
-              className="focus-ring flex-1 rounded-md bg-brand-500 px-4 py-2.5 text-center text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700"
+              className="focus-ring flex-1 whitespace-nowrap rounded-md bg-brand-500 px-4 py-2.5 text-center text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700"
             >
               Дараагийн хичээл
             </Link>
           ) : (
-            <span className="flex-1 rounded-md bg-ink/10 px-4 py-2.5 text-center text-sm font-medium text-ink/30">
+            <span className="flex-1 whitespace-nowrap rounded-md bg-ink/10 px-4 py-2.5 text-center text-sm font-medium text-ink/30">
               Дараагийн хичээл
             </span>
           )}

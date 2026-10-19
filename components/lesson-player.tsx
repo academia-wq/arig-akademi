@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import MuxPlayer from "@mux/mux-player-react";
 import { LessonCelebration } from "@/components/lesson-celebration";
+import { PlayIcon } from "@/components/icons";
 
 const COMPLETION_THRESHOLD = 0.9; // 90%+ үзвэл дууссанд тооцно (спек 4.3.4)
 const SAVE_INTERVAL_MS = 10_000; // 10 секунд тутамд хадгална (спек 4.3.3)
@@ -29,6 +30,7 @@ export function LessonPlayer({
   const router = useRouter();
   const [completed, setCompleted] = useState(initiallyCompleted);
   const [celebrating, setCelebrating] = useState(false);
+  const [started, setStarted] = useState(false);
   const lastSavedAt = useRef(0);
   const hasMarkedComplete = useRef(initiallyCompleted);
 
@@ -81,17 +83,40 @@ export function LessonPlayer({
 
   return (
     <div>
-      <MuxPlayer
-        playbackId={playbackId}
-        streamType="on-demand"
-        startTime={startTime}
-        metadata={{ video_id: lessonId }}
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={() => {
-          if (!markCompleteOnce(0)) saveProgress(0, true);
-        }}
-        style={{ aspectRatio: "16/9", width: "100%", borderRadius: "8px" }}
-      />
+      <div className="relative aspect-[724/400] w-full overflow-hidden rounded-2xl bg-ink">
+        {started ? (
+          <MuxPlayer
+            playbackId={playbackId}
+            streamType="on-demand"
+            startTime={startTime}
+            autoPlay
+            metadata={{ video_id: lessonId }}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={() => {
+              if (!markCompleteOnce(0)) saveProgress(0, true);
+            }}
+            style={{ width: "100%", height: "100%", "--media-object-fit": "cover" } as React.CSSProperties}
+          />
+        ) : (
+          // Дизайн шиг: эхлэхээс өмнө видеоны зураг + голд цагаан тоглуулах товч.
+          <button
+            type="button"
+            onClick={() => setStarted(true)}
+            aria-label="Видео тоглуулах"
+            className="focus-ring group absolute inset-0 h-full w-full"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://image.mux.com/${playbackId}/thumbnail.webp?width=1280${startTime > 0 ? `&time=${Math.floor(startTime)}` : ""}`}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+            <span className="absolute left-1/2 top-1/2 flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-lg transition group-hover:scale-110">
+              <PlayIcon className="ml-1 h-7 w-7 text-brand-500" />
+            </span>
+          </button>
+        )}
+      </div>
       <div className="mt-3 flex items-center justify-between">
         <span className="text-sm text-ink/50">
           {completed ? "Энэ хичээлийг дуусгасан" : "Явц хадгалагдаж байна..."}
