@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import MuxPlayer from "@mux/mux-player-react";
 import { LessonCelebration } from "@/components/lesson-celebration";
-import { PlayIcon } from "@/components/icons";
+import { PlayIcon, ChevronDownIcon } from "@/components/icons";
 
 const COMPLETION_THRESHOLD = 0.9; // Видеоны 90%-ийг БОДИТООР үзвэл дууссанд тооцно (спек 4.3.4)
 const SAVE_INTERVAL_MS = 10_000; // 10 секунд тутамд хадгална (спек 4.3.3)
@@ -59,6 +59,25 @@ export function LessonPlayer({
   const [celebrating, setCelebrating] = useState(false);
   const [started, setStarted] = useState(false);
   const [rate, setRate] = useState(1);
+  const [rateOpen, setRateOpen] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const rateMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!rateOpen) return;
+    function onDown(e: MouseEvent) {
+      if (rateMenuRef.current && !rateMenuRef.current.contains(e.target as Node)) setRateOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setRateOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [rateOpen]);
   const [watchedPercent, setWatchedPercent] = useState(0);
   const lastSavedAt = useRef(0);
   const hasMarkedComplete = useRef(initiallyCompleted);
@@ -146,7 +165,56 @@ export function LessonPlayer({
   return (
     <div>
       {/* isolate + translateZ: тоглож буй видеог Chrome-д бөөрөнхий булангаар заавал тайруулна. */}
-      <div className="relative isolate aspect-[724/400] w-full overflow-hidden rounded-2xl bg-ink [transform:translateZ(0)]">
+      <div className="group/video relative isolate aspect-[724/400] w-full overflow-hidden rounded-2xl bg-ink [transform:translateZ(0)]">
+        {started && (
+          // Хурдны товч видеоны баруун дээд буланд: хулгана видеон дээр, зогссон эсвэл цэс нээлттэй үед харагдана.
+          <div
+            ref={rateMenuRef}
+            className={clsx(
+              "absolute right-3 top-3 z-10 transition-opacity duration-200 group-hover/video:opacity-100",
+              paused || rateOpen ? "opacity-100" : "opacity-0 focus-within:opacity-100"
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setRateOpen((v) => !v)}
+              aria-haspopup="listbox"
+              aria-expanded={rateOpen}
+              aria-label="Тоглуулах хурд"
+              className="focus-ring flex items-center gap-1 rounded-md bg-black/55 px-2.5 py-1 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-black/70"
+            >
+              {rate}x
+              <ChevronDownIcon className={clsx("h-3.5 w-3.5 transition", rateOpen && "rotate-180")} />
+            </button>
+            {rateOpen && (
+              <ul
+                role="listbox"
+                aria-label="Тоглуулах хурд"
+                className="absolute right-0 top-[calc(100%+6px)] min-w-[76px] overflow-hidden rounded-md bg-black/70 py-1 text-sm text-white backdrop-blur-sm"
+              >
+                {PLAYBACK_RATES.map((r) => (
+                  <li key={r}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={rate === r}
+                      onClick={() => {
+                        setRate(r);
+                        setRateOpen(false);
+                      }}
+                      className={clsx(
+                        "w-full px-3 py-1.5 text-left transition hover:bg-white/15",
+                        rate === r && "font-semibold text-brand-300"
+                      )}
+                    >
+                      {r}x
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
         {started ? (
           <MuxPlayer
             ref={(el) => {
@@ -162,6 +230,8 @@ export function LessonPlayer({
             onLoadedMetadata={(e) => {
               (e.currentTarget as HTMLMediaElement).playbackRate = rate;
             }}
+            onPlay={() => setPaused(false)}
+            onPause={() => setPaused(true)}
             style={
               {
                 width: "100%",
@@ -170,7 +240,7 @@ export function LessonPlayer({
                 overflow: "hidden",
                 "--media-object-fit": "cover",
                 // Mux-ийн хурдны цэс FigmaScale-ийн zoom дор буруу байрлалд гарч тайрагддаг тул
-                // нуугаад доор өөрсдийн товчоор сольсон.
+                // нуугаад видеоны баруун дээд буланд өөрсдийн товчоор сольсон.
                 "--playback-rate-button": "none",
               } as React.CSSProperties
             }
@@ -197,7 +267,7 @@ export function LessonPlayer({
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
+      <div className="mt-3 text-sm">
         {completed ? (
           <span className="text-accent">
             ✓ {justCompleted ? "Хичээл дууслаа! Бичлэгийг үргэлжлүүлэн үзэж болно." : "Энэ хичээлийг дуусгасан"}
@@ -208,22 +278,6 @@ export function LessonPlayer({
             <span className="font-medium text-brand-500">Үзсэн: {watchedPercent}%</span>
           </span>
         )}
-        <div className="flex items-center gap-1" role="group" aria-label="Тоглуулах хурд">
-          {PLAYBACK_RATES.map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setRate(r)}
-              aria-pressed={rate === r}
-              className={clsx(
-                "focus-ring rounded px-2 py-0.5 text-xs font-medium transition",
-                rate === r ? "bg-brand-500 text-white" : "text-ink/50 hover:bg-brand-50 hover:text-brand-500"
-              )}
-            >
-              {r}x
-            </button>
-          ))}
-        </div>
       </div>
 
       {celebrating && (
