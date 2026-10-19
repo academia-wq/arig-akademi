@@ -122,43 +122,38 @@ export function AppTopBar({
 
       <div className="flex min-w-0 flex-1 items-center gap-8">
       <div className="relative min-w-0 max-w-[320px] flex-1" ref={searchRef}>
-        <button
-          type="button"
-          onClick={() => setSearchOpen(true)}
-          className="focus-ring flex w-full items-center gap-2 rounded-lg border border-[#D9D9D9] bg-paper px-4 py-[9px] text-left text-sm text-[#8A9DA2]"
-        >
-          <SearchIcon className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">Сургалт, сэдэв, ур чадвар хайх...</span>
-        </button>
+        {/* Дээд мөрийн талбар өөрөө хайлтын input — илэрц нь доор нь гарна. */}
+        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A9DA2]" />
+        <input
+          ref={searchInputRef}
+          type="search"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setSearchOpen(true);
+          }}
+          onFocus={() => setSearchOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              closeSearch();
+              searchInputRef.current?.blur();
+            }
+          }}
+          placeholder="Сургалт, сэдэв, ур чадвар хайх..."
+          aria-label="Хайх"
+          className="focus-ring w-full rounded-lg border border-[#D9D9D9] bg-paper py-[9px] pl-10 pr-4 text-sm text-ink placeholder:text-[#8A9DA2] [&::-webkit-search-cancel-button]:hidden"
+        />
 
-        {searchOpen && (
+        {searchOpen && hasQuery && (
           <div className="absolute left-0 top-[calc(100%+10px)] w-[min(24rem,90vw)] rounded-lg border border-ink/10 bg-white shadow-lg">
-            <div className="relative border-b border-ink/10 p-3">
-              <SearchIcon className="pointer-events-none absolute left-6 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/30" />
-              <input
-                ref={searchInputRef}
-                autoFocus
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Хичээл, курс хайх..."
-                className="focus-ring w-full rounded-md border border-ink/10 py-2 pl-9 pr-3 text-sm"
-              />
-            </div>
-
             <div className="max-h-80 overflow-y-auto p-2">
-              {!hasQuery && (
-                <p className="px-3 py-4 text-center text-sm text-ink/40">
-                  Хамгийн багадаа 2 үсэг бичнэ үү
-                </p>
-              )}
-              {hasQuery && searching && (
+              {searching && (
                 <p className="px-3 py-4 text-center text-sm text-ink/40">Хайж байна...</p>
               )}
-              {hasQuery && !searching && !hasResults && (
+              {!searching && !hasResults && (
                 <p className="px-3 py-4 text-center text-sm text-ink/40">Илэрц олдсонгүй</p>
               )}
-              {hasQuery && !searching && results.courses.length > 0 && (
+              {!searching && results.courses.length > 0 && (
                 <div className="mb-1">
                   <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-ink/40">
                     Курсууд
@@ -175,7 +170,7 @@ export function AppTopBar({
                   ))}
                 </div>
               )}
-              {hasQuery && !searching && results.lessons.length > 0 && (
+              {!searching && results.lessons.length > 0 && (
                 <div>
                   <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-ink/40">
                     Хичээлүүд
