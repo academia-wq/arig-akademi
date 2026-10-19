@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { uploadVideoToMux } from "@/lib/mux-upload";
 
 export function VideoUploader({ lessonId }: { lessonId: string }) {
   const router = useRouter();
@@ -19,34 +20,12 @@ export function VideoUploader({ lessonId }: { lessonId: string }) {
     setStatus("requesting");
 
     try {
-      // 1. Backend-с Mux Direct Upload URL авах
-      const res = await fetch("/api/mux/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId }),
-      });
-      if (!res.ok) throw new Error("Upload URL авахад алдаа гарлаа");
-      const { uploadUrl } = await res.json();
-
-      // 2. Файлыг шууд Mux рүү PUT хийх (сервер дамжуулахгүй)
-      setStatus("uploading");
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("PUT", uploadUrl);
-        xhr.upload.onprogress = (evt) => {
-          if (evt.lengthComputable) {
-            setProgress(Math.round((evt.loaded / evt.total) * 100));
-          }
-        };
-        xhr.onload = () =>
-          xhr.status >= 200 && xhr.status < 300
-            ? resolve()
-            : reject(new Error("Mux upload амжилтгүй"));
-        xhr.onerror = () => reject(new Error("Сүлжээний алдаа"));
-        xhr.send(file);
+      await uploadVideoToMux(lessonId, file, (percent) => {
+        setStatus("uploading");
+        setProgress(percent);
       });
 
-      // 3. Mux encode-г webhook дуусгах хүртэл хүлээх — хэрэглэгчид мэдэгдэнэ
+      // Mux encode-г webhook дуусгах хүртэл хүлээх — хэрэглэгчид мэдэгдэнэ
       setStatus("processing");
       router.refresh();
     } catch (err: any) {

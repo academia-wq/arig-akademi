@@ -24,6 +24,16 @@ export async function uploadLessonImage(
   const user = await getUser();
   if (!user) return { success: false, error: "Нэвтрээгүй байна." };
 
+  // Service role-оор бичдэг тул зөвхөн admin/instructor-т зөвшөөрнө.
+  const { data: profile } = await createClient()
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin" && profile?.role !== "instructor") {
+    return { success: false, error: "Энэ үйлдэлд эрх хүрэлцэхгүй байна." };
+  }
+
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { success: false, error: "Зураг сонгоно уу." };

@@ -17,6 +17,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
   }
 
+  // Хичээлийн видеог зөвхөн admin/instructor солино.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin" && profile?.role !== "instructor") {
+    return NextResponse.json({ error: "Эрх хүрэлцэхгүй байна" }, { status: 403 });
+  }
+
   const { lessonId } = await request.json();
   if (!lessonId) {
     return NextResponse.json({ error: "lessonId шаардлагатай" }, { status: 400 });

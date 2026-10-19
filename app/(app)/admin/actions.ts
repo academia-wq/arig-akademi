@@ -66,7 +66,14 @@ export async function assignEmployee(
 export async function createModuleWithLesson(
   formData: FormData
 ): Promise<
-  | { success: true; courseId: string; moduleId: string; lessonId: string }
+  | {
+      success: true;
+      courseId: string;
+      moduleId: string;
+      lessonId: string;
+      // Бүх үүссэн хичээл дарааллаараа — олон зургийг хичээл бүрт оноохад ашиглана.
+      lessonIds: string[];
+    }
   | { success: false; error: string }
 > {
   const staff = await requireStaff();
@@ -140,11 +147,17 @@ export async function createModuleWithLesson(
   if (lessonError || !newLessons?.length) {
     return { success: false, error: lessonError?.message || "Хичээл үүсгэж чадсангүй." };
   }
-  const newLesson = newLessons.find((l) => l.position === 0) || newLessons[0];
+  const orderedLessons = [...newLessons].sort((a, b) => a.position - b.position);
 
   revalidatePath("/admin");
   revalidatePath(`/admin/courses/${courseId}/edit`);
-  return { success: true, courseId, moduleId: newModule.id, lessonId: newLesson.id };
+  return {
+    success: true,
+    courseId,
+    moduleId: newModule.id,
+    lessonId: orderedLessons[0].id,
+    lessonIds: orderedLessons.map((l) => l.id),
+  };
 }
 
 export async function updateModule(
