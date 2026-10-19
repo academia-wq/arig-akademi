@@ -234,37 +234,91 @@ function SelectedVideo({
   );
 }
 
-function FileChips({
+type UploadStatus = "uploading" | "done" | "error";
+
+function ImageThumb({ file }: { file: File }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+  // eslint-disable-next-line @next/next/no-img-element
+  return url ? <img src={url} alt="" className="h-full w-full object-cover" /> : null;
+}
+
+// Сонгосон зураг/PDF-ийн тод карт (видеоны карттай ижил загвар): урьдчилсан харагдац,
+// нэр, хэмжээ, хасах товч; хуулах үед файл бүрийн төлөв.
+function SelectedFiles({
+  kind,
   files,
+  statuses,
   onRemove,
-  disabled,
 }: {
+  kind: "image" | "pdf";
   files: File[];
+  statuses: UploadStatus[];
   onRemove: (index: number) => void;
-  disabled?: boolean;
 }) {
   if (files.length === 0) return null;
+  const uploading = statuses.length > 0;
+  const allDone = uploading && statuses.length === files.length && statuses.every((s) => s === "done");
+  const noun = kind === "image" ? "зураг" : "PDF";
+
   return (
-    <ul className="mt-2 flex flex-col gap-1">
-      {files.map((f, i) => (
-        <li
-          key={`${f.name}-${i}`}
-          className="flex items-center gap-2 rounded-md bg-paper px-2.5 py-1.5 text-xs text-ink"
-        >
-          <span className="min-w-0 flex-1 truncate">{f.name}</span>
-          <span className="flex-shrink-0 text-[#8A9DA2]">{formatSize(f.size)}</span>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => onRemove(i)}
-            aria-label={`${f.name} хасах`}
-            className="focus-ring flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-ink/40 hover:bg-ink/5 hover:text-ink disabled:opacity-40"
-          >
-            <XIcon className="h-3 w-3" />
-          </button>
-        </li>
-      ))}
-    </ul>
+    <div
+      className={clsx(
+        "mt-2 rounded-md border-2 p-2.5 transition",
+        allDone ? "border-accent bg-accent/5" : "border-brand-500 bg-brand-50/60"
+      )}
+    >
+      <p className={clsx("text-xs font-medium", allDone ? "text-accent" : "text-brand-500")}>
+        ✓ {files.length} {noun} {allDone ? "хуулагдлаа" : "сонгогдлоо"}
+      </p>
+      <ul className="mt-2 flex flex-col gap-1.5">
+        {files.map((f, i) => {
+          const status = statuses[i];
+          return (
+            <li key={`${f.name}-${i}`} className="flex items-center gap-2.5">
+              <span
+                className={clsx(
+                  "flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded",
+                  kind === "image" ? "bg-ink/10" : "bg-red-50 text-[10px] font-bold text-red-600"
+                )}
+              >
+                {kind === "image" ? <ImageThumb file={f} /> : "PDF"}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-xs text-ink" title={f.name}>
+                  {f.name}
+                </span>
+                <span className="block text-[11px] text-[#8A9DA2]">{formatSize(f.size)}</span>
+              </span>
+              {status === "uploading" ? (
+                <span className="flex-shrink-0 text-[11px] text-brand-500">Хуулж байна...</span>
+              ) : status === "done" ? (
+                <span className="flex-shrink-0 text-xs font-medium text-accent" aria-label="Хуулагдсан">
+                  ✓
+                </span>
+              ) : status === "error" ? (
+                <span className="flex-shrink-0 text-xs font-medium text-red-600" aria-label="Алдаа">
+                  ✕
+                </span>
+              ) : !uploading ? (
+                <button
+                  type="button"
+                  onClick={() => onRemove(i)}
+                  aria-label={`${f.name} хасах`}
+                  className="focus-ring flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-ink/40 transition hover:bg-red-50 hover:text-red-600"
+                >
+                  <XIcon className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -283,6 +337,8 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
   const [pdfs, setPdfs] = useState<File[]>([]);
   const [progress, setProgress] = useState<string | null>(null);
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
+  const [imageStatuses, setImageStatuses] = useState<UploadStatus[]>([]);
+  const [pdfStatuses, setPdfStatuses] = useState<UploadStatus[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Сургалт үүссэн ч зарим файл хуулагдаагүй үед — дахин үүсгэхгүйн тулд хадгална.
@@ -303,6 +359,8 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
     setVideoProgress(null);
     setImages([]);
     setPdfs([]);
+    setImageStatuses([]);
+    setPdfStatuses([]);
   }
 
   function close() {
@@ -392,18 +450,22 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
 
     for (let i = 0; i < images.length; i++) {
       setProgress(`Зураг хуулж байна... (${i + 1}/${images.length})`);
+      setImageStatuses((prev) => [...prev.slice(0, i), "uploading"]);
       const fd = new FormData();
       fd.set("file", images[i]);
       const r = await uploadLessonImage(created.lessonIds[i], created.courseId, fd);
       if (!r.success) failures.push(`${images[i].name}: ${r.error}`);
+      setImageStatuses((prev) => [...prev.slice(0, i), r.success ? "done" : "error"]);
     }
 
     for (let i = 0; i < pdfs.length; i++) {
       setProgress(`PDF хуулж байна... (${i + 1}/${pdfs.length})`);
+      setPdfStatuses((prev) => [...prev.slice(0, i), "uploading"]);
       const fd = new FormData();
       fd.set("file", pdfs[i]);
       const r = await uploadLessonMaterial(created.lessonId, created.courseId, fd);
       if (!r.success) failures.push(`${pdfs[i].name}: ${r.error}`);
+      setPdfStatuses((prev) => [...prev.slice(0, i), r.success ? "done" : "error"]);
     }
 
     setSubmitting(false);
@@ -586,8 +648,10 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
                         title="Зураг оруулах"
                         hint="чирж оруулах эсвэл дарж сонгоно уу"
                       />
-                      <FileChips
+                      <SelectedFiles
+                        kind="image"
                         files={images}
+                        statuses={imageStatuses}
                         onRemove={(i) => setImages((prev) => prev.filter((_, j) => j !== i))}
                       />
                     </div>
@@ -604,8 +668,10 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
                         title="PDF файл нэмэх"
                         hint="чирж оруулах эсвэл дарж сонгоно уу"
                       />
-                      <FileChips
+                      <SelectedFiles
+                        kind="pdf"
                         files={pdfs}
+                        statuses={pdfStatuses}
                         onRemove={(i) => setPdfs((prev) => prev.filter((_, j) => j !== i))}
                       />
                     </div>
