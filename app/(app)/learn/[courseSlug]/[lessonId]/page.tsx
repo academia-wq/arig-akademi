@@ -24,7 +24,7 @@ export default async function LessonPage({
     supabase
       .from("courses")
       .select(
-        "id, title, slug, description, thumbnail_url, modules(id, title, position, visible_positions, category, lessons(id, title, content_text, mux_playback_id, image_url, material_urls, duration_seconds, position))"
+        "id, title, slug, description, thumbnail_url, level, modules(id, title, position, visible_positions, category, lessons(id, title, content_text, mux_playback_id, image_url, material_urls, duration_seconds, position))"
       )
       .eq("slug", decodeURIComponent(params.courseSlug))
       .single(),
@@ -90,21 +90,21 @@ export default async function LessonPage({
   return (
     <div className="grid gap-8 lg:-mr-[88px] lg:grid-cols-[minmax(0,1fr)_360px]">
       <main className="min-w-0">
-        <div className="flex items-center gap-2 text-sm text-ink/50">
+        <div className="flex items-center gap-2 text-sm text-[#8A9DA2]">
           <Link prefetch={false} href="/learn" className="focus-ring hover:text-brand-500">
             Миний сургалт
           </Link>
-          <ChevronRightIcon className="h-3.5 w-3.5 flex-shrink-0" />
+          <ChevronRightIcon className="h-3 w-3 flex-shrink-0 text-ink" />
           <Link
             prefetch={false}
             href={`/learn/${course.slug}`}
-            className="focus-ring truncate text-ink hover:text-brand-500"
+            className="focus-ring truncate text-base text-ink hover:text-brand-500"
           >
             {course.title}
           </Link>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-6">
           {currentLesson.mux_playback_id ? (
             <LessonPlayer
               lessonId={currentLesson.id}
@@ -145,12 +145,12 @@ export default async function LessonPage({
           )}
         </div>
 
-        <h1 className="mt-8 text-xl leading-8 text-ink">
+        <h1 className="mt-6 text-xl leading-8 text-ink">
           {currentLesson.title}
         </h1>
 
         {description && (
-          <p className="mt-3 whitespace-pre-line text-sm leading-6 text-ink/80">{description}</p>
+          <p className="mt-4 whitespace-pre-line text-sm leading-5 text-ink">{description}</p>
         )}
 
         {materials.length > 0 && (
@@ -170,13 +170,13 @@ export default async function LessonPage({
           </ul>
         )}
 
-        <div className="mt-6 border-b border-ink/10">
-          <span className="-mb-px inline-block border-b-2 border-brand-500 py-3 text-sm font-medium text-brand-500">
+        <div className="mt-6 border-b border-[#D9D9D9]">
+          <span className="-mb-px inline-block border-b-2 border-brand-500 pb-3 text-sm font-medium leading-[18px] text-brand-500">
             Модулиуд
           </span>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-6">
           <LessonCurriculumList
             courseSlug={course.slug}
             modules={modules}
@@ -187,37 +187,39 @@ export default async function LessonPage({
       </main>
 
       <aside className="flex flex-col gap-6">
-        <div className="rounded-2xl bg-white p-6">
-          <p className="text-base text-ink">Таны явц</p>
-          <div className="mt-4 flex items-center justify-center">
-            <ProgressRing percent={percent} size={112} />
+        <div className="flex flex-col items-center gap-5 rounded-2xl bg-white p-6 shadow-[0px_4px_6px_rgba(0,0,0,0.02)]">
+          <p className="w-full text-base text-ink">Таны явц</p>
+          <div className="flex h-[120px] w-[120px] items-center justify-center">
+            <ProgressRing percent={percent} size={110} />
           </div>
-          <p className="mt-6 text-sm text-[#8A9DA2]">
-            {nextLesson ? `Дараагийн: ${nextLesson.title}` : "Энэ бол сүүлийн хичээл"}
-          </p>
-          <CompleteModuleButton
-            moduleId={currentModule.id}
-            courseSlug={course.slug}
-            initiallyCompleted={moduleCompleted}
-            courseDone={doneAfterModule}
-            courseTotal={totalLessons}
-            nextHref={nextModuleHref}
-          />
+          <div className="w-full">
+            <p className="text-sm text-[#8A9DA2]">
+              {nextLesson ? `Дараагийн: ${nextLesson.title}` : "Энэ бол сүүлийн хичээл"}
+            </p>
+            <CompleteModuleButton
+              moduleId={currentModule.id}
+              courseSlug={course.slug}
+              initiallyCompleted={moduleCompleted}
+              courseDone={doneAfterModule}
+              courseTotal={totalLessons}
+              nextHref={nextModuleHref}
+            />
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6">
+        <div className="flex flex-col gap-4 rounded-2xl border border-[#E2E8F0] bg-white p-6">
           <p className="text-base text-ink">Сургалтын дэлгэрэнгүй</p>
-          <div className="mt-4 flex flex-col gap-3 text-sm">
-            {totalDuration && (
-              <div className="flex items-center justify-between">
-                <span className="text-[#8A9DA2]">Хугацаа</span>
-                <span className="font-medium text-ink">{totalDuration}</span>
+          <div className="flex flex-col gap-3 text-sm">
+            {[
+              ["Хугацаа", totalDuration || "—"],
+              ["Хичээлүүд", `${totalLessons} Хичээл`],
+              ["Түвшин", (course as any).level || "—"],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-start justify-between gap-4">
+                <span className="leading-5 text-[#8A9DA2]">{label}</span>
+                <span className="font-medium leading-[18px] text-ink">{value}</span>
               </div>
-            )}
-            <div className="flex items-center justify-between">
-              <span className="text-[#8A9DA2]">Хичээлүүд</span>
-              <span className="font-medium text-ink">{totalLessons} Хичээл</span>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -226,12 +228,12 @@ export default async function LessonPage({
             <Link
               prefetch={false}
               href={`/learn/${course.slug}/${prevLesson.id}`}
-              className="focus-ring flex-1 whitespace-nowrap rounded-md border border-ink/60 px-4 py-2.5 text-center text-sm font-medium text-ink/80 transition hover:border-ink hover:bg-ink/5 hover:text-ink"
+              className="focus-ring flex-1 whitespace-nowrap rounded-md border border-[#8A9DA2] px-4 py-3 text-center text-sm font-medium leading-[18px] text-[#8A9DA2] transition hover:border-ink hover:bg-ink/5 hover:text-ink"
             >
               Өмнөх
             </Link>
           ) : (
-            <span className="flex-1 whitespace-nowrap rounded-md border border-ink/15 px-4 py-2.5 text-center text-sm font-medium text-ink/30">
+            <span className="flex-1 whitespace-nowrap rounded-md border border-ink/15 px-4 py-3 text-center text-sm font-medium leading-[18px] text-ink/30">
               Өмнөх
             </span>
           )}
@@ -239,12 +241,12 @@ export default async function LessonPage({
             <Link
               prefetch={false}
               href={`/learn/${course.slug}/${nextLesson.id}`}
-              className="focus-ring flex-1 whitespace-nowrap rounded-md bg-brand-500 px-4 py-2.5 text-center text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700"
+              className="focus-ring flex-1 whitespace-nowrap rounded-md border border-brand-500 bg-brand-500 px-4 py-3 text-center leading-[18px] text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700"
             >
               Дараагийн хичээл
             </Link>
           ) : (
-            <span className="flex-1 whitespace-nowrap rounded-md bg-ink/10 px-4 py-2.5 text-center text-sm font-medium text-ink/30">
+            <span className="flex-1 whitespace-nowrap rounded-md border border-transparent bg-ink/10 px-4 py-3 text-center text-sm font-medium leading-[18px] text-ink/30">
               Дараагийн хичээл
             </span>
           )}

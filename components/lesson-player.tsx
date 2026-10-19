@@ -111,7 +111,8 @@ export function LessonPlayer({
               alt=""
               className="h-full w-full object-cover"
             />
-            <span className="absolute left-1/2 top-1/2 flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-lg transition group-hover:scale-110">
+            <span aria-hidden className="absolute inset-0 bg-black/30" />
+            <span className="absolute left-1/2 top-1/2 flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-[0px_8px_12px_rgba(0,0,0,0.19)] transition group-hover:scale-110">
               <PlayIcon className="ml-1 h-7 w-7 text-brand-500" />
             </span>
           </button>

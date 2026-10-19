@@ -54,6 +54,7 @@ export type Database = {
           is_published: boolean;
           instructor_id: string | null;
           created_at: string;
+          level: "Анхан" | "Дунд" | "Ахисан" | null;
         };
         Insert: Partial<Database["public"]["Tables"]["courses"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["courses"]["Row"]>;

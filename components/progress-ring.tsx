@@ -1,4 +1,4 @@
-export function ProgressRing({ percent, size = 104 }: { percent: number; size?: number }) {
+export function ProgressRing({ percent, size = 110 }: { percent: number; size?: number }) {
   const stroke = 10;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -30,8 +30,8 @@ export function ProgressRing({ percent, size = 104 }: { percent: number; size?: 
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-lg font-semibold text-ink">{percent}%</p>
-        <p className="text-[10px] text-ink/40">Дууссан</p>
+        <p className="text-xl font-semibold leading-7 text-ink">{percent}%</p>
+        <p className="mt-0.5 text-xs font-medium leading-[18px] text-[#8A9DA2]">Дууссан</p>
       </div>
     </div>
   );

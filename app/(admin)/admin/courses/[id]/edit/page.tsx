@@ -6,14 +6,20 @@ import { ImageUploader } from "@/components/image-uploader";
 import { DocumentCourseBuilder } from "@/components/document-course-builder";
 import { DeleteButton } from "@/components/delete-button";
 
+const COURSE_LEVELS = ["Анхан", "Дунд", "Ахисан"] as const;
+
 async function updateCourseMeta(courseId: string, formData: FormData) {
   "use server";
   const supabase = createClient();
+  const level = formData.get("level") as string;
   await supabase
     .from("courses")
     .update({
       description: formData.get("description") as string,
       is_published: formData.get("is_published") === "on",
+      level: (COURSE_LEVELS as readonly string[]).includes(level)
+        ? (level as (typeof COURSE_LEVELS)[number])
+        : null,
     })
     .eq("id", courseId);
   revalidatePath(`/admin/courses/${courseId}/edit`);
@@ -125,7 +131,7 @@ export default async function EditCoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, description, is_published, modules(id, title, position, visible_positions, category, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
+      "id, title, description, is_published, level, modules(id, title, position, visible_positions, category, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
     )
     .eq("id", params.id)
     .single();
@@ -170,6 +176,21 @@ export default async function EditCoursePage({
             rows={3}
             className="focus-ring mt-1 w-full rounded-md border border-ink/15 px-3 py-2"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-ink">Түвшин</label>
+          <select
+            name="level"
+            defaultValue={(course as any).level || ""}
+            className="focus-ring mt-1 w-full max-w-xs rounded-md border border-ink/15 px-3 py-2 text-sm"
+          >
+            <option value="">Сонгоогүй</option>
+            {COURSE_LEVELS.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input

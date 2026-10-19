@@ -38,7 +38,7 @@ export function CompleteModuleButton({
   }
 
   return (
-    <div className="mt-4">
+    <div className="mt-2">
       {initiallyCompleted ? (
         <p className="text-center text-sm font-medium text-accent">✓ Модуль дууссан</p>
       ) : (
@@ -47,7 +47,7 @@ export function CompleteModuleButton({
             type="button"
             onClick={handleClick}
             disabled={saving || celebrating}
-            className="focus-ring w-full rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700 disabled:opacity-50"
+            className="focus-ring w-full rounded-md bg-brand-500 px-6 py-3 text-sm font-medium leading-[18px] text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Хадгалж байна..." : "Модулийг дуусгах"}
           </button>

@@ -25,3 +25,29 @@ export async function uploadVideoToMux(
     xhr.send(file);
   });
 }
+
+// Mux encode дуусах хүртэл хүлээж, хичээлд холбоно (/api/mux/sync — webhook-ийн нөөц).
+// Бэлэн болбол true, хугацаа дуусвал false. Webhook түрүүлж холбосон ч асуудалгүй.
+export async function waitForMuxVideo(
+  lessonId: string,
+  { intervalMs = 5000, timeoutMs = 10 * 60 * 1000 } = {}
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, intervalMs));
+    try {
+      const res = await fetch("/api/mux/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId }),
+      });
+      if (!res.ok) return false;
+      const { status } = await res.json();
+      if (status === "ready") return true;
+      if (status === "errored") return false;
+    } catch {
+      // сүлжээний түр алдаа — дахин оролдоно
+    }
+  }
+  return false;
+}

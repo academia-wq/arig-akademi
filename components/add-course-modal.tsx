@@ -13,7 +13,7 @@ import {
 } from "@/components/icons";
 import { createModuleWithLesson, uploadLessonMaterial } from "@/app/(app)/admin/actions";
 import { uploadLessonImage } from "@/app/(admin)/admin/courses/[id]/edit/actions";
-import { uploadVideoToMux } from "@/lib/mux-upload";
+import { uploadVideoToMux, waitForMuxVideo } from "@/lib/mux-upload";
 
 export const CATEGORIES = [
   "Менежмент",
@@ -253,6 +253,8 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
         await uploadVideoToMux(created.lessonId, video, (p) =>
           setProgress(`Видео хуулж байна... ${p}%`)
         );
+        // Mux encode хэдэн минут болно — цонхыг хүлээлгэхгүй, ар талд нь хичээлд холбоно.
+        waitForMuxVideo(created.lessonId).then((ready) => ready && router.refresh());
       } catch (err: any) {
         failures.push(`Видео: ${err?.message || "алдаа"}`);
       }

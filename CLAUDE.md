@@ -62,8 +62,9 @@
 
 ## Мэдэгдэж буй асуудлууд (засагдаагүй)
 
-1. `uploadLessonImage` (`app/(admin)/admin/courses/[id]/edit/actions.ts`) — зөвхөн нэвтэрсэн эсэхийг шалгадаг,
-   staff эрх шалгадаггүй, service-role ашигладаг. `requireStaff()` нэмэх.
+1. Mux webhook (`/api/mux/webhook`) видеог хичээлд холбож чадахгүй байна (signing secret эсвэл URL таарахгүй байх).
+   Нөөц арга: видео хуулсны дараа `/api/mux/sync`-ээр шалгаж холбодог (`lib/mux-upload.ts` → `waitForMuxVideo`).
+   Mux → Settings → Webhooks болон Vercel-ийн `MUX_WEBHOOK_SECRET`-ийг шалгах.
 2. `generateDraftFromFile`, `saveDraftStructure` — role шалгадаггүй.
 3. `/mystery-shopper` — нэвтрэлтгүй, service-role-оор бичдэг, spam хамгаалалтгүй.
 4. Production DB-д `ai_usage_logs`, `onboarding_plans` хүснэгт **үүсээгүй** — `supabase/migration_ai_usage_logs.sql`,
@@ -72,6 +73,8 @@
 6. Supabase дээр зөвхөн `add_notifications` migration бүртгэлтэй — бусдыг гараар ажиллуулсан.
 7. Нүүр хуудсанд нэвтрээгүй хүнд "0+ Нийт хичээл" харагддаг (RLS-ээс шалтгаалсан байх).
 8. Автомат тест байхгүй.
+9. Зураг/PDF нь server action-оор дамждаг тул Vercel-ийн ~4.5MB хүсэлтийн хязгаараас том файл хуулагдахгүй
+   ("Сургалт нэмэх" цонх 4MB-аар хязгаарлана). Видео Mux руу шууд хуулагдана.
 
 ## Ажлын дүрэм
 

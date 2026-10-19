@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { uploadVideoToMux } from "@/lib/mux-upload";
+import { uploadVideoToMux, waitForMuxVideo } from "@/lib/mux-upload";
 
 export function VideoUploader({ lessonId }: { lessonId: string }) {
   const router = useRouter();
@@ -25,9 +25,16 @@ export function VideoUploader({ lessonId }: { lessonId: string }) {
         setProgress(percent);
       });
 
-      // Mux encode-г webhook дуусгах хүртэл хүлээх — хэрэглэгчид мэдэгдэнэ
+      // Mux encode дуусах хүртэл хүлээж хичээлд холбоно (webhook ажиллахгүй байсан ч).
       setStatus("processing");
-      router.refresh();
+      const ready = await waitForMuxVideo(lessonId);
+      if (ready) {
+        setStatus("idle");
+        router.refresh();
+      } else {
+        setError("Видео боловсруулалт удаж байна. Хэсэг хугацааны дараа хуудсыг дахин ачаална уу.");
+        setStatus("error");
+      }
     } catch (err: any) {
       setError(err.message || "Тодорхойгүй алдаа");
       setStatus("error");
@@ -37,7 +44,7 @@ export function VideoUploader({ lessonId }: { lessonId: string }) {
   if (status === "processing") {
     return (
       <p className="text-sm text-brand-500">
-        Видео боловсруулж байна... Дуусмагц хуудсыг дахин ачаалахад харагдана.
+        Видео боловсруулж байна... Бэлэн болмогц автоматаар харагдана (хэдэн минут болж магадгүй).
       </p>
     );
   }
