@@ -1,17 +1,37 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import clsx from "clsx";
 import MuxPlayer from "@mux/mux-player-react";
 import { LessonCelebration } from "@/components/lesson-celebration";
 import { PlayIcon } from "@/components/icons";
 
 const COMPLETION_THRESHOLD = 0.9; // Видеоны 90%-ийг БОДИТООР үзвэл дууссанд тооцно (спек 4.3.4)
 const SAVE_INTERVAL_MS = 10_000; // 10 секунд тутамд хадгална (спек 4.3.3)
-// Энгийн тоглолтын үед timeupdate хооронд ~0.25с; үүнээс их үсрэлт = гүйлгэсэн (seek).
+// Энгийн тоглолтын үед timeupdate хооронд ~0.25с (2x үед ~0.5с); үүнээс их үсрэлт = гүйлгэсэн.
 const MAX_PLAYBACK_STEP = 1.5;
-// Урагш гүйлгэхэд хамгийн хол үзсэн цэгээс ийм хэмжээгээр л давахыг зөвшөөрнө.
-const SEEK_TOLERANCE = 2;
+const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2];
+
+// Үзсэн секундүүдийг энэ хөтчид хадгална — хуудсыг дахин ачаалсан ч тооцоо үргэлжилнэ.
+function storageKey(lessonId: string) {
+  return `arig:watched:${lessonId}`;
+}
+function loadWatched(lessonId: string): Set<number> {
+  try {
+    const raw = localStorage.getItem(storageKey(lessonId));
+    return new Set(raw ? (JSON.parse(raw) as number[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+function storeWatched(lessonId: string, seconds: Set<number>) {
+  try {
+    localStorage.setItem(storageKey(lessonId), JSON.stringify(Array.from(seconds)));
+  } catch {
+    // хадгалах боломжгүй (private mode г.м.) — тухайн сессийн дотор тоолсоор байна
+  }
+}
 
 export function LessonPlayer({
   lessonId,
@@ -32,28 +52,26 @@ export function LessonPlayer({
   nextHref: string | null;
 }) {
   const router = useRouter();
+  const playerRef = useRef<HTMLMediaElement | null>(null);
   const [completed, setCompleted] = useState(initiallyCompleted);
+  // Энэ удаа үзэж байхад дууссан эсэх — баярын цонхыг видео төгсөхөд л харуулна.
+  const [justCompleted, setJustCompleted] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
   const [started, setStarted] = useState(false);
+  const [rate, setRate] = useState(1);
+  const [watchedPercent, setWatchedPercent] = useState(0);
   const lastSavedAt = useRef(0);
   const hasMarkedComplete = useRef(initiallyCompleted);
-  // Бодитоор тоглогдсон секундүүд (гүйлгэж алгассан хэсэг орохгүй). Урагш гүйлгэх хориотой тул
-  // өмнө нь хадгалсан байрлал хүртэлх хэсгийг үзсэнд тооцно.
-  const watchedSeconds = useRef(new Set<number>(Array.from({ length: Math.floor(startTime) }, (_, i) => i)));
+  const watchedSeconds = useRef<Set<number>>(new Set());
   const lastTime = useRef(startTime);
-  const maxReached = useRef(startTime);
-  const [watchedPercent, setWatchedPercent] = useState(0);
 
-  // Хичээл анх удаа дуусахад нэг л удаа дуудагдана.
-  function markCompleteOnce(positionSeconds: number) {
-    if (hasMarkedComplete.current) return false;
-    hasMarkedComplete.current = true;
-    setCompleted(true);
-    setCelebrating(true);
-    // Хуудсыг (явцын дугуй г.м.) баярын цонх хаагдсаны дараа шинэчилнэ.
-    saveProgress(positionSeconds, true);
-    return true;
-  }
+  useEffect(() => {
+    watchedSeconds.current = loadWatched(lessonId);
+  }, [lessonId]);
+
+  useEffect(() => {
+    if (playerRef.current) playerRef.current.playbackRate = rate;
+  }, [rate, started]);
 
   const saveProgress = useCallback(
     async (positionSeconds: number, isCompleted: boolean) => {
@@ -74,8 +92,22 @@ export function LessonPlayer({
     [lessonId]
   );
 
-  function watchedRatio(duration: number) {
-    return duration > 0 ? Math.min(1, watchedSeconds.current.size / Math.floor(duration)) : 0;
+  // 90% бодитоор үзмэгц нэг л удаа: хадгалж, жижиг мэдэгдэл харуулна (үзэлтийг тасалдуулахгүй).
+  function markCompleteOnce(positionSeconds: number) {
+    if (hasMarkedComplete.current) return;
+    hasMarkedComplete.current = true;
+    setCompleted(true);
+    setJustCompleted(true);
+    saveProgress(positionSeconds, true);
+  }
+
+  function updateWatched(media: HTMLMediaElement) {
+    const ratio =
+      media.duration > 0
+        ? Math.min(1, watchedSeconds.current.size / Math.floor(media.duration))
+        : 0;
+    setWatchedPercent(Math.round(ratio * 100));
+    if (ratio >= COMPLETION_THRESHOLD) markCompleteOnce(media.currentTime);
   }
 
   function handleTimeUpdate(e: Event) {
@@ -83,47 +115,32 @@ export function LessonPlayer({
     const time = media.currentTime;
     const step = time - lastTime.current;
 
-    if (!hasMarkedComplete.current && time > maxReached.current + SEEK_TOLERANCE) {
-      // Урагш гүйлгэсэн — хамгийн хол үзсэн цэг рүү буцаана (дууссан хичээлд хязгааргүй).
-      media.currentTime = maxReached.current;
-      lastTime.current = maxReached.current;
-      return;
-    }
-
+    // Зөвхөн энгийн тоглолтоор өнгөрсөн секундүүдийг тоолно — гүйлгэж алгассан хэсэг орохгүй.
     if (step > 0 && step <= MAX_PLAYBACK_STEP) {
-      // Энгийн тоглолт: энэ хооронд тоглогдсон секундүүдийг тэмдэглэнэ.
+      const before = watchedSeconds.current.size;
       for (let s = Math.floor(lastTime.current); s < Math.floor(time); s++) watchedSeconds.current.add(s);
-      maxReached.current = Math.max(maxReached.current, time);
+      if (watchedSeconds.current.size !== before) storeWatched(lessonId, watchedSeconds.current);
     }
     lastTime.current = time;
-
-    const ratio = watchedRatio(media.duration);
-    setWatchedPercent(Math.round(ratio * 100));
-    if (ratio >= COMPLETION_THRESHOLD && markCompleteOnce(time)) return;
+    updateWatched(media);
 
     const now = Date.now();
     if (now - lastSavedAt.current < SAVE_INTERVAL_MS) return;
     lastSavedAt.current = now;
-    saveProgress(Math.min(time, maxReached.current), hasMarkedComplete.current);
+    saveProgress(time, hasMarkedComplete.current);
   }
 
   function handleEnded(e: Event) {
     const media = e.currentTarget as HTMLMediaElement;
-    const reachedNormally = media.currentTime - lastTime.current <= MAX_PLAYBACK_STEP;
-    if (reachedNormally) {
-      // Сүүлийн секундүүдийг тоолно.
+    // Төгсгөлд энгийн тоглолтоор хүрсэн бол сүүлийн секундүүдийг тоолно.
+    if (media.currentTime - lastTime.current <= MAX_PLAYBACK_STEP) {
       for (let s = Math.floor(lastTime.current); s < Math.ceil(media.duration); s++) watchedSeconds.current.add(s);
-      maxReached.current = media.duration;
-    } else if (!hasMarkedComplete.current) {
-      // Төгсгөл рүү гүйлгэсэн — тооцохгүй, хамгийн хол үзсэн цэг рүү буцаана.
-      media.currentTime = maxReached.current;
-      lastTime.current = maxReached.current;
+      storeWatched(lessonId, watchedSeconds.current);
     }
-    const ratio = watchedRatio(media.duration);
-    setWatchedPercent(Math.round(ratio * 100));
-    if (ratio >= COMPLETION_THRESHOLD) markCompleteOnce(0);
-    // Хадгалах байрлал нь хамгийн хол БОДИТООР үзсэн цэгээс хэтрэхгүй.
-    else saveProgress(Math.min(media.currentTime, maxReached.current), hasMarkedComplete.current);
+    updateWatched(media);
+    saveProgress(0, hasMarkedComplete.current);
+    // Баярын цонх: энэ удаа дуусгасан бол видео бүрэн төгсөхөд л гарна.
+    if (hasMarkedComplete.current && !initiallyCompleted) setCelebrating(true);
   }
 
   return (
@@ -132,6 +149,9 @@ export function LessonPlayer({
       <div className="relative isolate aspect-[724/400] w-full overflow-hidden rounded-2xl bg-ink [transform:translateZ(0)]">
         {started ? (
           <MuxPlayer
+            ref={(el) => {
+              playerRef.current = el as unknown as HTMLMediaElement | null;
+            }}
             playbackId={playbackId}
             streamType="on-demand"
             startTime={startTime}
@@ -139,6 +159,9 @@ export function LessonPlayer({
             metadata={{ video_id: lessonId }}
             onTimeUpdate={handleTimeUpdate}
             onEnded={handleEnded}
+            onLoadedMetadata={(e) => {
+              (e.currentTarget as HTMLMediaElement).playbackRate = rate;
+            }}
             style={
               {
                 width: "100%",
@@ -146,6 +169,9 @@ export function LessonPlayer({
                 borderRadius: "16px",
                 overflow: "hidden",
                 "--media-object-fit": "cover",
+                // Mux-ийн хурдны цэс FigmaScale-ийн zoom дор буруу байрлалд гарч тайрагддаг тул
+                // нуугаад доор өөрсдийн товчоор сольсон.
+                "--playback-rate-button": "none",
               } as React.CSSProperties
             }
           />
@@ -170,17 +196,34 @@ export function LessonPlayer({
           </button>
         )}
       </div>
-      <div className="mt-3 flex items-center justify-between gap-4 text-sm">
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
         {completed ? (
-          <span className="text-accent">✓ Энэ хичээлийг дуусгасан</span>
+          <span className="text-accent">
+            ✓ {justCompleted ? "Хичээл дууслаа! Бичлэгийг үргэлжлүүлэн үзэж болно." : "Энэ хичээлийг дуусгасан"}
+          </span>
         ) : (
-          <>
-            <span className="text-ink/50">
-              Видеоны 90%-ийг үзэхэд хичээл дуусна. Урагш гүйлгэх боломжгүй.
-            </span>
-            <span className="flex-shrink-0 font-medium text-brand-500">Үзсэн: {watchedPercent}%</span>
-          </>
+          <span className="text-ink/50">
+            Видеоны 90%-ийг үзэхэд хичээл дуусна ·{" "}
+            <span className="font-medium text-brand-500">Үзсэн: {watchedPercent}%</span>
+          </span>
         )}
+        <div className="flex items-center gap-1" role="group" aria-label="Тоглуулах хурд">
+          {PLAYBACK_RATES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRate(r)}
+              aria-pressed={rate === r}
+              className={clsx(
+                "focus-ring rounded px-2 py-0.5 text-xs font-medium transition",
+                rate === r ? "bg-brand-500 text-white" : "text-ink/50 hover:bg-brand-50 hover:text-brand-500"
+              )}
+            >
+              {r}x
+            </button>
+          ))}
+        </div>
       </div>
 
       {celebrating && (

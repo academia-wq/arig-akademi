@@ -12,6 +12,7 @@ export function CompleteModuleButton({
   courseDone,
   courseTotal,
   nextHref,
+  pendingVideoCount,
 }: {
   moduleId: string;
   courseSlug: string;
@@ -20,6 +21,8 @@ export function CompleteModuleButton({
   courseDone: number;
   courseTotal: number;
   nextHref: string | null;
+  // Модулийн үзэж дуусгаагүй видео хичээлийн тоо — 0 болтол товч идэвхгүй.
+  pendingVideoCount: number;
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -46,11 +49,16 @@ export function CompleteModuleButton({
           <button
             type="button"
             onClick={handleClick}
-            disabled={saving || celebrating}
-            className="focus-ring w-full rounded-md bg-brand-500 px-6 py-3 text-sm font-medium leading-[18px] text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700 disabled:opacity-50"
+            disabled={saving || celebrating || pendingVideoCount > 0}
+            className="focus-ring w-full rounded-md bg-brand-500 px-6 py-3 text-sm font-medium leading-[18px] text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-brand-500"
           >
             {saving ? "Хадгалж байна..." : "Модулийг дуусгах"}
           </button>
+          {pendingVideoCount > 0 && !error && (
+            <p className="mt-2 text-center text-xs text-[#8A9DA2]">
+              Модулийн {pendingVideoCount} видео хичээлийг үзэж дуусгасны дараа идэвхжинэ.
+            </p>
+          )}
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
         </>
       )}

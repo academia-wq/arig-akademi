@@ -14,7 +14,7 @@ export async function completeModule(
 
   const { data: lessons, error: lessonsError } = await supabase
     .from("lessons")
-    .select("id")
+    .select("id, mux_playback_id")
     .eq("module_id", moduleId);
   if (lessonsError || !lessons || lessons.length === 0) {
     return { success: false, error: lessonsError?.message || "Хичээл олдсонгүй." };
@@ -28,6 +28,15 @@ export async function completeModule(
     .eq("is_completed", true)
     .in("lesson_id", lessonIds);
   const doneSet = new Set((alreadyDone || []).map((r) => r.lesson_id));
+
+  // Видео хичээлийг зөвхөн бодитоор үзэж (90%) дуусгана — модулийн товчоор алгасахгүй.
+  const pendingVideos = lessons.filter((l) => l.mux_playback_id && !doneSet.has(l.id)).length;
+  if (pendingVideos > 0) {
+    return {
+      success: false,
+      error: `Модулийн ${pendingVideos} видео хичээлийг эхлээд үзэж дуусгана уу.`,
+    };
+  }
 
   const now = new Date().toISOString();
   const rows = lessonIds

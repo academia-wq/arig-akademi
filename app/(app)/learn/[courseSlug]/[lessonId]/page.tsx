@@ -80,6 +80,9 @@ export default async function LessonPage({
   const doneAfterLesson = completedCount + (completedSet.has(currentLesson.id) ? 0 : 1);
   const doneAfterModule =
     completedCount + currentModule.lessons.filter((l: any) => !completedSet.has(l.id)).length;
+  const pendingVideoCount = currentModule.lessons.filter(
+    (l: any) => l.mux_playback_id && !completedSet.has(l.id)
+  ).length;
   const nextLessonHref = nextLesson ? `/learn/${course.slug}/${nextLesson.id}` : null;
   const nextModule = modules[modules.indexOf(currentModule) + 1];
   const nextModuleHref = nextModule?.lessons[0]
@@ -217,6 +220,7 @@ export default async function LessonPage({
               courseDone={doneAfterModule}
               courseTotal={totalLessons}
               nextHref={nextModuleHref}
+              pendingVideoCount={pendingVideoCount}
             />
           </div>
         </div>

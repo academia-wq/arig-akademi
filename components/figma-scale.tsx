@@ -5,6 +5,8 @@ import { useLayoutEffect, useRef, useState } from "react";
 // Figma-д тогтмол өргөнөөр (designWidth) зурсан хэсгийг боломжит өргөнд жигд томруулж/жижигрүүлнэ.
 // CSS zoom нь layout-д нөлөөлдөг тул видео, карт, бичиг, зай бүгд Figma-ийн харьцаагаа хадгална.
 // minWidth-ээс нарийн (таблет, утас) үед томруулахгүй — тэнд энгийн responsive байрлал ажиллана.
+// Анхаар: дотор нь байрлах элементийн popup цэс (жишээ нь Mux тоглуулагчийн хурдны цэс) zoom-ыг
+// тооцдоггүй тул буруу байрлалд гардаг — ийм цэсийг өөрсдөө хийх хэрэгтэй (LessonPlayer-ийг үз).
 export function FigmaScale({
   designWidth,
   minWidth = 900,
