@@ -88,7 +88,7 @@ export default async function LessonPage({
   const description = currentLesson.content_text || course.description;
 
   return (
-    <div className="grid gap-8 lg:-mr-[88px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)]">
+    <div className="grid gap-8 lg:-mr-[88px] lg:grid-cols-[minmax(0,724px)_360px] lg:justify-center">
       <main className="min-w-0">
         <div className="flex items-center gap-2 text-sm text-[#8A9DA2]">
           <Link prefetch={false} href="/learn" className="focus-ring hover:text-brand-500">
