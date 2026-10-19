@@ -5,6 +5,7 @@ import { LessonPlayer } from "@/components/lesson-player";
 import { CompleteModuleButton } from "@/components/complete-module-button";
 import { LessonCurriculumList } from "@/components/lesson-curriculum-list";
 import { ProgressRing } from "@/components/progress-ring";
+import { FigmaScale } from "@/components/figma-scale";
 import { ChevronRightIcon } from "@/components/icons";
 import { isModuleVisible } from "@/lib/module-visibility";
 import { getCourseIcon } from "@/lib/course-icon";
@@ -88,7 +89,10 @@ export default async function LessonPage({
   const description = currentLesson.content_text || course.description;
 
   return (
-    <div className="grid gap-8 lg:-mr-[88px] lg:grid-cols-[minmax(0,724px)_360px] lg:justify-center">
+    // Figma-ийн контентын өргөн 1116px (724 + 32 + 360) — дэлгэцэд жигд томруулна.
+    <div className="lg:-mr-[88px]">
+    <FigmaScale designWidth={1116}>
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
       <main className="min-w-0">
         <div className="flex items-center gap-2 text-sm text-[#8A9DA2]">
           <Link prefetch={false} href="/learn" className="focus-ring hover:text-brand-500">
@@ -252,6 +256,8 @@ export default async function LessonPage({
           )}
         </div>
       </aside>
+    </div>
+    </FigmaScale>
     </div>
   );
 }

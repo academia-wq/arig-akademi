@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 
 // Duolingo маягийн "Сайн байна!" баярын цонх — хичээл/модуль дуусахад гарна.
@@ -103,7 +104,7 @@ export function LessonCelebration({
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  return (
+  return createPortal(
     <div
       className="celebrate-motion fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto overflow-x-hidden bg-ink/50 p-4 py-10"
       style={{ animation: "celebrate-backdrop 200ms ease-out both" }}
@@ -251,6 +252,7 @@ export function LessonCelebration({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
