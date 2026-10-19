@@ -228,12 +228,12 @@ export default async function LessonPage({
             <Link
               prefetch={false}
               href={`/learn/${course.slug}/${prevLesson.id}`}
-              className="focus-ring flex-1 whitespace-nowrap rounded-md border border-[#8A9DA2] px-4 py-3 text-center text-sm font-medium leading-[18px] text-[#8A9DA2] transition hover:border-ink hover:bg-ink/5 hover:text-ink"
+              className="focus-ring flex flex-1 items-center justify-center whitespace-nowrap rounded-md border border-[#8A9DA2] px-4 py-3 text-center text-sm font-medium leading-[18px] text-[#8A9DA2] transition hover:border-ink hover:bg-ink/5 hover:text-ink"
             >
               Өмнөх
             </Link>
           ) : (
-            <span className="flex-1 whitespace-nowrap rounded-md border border-ink/15 px-4 py-3 text-center text-sm font-medium leading-[18px] text-ink/30">
+            <span className="flex flex-1 items-center justify-center whitespace-nowrap rounded-md border border-ink/15 px-4 py-3 text-center text-sm font-medium leading-[18px] text-ink/30">
               Өмнөх
             </span>
           )}
@@ -241,12 +241,12 @@ export default async function LessonPage({
             <Link
               prefetch={false}
               href={`/learn/${course.slug}/${nextLesson.id}`}
-              className="focus-ring flex-1 whitespace-nowrap rounded-md border border-brand-500 bg-brand-500 px-4 py-3 text-center leading-[18px] text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700"
+              className="focus-ring flex flex-1 items-center justify-center whitespace-nowrap rounded-md border border-brand-500 bg-brand-500 px-4 py-3 text-center leading-[18px] text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700"
             >
               Дараагийн хичээл
             </Link>
           ) : (
-            <span className="flex-1 whitespace-nowrap rounded-md border border-transparent bg-ink/10 px-4 py-3 text-center text-sm font-medium leading-[18px] text-ink/30">
+            <span className="flex flex-1 items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-ink/10 px-4 py-3 text-center text-sm font-medium leading-[18px] text-ink/30">
               Дараагийн хичээл
             </span>
           )}

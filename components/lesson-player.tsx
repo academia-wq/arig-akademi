@@ -83,7 +83,8 @@ export function LessonPlayer({
 
   return (
     <div>
-      <div className="relative aspect-[724/400] w-full overflow-hidden rounded-2xl bg-ink">
+      {/* isolate + translateZ: тоглож буй видеог Chrome-д бөөрөнхий булангаар заавал тайруулна. */}
+      <div className="relative isolate aspect-[724/400] w-full overflow-hidden rounded-2xl bg-ink [transform:translateZ(0)]">
         {started ? (
           <MuxPlayer
             playbackId={playbackId}
@@ -95,7 +96,15 @@ export function LessonPlayer({
             onEnded={() => {
               if (!markCompleteOnce(0)) saveProgress(0, true);
             }}
-            style={{ width: "100%", height: "100%", "--media-object-fit": "cover" } as React.CSSProperties}
+            style={
+              {
+                width: "100%",
+                height: "100%",
+                borderRadius: "16px",
+                overflow: "hidden",
+                "--media-object-fit": "cover",
+              } as React.CSSProperties
+            }
           />
         ) : (
           // Дизайн шиг: эхлэхээс өмнө видеоны зураг + голд цагаан тоглуулах товч.
