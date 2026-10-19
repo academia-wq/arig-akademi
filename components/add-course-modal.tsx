@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import {
@@ -10,6 +10,7 @@ import {
   VideoIcon,
   ImageIcon,
   CloudUploadIcon,
+  PlayIcon,
 } from "@/components/icons";
 import { createModuleWithLesson, uploadLessonMaterial } from "@/app/(app)/admin/actions";
 import { uploadLessonImage } from "@/app/(admin)/admin/courses/[id]/edit/actions";
@@ -109,6 +110,130 @@ function Dropzone({
   );
 }
 
+function formatClock(seconds: number) {
+  const s = Math.round(seconds);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = String(s % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
+}
+
+// Видео сонгогдсоны дараа чирж оруулах талбарын оронд гарах тод карт:
+// урьдчилсан харагдац, нэр, хэмжээ, хугацаа, Солих/Хасах, хуулах явц.
+function SelectedVideo({
+  file,
+  progress,
+  disabled,
+  onReplace,
+  onRemove,
+}: {
+  file: File;
+  progress: number | null;
+  disabled?: boolean;
+  onReplace: (files: File[]) => void;
+  onRemove: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [url, setUrl] = useState<string | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    setDuration(null);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  const uploaded = progress === 100;
+
+  return (
+    <div
+      className={clsx(
+        "rounded-md border-2 p-3 transition",
+        uploaded ? "border-accent bg-accent/5" : "border-brand-500 bg-brand-50/60"
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div className="relative h-[68px] w-[120px] flex-shrink-0 overflow-hidden rounded bg-ink">
+          {url && (
+            <video
+              src={`${url}#t=0.5`}
+              muted
+              preload="metadata"
+              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+              className="h-full w-full object-cover"
+            />
+          )}
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90">
+              <PlayIcon className="ml-0.5 h-3.5 w-3.5 text-brand-500" />
+            </span>
+          </span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={clsx("text-sm font-medium", uploaded ? "text-accent" : "text-brand-500")}>
+            {uploaded ? "✓ Видео хуулагдлаа" : "✓ Видео сонгогдлоо"}
+          </p>
+          <p className="mt-0.5 truncate text-sm text-ink" title={file.name}>
+            {file.name}
+          </p>
+          <p className="text-xs text-[#8A9DA2]">
+            {formatSize(file.size)}
+            {duration ? ` · ${formatClock(duration)}` : ""}
+          </p>
+        </div>
+        {progress === null && (
+          <div className="flex flex-shrink-0 flex-col gap-1.5">
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => inputRef.current?.click()}
+              className="focus-ring rounded-md border border-[#D9D9D9] bg-white px-3 py-1 text-xs font-medium text-ink transition hover:border-ink/30 disabled:opacity-50"
+            >
+              Солих
+            </button>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={onRemove}
+              className="focus-ring rounded-md px-3 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+            >
+              Хасах
+            </button>
+          </div>
+        )}
+      </div>
+
+      {progress !== null && (
+        <div className="mt-3">
+          <div className="flex justify-between text-xs">
+            <span className="text-ink/60">{uploaded ? "Хуулагдсан — Mux боловсруулж байна" : "Хуулж байна..."}</span>
+            <span className="font-medium text-ink">{progress}%</span>
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-white">
+            <div
+              className={clsx("h-full rounded-full transition-[width]", uploaded ? "bg-accent" : "bg-brand-500")}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="video/mp4,video/quicktime,video/*"
+        hidden
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          if (files.length) onReplace(files);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
 function FileChips({
   files,
   onRemove,
@@ -157,6 +282,7 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
   const [images, setImages] = useState<File[]>([]);
   const [pdfs, setPdfs] = useState<File[]>([]);
   const [progress, setProgress] = useState<string | null>(null);
+  const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Сургалт үүссэн ч зарим файл хуулагдаагүй үед — дахин үүсгэхгүйн тулд хадгална.
@@ -174,6 +300,7 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
     setLessonCount("");
     setDuration("");
     setVideo(null);
+    setVideoProgress(null);
     setImages([]);
     setPdfs([]);
   }
@@ -250,9 +377,12 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
 
     if (video) {
       try {
-        await uploadVideoToMux(created.lessonId, video, (p) =>
-          setProgress(`Видео хуулж байна... ${p}%`)
-        );
+        setVideoProgress(0);
+        await uploadVideoToMux(created.lessonId, video, (p) => {
+          setVideoProgress(p);
+          setProgress(`Видео хуулж байна... ${p}%`);
+        });
+        setVideoProgress(100);
         // Mux encode хэдэн минут болно — цонхыг хүлээлгэхгүй, ар талд нь хичээлд холбоно.
         waitForMuxVideo(created.lessonId).then((ready) => ready && router.refresh());
       } catch (err: any) {
@@ -423,15 +553,23 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
                 <div>
                   <label className={labelClass}>Видео файл (MP4, MOV — макс 2GB)</label>
                   <div className="mt-1.5">
-                    <Dropzone
-                      accept="video/mp4,video/quicktime,video/*"
-                      onFiles={addVideo}
-                      layout="stacked"
-                      icon={<VideoIcon className="h-5 w-5" />}
-                      title={video ? "Өөр видео сонгох" : "Видео сонгох"}
-                      hint="Эсвэл энд чирж оруулна уу"
-                    />
-                    <FileChips files={video ? [video] : []} onRemove={() => setVideo(null)} />
+                    {video ? (
+                      <SelectedVideo
+                        file={video}
+                        progress={videoProgress}
+                        onReplace={addVideo}
+                        onRemove={() => setVideo(null)}
+                      />
+                    ) : (
+                      <Dropzone
+                        accept="video/mp4,video/quicktime,video/*"
+                        onFiles={addVideo}
+                        layout="stacked"
+                        icon={<VideoIcon className="h-5 w-5" />}
+                        title="Видео сонгох"
+                        hint="Эсвэл энд чирж оруулна уу"
+                      />
+                    )}
                   </div>
                 </div>
 
