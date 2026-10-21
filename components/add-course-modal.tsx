@@ -15,15 +15,9 @@ import {
 import { createModuleWithLesson, uploadLessonMaterial } from "@/app/(app)/admin/actions";
 import { uploadLessonImage } from "@/app/(admin)/admin/courses/[id]/edit/actions";
 import { uploadVideoToMux, waitForMuxVideo } from "@/lib/mux-upload";
+import { CATEGORIES } from "@/lib/categories";
 
-export const CATEGORIES = [
-  "Менежмент",
-  "Санхүү",
-  "Технологи",
-  "Гал тогоо",
-  "Харилцагчийн үйлчилгээ",
-  "Аюулгүй байдал",
-];
+export { CATEGORIES };
 
 const MAX_VIDEO_BYTES = 2 * 1024 * 1024 * 1024;
 // Зураг, PDF нь server action-оор дамждаг; Vercel нэг хүсэлтийг ~4.5MB-аар хязгаарладаг.

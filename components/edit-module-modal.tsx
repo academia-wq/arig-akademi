@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { XIcon, EditIcon, PlusIcon } from "@/components/icons";
 import { updateModule } from "@/app/(app)/admin/actions";
-import { CATEGORIES } from "@/components/add-course-modal";
+import { CATEGORIES } from "@/lib/categories";
 import { VideoUploader } from "@/components/video-uploader";
 import { ImageUploader } from "@/components/image-uploader";
 import { PdfMaterialUploader } from "@/components/pdf-material-uploader";

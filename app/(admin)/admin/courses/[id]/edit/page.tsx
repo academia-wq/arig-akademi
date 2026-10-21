@@ -6,6 +6,7 @@ import { ImageUploader } from "@/components/image-uploader";
 import { DocumentCourseBuilder } from "@/components/document-course-builder";
 import { DeleteButton } from "@/components/delete-button";
 import { DEPARTMENTS } from "@/lib/departments";
+import { CATEGORIES } from "@/lib/categories";
 
 const COURSE_LEVELS = ["Анхан", "Дунд", "Ахисан"] as const;
 
@@ -307,13 +308,23 @@ export default async function EditCoursePage({
               </form>
 
               <form action={saveModuleCategory} className="mt-2 flex items-center gap-2">
-                <label className="text-xs text-ink/50">Folder (ангилал):</label>
-                <input
+                <label className="text-xs text-ink/50">Ангилал (хавтас):</label>
+                <select
                   name="category"
                   defaultValue={mod.category || ""}
-                  placeholder="Жишээ: Үйлчилгээний нэгдсэн стандарт"
                   className="focus-ring flex-1 rounded-md border border-ink/15 px-2 py-1 text-xs"
-                />
+                >
+                  <option value="">Ангилалгүй</option>
+                  {/* Жагсаалтад байхгүй хуучин ангилал алдагдахгүйн тулд одоогийнхыг үлдээнэ. */}
+                  {mod.category && !CATEGORIES.includes(mod.category) && (
+                    <option value={mod.category}>{mod.category}</option>
+                  )}
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="submit"
                   className="focus-ring rounded-md border border-ink/15 px-2 py-1 text-xs font-medium hover:border-ink/30"
