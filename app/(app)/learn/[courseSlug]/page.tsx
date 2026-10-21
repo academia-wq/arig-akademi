@@ -17,14 +17,14 @@ export default async function CourseCurriculumPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("position")
+    .select("position, department, role")
     .eq("id", user.id)
     .single();
 
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, slug, description, thumbnail_url, modules(id, title, position, visible_positions, category, lessons(id, title, position, image_url))"
+      "id, title, slug, description, thumbnail_url, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, title, position, image_url))"
     )
     .eq("slug", decodeURIComponent(params.courseSlug))
     .single();
@@ -32,7 +32,7 @@ export default async function CourseCurriculumPage({
   if (!course) notFound();
 
   const modules = (course as any).modules
-    ?.filter((m: any) => isModuleVisible(m.visible_positions, profile?.position))
+    ?.filter((m: any) => isModuleVisible(m, profile))
     .sort((a: any, b: any) => a.position - b.position);
 
   const categoryGroups: { category: string | null; modules: any[] }[] = [];

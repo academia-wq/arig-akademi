@@ -4,15 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { XIcon } from "@/components/icons";
 import { assignEmployee } from "@/app/(app)/admin/actions";
+import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
 
-export const DEPARTMENTS = ["Санхүү", "Менежмент", "Технологи", "Гал тогоо"];
-
-export const POSITIONS: Record<string, string[]> = {
-  "Санхүү": ["Нягтлан бодогч", "Санхүүгийн менежер", "Кассир"],
-  "Менежмент": ["Ерөнхий менежер", "Салбарын менежер", "Ээлжийн менежер"],
-  "Технологи": ["IT инженер", "Систем администратор", "Дэмжлэгийн ажилтан"],
-  "Гал тогоо": ["Тогооч", "Туслах тогооч", "Гал тогооны эрхлэгч"],
-};
+export { DEPARTMENTS, POSITIONS };
 
 export function AddEmployeeButton({
   pendingProfiles,

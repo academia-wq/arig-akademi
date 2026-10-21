@@ -5,6 +5,7 @@ import { VideoUploader } from "@/components/video-uploader";
 import { ImageUploader } from "@/components/image-uploader";
 import { DocumentCourseBuilder } from "@/components/document-course-builder";
 import { DeleteButton } from "@/components/delete-button";
+import { DEPARTMENTS } from "@/lib/departments";
 
 const COURSE_LEVELS = ["Анхан", "Дунд", "Ахисан"] as const;
 
@@ -60,6 +61,19 @@ async function updateModuleTitle(moduleId: string, courseId: string, formData: F
   const supabase = createClient();
   const title = formData.get("module_title") as string;
   await supabase.from("modules").update({ title }).eq("id", moduleId);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+}
+
+async function updateModuleDepartments(moduleId: string, courseId: string, formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const departments = (formData.getAll("visible_departments") as string[]).filter((d) =>
+    DEPARTMENTS.includes(d)
+  );
+  await supabase
+    .from("modules")
+    .update({ visible_departments: departments.length ? departments : null })
+    .eq("id", moduleId);
   revalidatePath(`/admin/courses/${courseId}/edit`);
 }
 
@@ -131,7 +145,7 @@ export default async function EditCoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, description, is_published, level, modules(id, title, position, visible_positions, category, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
+      "id, title, description, is_published, level, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
     )
     .eq("id", params.id)
     .single();
@@ -250,6 +264,31 @@ export default async function EditCoursePage({
                   <DeleteButton title="Бүлэг устгах уу?" confirmText={`"${mod.title}" бүлэг болон доторх бүх хичээл устна. Энэ үйлдлийг буцаах боломжгүй.`} />
                 </form>
               </div>
+
+              <form
+                action={updateModuleDepartments.bind(null, mod.id, course.id)}
+                className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1"
+              >
+                <span className="text-xs text-ink/50">Харагдах хэлтэс:</span>
+                {DEPARTMENTS.map((d) => (
+                  <label key={d} className="flex items-center gap-1 text-xs text-ink">
+                    <input
+                      type="checkbox"
+                      name="visible_departments"
+                      value={d}
+                      defaultChecked={mod.visible_departments?.includes(d)}
+                    />
+                    {d}
+                  </label>
+                ))}
+                <span className="text-xs text-ink/40">(сонгоогүй = бүх хэлтэст)</span>
+                <button
+                  type="submit"
+                  className="focus-ring ml-auto rounded-md border border-ink/15 px-2 py-1 text-xs font-medium hover:border-ink/30"
+                >
+                  Хадгалах
+                </button>
+              </form>
 
               <form action={saveModuleVisibility} className="mt-2 flex items-center gap-2">
                 <label className="text-xs text-ink/50">Зөвхөн харагдах албан тушаал:</label>

@@ -15,11 +15,11 @@ export default async function LearnCoursesPage() {
   if (!user) redirect("/login?redirect=/learn");
 
   const [{ data: profile }, { data: enrollments }] = await Promise.all([
-    supabase.from("profiles").select("full_name, position").eq("id", user.id).single(),
+    supabase.from("profiles").select("full_name, position, department, role").eq("id", user.id).single(),
     supabase
       .from("enrollments")
       .select(
-        "course_id, courses(id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, category, lessons(id, position, duration_seconds, image_url)))"
+        "course_id, courses(id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, position, duration_seconds, image_url)))"
       )
       .eq("user_id", user.id),
   ]);
@@ -32,7 +32,7 @@ export default async function LearnCoursesPage() {
     const { data: freeCourses } = await supabase
       .from("courses")
       .select(
-        "id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, category, lessons(id, position, duration_seconds, image_url))"
+        "id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, position, duration_seconds, image_url))"
       )
       .eq("is_published", true)
       .eq("price", 0);
@@ -120,7 +120,7 @@ export default async function LearnCoursesPage() {
             "Ариг Академи";
           const moduleRows = notStarted
             ? (course.modules || [])
-                .filter((m: any) => isModuleVisible(m.visible_positions, profile?.position))
+                .filter((m: any) => isModuleVisible(m, profile))
                 .sort((a: any, b: any) => a.position - b.position)
                 .map((m: any) => {
                   const lessons = [...(m.lessons || [])].sort(

@@ -75,6 +75,7 @@ export type Database = {
           title: string;
           position: number;
           visible_positions: string[] | null;
+          visible_departments: string[] | null;
           category: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["modules"]["Row"]>;

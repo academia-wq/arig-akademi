@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { XIcon, EditIcon } from "@/components/icons";
 import { Tooltip } from "@/components/tooltip";
 import { assignEmployee } from "@/app/(app)/admin/actions";
-import { DEPARTMENTS, POSITIONS } from "@/components/add-employee-modal";
+import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
 
 export function EditEmployeeButton({
   profileId,

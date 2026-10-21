@@ -1,17 +1,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isModuleVisible } from "@/lib/module-visibility";
 
+// Явцыг зөвхөн тухайн хэрэглэгчид ХАРАГДАХ модулиудын хичээлээр тооцно
+// (хэлтэс/албан тушаалаар хязгаарлагдсан модуль 100%-д саад болохгүй).
 export async function computeCourseProgress(
   supabase: SupabaseClient,
   userId: string,
   course: { id: string; [key: string]: any }
 ) {
-  const { data: lessons } = await supabase
-    .from("lessons")
-    .select("id, duration_seconds, modules!inner(course_id)")
-    .eq("modules.course_id", course.id);
+  const [{ data: allLessons }, { data: viewer }] = await Promise.all([
+    supabase
+      .from("lessons")
+      .select("id, duration_seconds, modules!inner(course_id, visible_positions, visible_departments)")
+      .eq("modules.course_id", course.id),
+    supabase.from("profiles").select("position, department, role").eq("id", userId).single(),
+  ]);
+  const lessons = (allLessons || []).filter((l: any) => isModuleVisible(l.modules, viewer));
 
-  const lessonIds = (lessons || []).map((l: any) => l.id);
-  const durationSeconds = (lessons || []).reduce(
+  const lessonIds = lessons.map((l: any) => l.id);
+  const durationSeconds = lessons.reduce(
     (sum: number, l: any) => sum + (l.duration_seconds || 0),
     0
   );
