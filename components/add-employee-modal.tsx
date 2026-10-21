@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { XIcon } from "@/components/icons";
-import { assignEmployee } from "@/app/(app)/admin/actions";
+import { assignEmployee, createEmployee } from "@/app/(app)/admin/actions";
 import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
 
 export { DEPARTMENTS, POSITIONS };
+
+type Mode = "create" | "assign";
 
 export function AddEmployeeButton({
   pendingProfiles,
@@ -15,23 +17,43 @@ export function AddEmployeeButton({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<Mode>("create");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [profileId, setProfileId] = useState("");
   const [department, setDepartment] = useState(DEPARTMENTS[0]);
   const [position, setPosition] = useState(POSITIONS[DEPARTMENTS[0]][0]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [created, setCreated] = useState<{
+    name: string;
+    email: string;
+    link: string;
+    emailed: boolean;
+    resent: boolean;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   function close() {
     setOpen(false);
     setError(null);
+    setMode("create");
+    setFullName("");
+    setEmail("");
     setProfileId("");
     setDepartment(DEPARTMENTS[0]);
     setPosition(POSITIONS[DEPARTMENTS[0]][0]);
+    setCreated(null);
+    setCopied(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!profileId) {
+    if (mode === "create" && (!fullName.trim() || !email.trim())) {
+      setError("Нэр, имэйлээ оруулна уу.");
+      return;
+    }
+    if (mode === "assign" && !profileId) {
       setError("Ажилтнаа сонгоно уу.");
       return;
     }
@@ -39,10 +61,30 @@ export function AddEmployeeButton({
     setError(null);
 
     const formData = new FormData();
-    formData.set("profileId", profileId);
     formData.set("department", department);
     formData.set("position", position);
 
+    if (mode === "create") {
+      formData.set("fullName", fullName.trim());
+      formData.set("email", email.trim());
+      const result = await createEmployee(formData);
+      setSubmitting(false);
+      if (result.success) {
+        setCreated({
+          name: fullName.trim(),
+          email: email.trim(),
+          link: result.link,
+          emailed: result.emailed,
+          resent: result.resent,
+        });
+        router.refresh();
+      } else {
+        setError(result.error);
+      }
+      return;
+    }
+
+    formData.set("profileId", profileId);
     const result = await assignEmployee(formData);
     setSubmitting(false);
     if (result.success) {
@@ -50,6 +92,17 @@ export function AddEmployeeButton({
       router.refresh();
     } else {
       setError(result.error);
+    }
+  }
+
+  async function copyLink() {
+    if (!created) return;
+    try {
+      await navigator.clipboard.writeText(created.link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
     }
   }
 
@@ -84,82 +137,175 @@ export function AddEmployeeButton({
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
-              <div>
-                <label className="block text-sm font-medium text-ink">Ажилтан</label>
-                <select
-                  value={profileId}
-                  onChange={(e) => setProfileId(e.target.value)}
-                  className="focus-ring mt-1.5 w-full rounded-md border border-ink/15 px-3 py-2.5 text-sm text-ink"
-                >
-                  <option value="">Сонгоно уу</option>
-                  {pendingProfiles.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.full_name || "Нэргүй"} — {p.email}
-                    </option>
-                  ))}
-                </select>
-                {pendingProfiles.length === 0 && (
-                  <p className="mt-1.5 text-xs text-ink/50">
-                    Хуваарилагдаагүй бүртгэлтэй хэрэглэгч алга байна.
+            {created ? (
+              <div className="mt-5 flex flex-col gap-4">
+                <div className="rounded-lg bg-brand-50 p-4 text-sm text-ink">
+                  <p className="font-medium">
+                    ✓ {created.name} {created.resent ? "— шинэ холбоос үүслээ" : "ажилтныг үүсгэлээ"}
                   </p>
-                )}
-              </div>
+                  <p className="mt-1 text-ink/60">
+                    {created.emailed
+                      ? `Нууц үг тохируулах холбоосыг ${created.email} хаяг руу илгээлээ.`
+                      : "Имэйл илгээгдсэнгүй. Доорх холбоосыг хуулж ажилтанд (Messenger, чат г.м.-ээр) өгнө үү."}
+                  </p>
+                </div>
 
-              <div className="flex flex-wrap gap-2 sm:flex-nowrap">
-                {DEPARTMENTS.map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => {
-                      setDepartment(d);
-                      setPosition(POSITIONS[d][0]);
-                    }}
-                    className={`focus-ring flex-auto whitespace-nowrap rounded-md border px-2 py-1.5 text-sm font-medium transition ${
-                      department === d
-                        ? "border-brand-500 bg-brand-500 text-white"
-                        : "border-ink/15 text-ink/60 hover:border-ink/30"
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-ink">Нууц үг тохируулах холбоос</label>
+                  <div className="mt-1.5 flex gap-2">
+                    <input
+                      readOnly
+                      value={created.link}
+                      onFocus={(e) => e.target.select()}
+                      className="focus-ring w-full min-w-0 rounded-md border border-ink/15 bg-paper px-3 py-2.5 text-xs text-ink/70"
+                    />
+                    <button
+                      type="button"
+                      onClick={copyLink}
+                      className="focus-ring flex-shrink-0 rounded-md bg-brand-500 px-4 text-sm font-medium text-white hover:bg-brand-700"
+                    >
+                      {copied ? "Хуулсан" : "Хуулах"}
+                    </button>
+                  </div>
+                  <p className="mt-1.5 text-xs text-ink/50">
+                    Холбоос хугацаатай, нэг удаа ашиглагдана. Хүчингүй болсон бол ижил имэйлээр дахин
+                    нэмэхэд шинэ холбоос үүснэ.
+                  </p>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-ink">Албан тушаал</label>
-                <select
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  className="focus-ring mt-1.5 w-full rounded-md border border-ink/15 px-3 py-2.5 text-sm text-ink"
-                >
-                  {POSITIONS[department].map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {error && <p className="text-sm text-red-600">{error}</p>}
-
-              <div className="mt-2 flex gap-3">
                 <button
                   type="button"
                   onClick={close}
-                  className="focus-ring flex-1 rounded-md border border-ink/15 px-4 py-2.5 text-sm font-medium text-ink transition hover:border-ink/30"
+                  className="focus-ring mt-2 rounded-md border border-ink/15 px-4 py-2.5 text-sm font-medium text-ink transition hover:border-ink/30"
                 >
-                  Болих
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="focus-ring flex-1 rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700 disabled:opacity-60"
-                >
-                  {submitting ? "Нэмж байна..." : "Нэмэх"}
+                  Хаах
                 </button>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
+                <div className="grid grid-cols-2 gap-1 rounded-lg bg-paper p-1">
+                  {(
+                    [
+                      ["create", "Шинэ ажилтан"],
+                      ["assign", `Бүртгүүлсэн хүн${pendingProfiles.length ? ` (${pendingProfiles.length})` : ""}`],
+                    ] as const
+                  ).map(([m, label]) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => {
+                        setMode(m);
+                        setError(null);
+                      }}
+                      className={`focus-ring rounded-md px-3 py-2 text-sm font-medium transition ${
+                        mode === m ? "bg-white text-ink shadow-sm" : "text-ink/50 hover:text-ink"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {mode === "create" ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-ink">Овог нэр</label>
+                      <input
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Жишээ: Бат Болд"
+                        className="focus-ring mt-1.5 w-full rounded-md border border-ink/15 px-3 py-2.5 text-sm text-ink"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-ink">Имэйл</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="ажилтан@gmail.com"
+                        className="focus-ring mt-1.5 w-full rounded-md border border-ink/15 px-3 py-2.5 text-sm text-ink"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium text-ink">Ажилтан</label>
+                    <select
+                      value={profileId}
+                      onChange={(e) => setProfileId(e.target.value)}
+                      className="focus-ring mt-1.5 w-full rounded-md border border-ink/15 px-3 py-2.5 text-sm text-ink"
+                    >
+                      <option value="">Сонгоно уу</option>
+                      {pendingProfiles.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.full_name || "Нэргүй"} — {p.email}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1.5 text-xs text-ink/50">
+                      {pendingProfiles.length === 0
+                        ? "Хуваарилагдаагүй бүртгэлтэй хэрэглэгч алга байна."
+                        : "Сайтад өөрөө бүртгүүлсэн, хэлтэс оноогоогүй хүмүүс."}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+                  {DEPARTMENTS.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => {
+                        setDepartment(d);
+                        setPosition(POSITIONS[d][0]);
+                      }}
+                      className={`focus-ring flex-auto whitespace-nowrap rounded-md border px-2 py-1.5 text-sm font-medium transition ${
+                        department === d
+                          ? "border-brand-500 bg-brand-500 text-white"
+                          : "border-ink/15 text-ink/60 hover:border-ink/30"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-ink">Албан тушаал</label>
+                  <select
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    className="focus-ring mt-1.5 w-full rounded-md border border-ink/15 px-3 py-2.5 text-sm text-ink"
+                  >
+                    {POSITIONS[department].map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {error && <p className="text-sm text-red-600">{error}</p>}
+
+                <div className="mt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={close}
+                    className="focus-ring flex-1 rounded-md border border-ink/15 px-4 py-2.5 text-sm font-medium text-ink transition hover:border-ink/30"
+                  >
+                    Болих
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="focus-ring flex-1 rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700 disabled:opacity-60"
+                  >
+                    {submitting ? "Нэмж байна..." : mode === "create" ? "Үүсгэх" : "Нэмэх"}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
