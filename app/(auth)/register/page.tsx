@@ -1,12 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AuthCard } from "@/components/auth-card";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
+import { getFranchiseByCode } from "./actions";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+// /register?code=XXXX — франчайзын бүртгэлийн холбоос. Код таарвал бүртгэл
+// тухайн франчайзад харьяалагдана (trigger кодыг дахин шалгана).
+function RegisterForm() {
+  const franchiseCode = (useSearchParams().get("code") || "").trim().toUpperCase();
+  const [franchise, setFranchise] = useState<{ name: string } | null | "invalid">(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +31,11 @@ export default function RegisterPage() {
 
   const supabase = createClient();
 
+  useEffect(() => {
+    if (!franchiseCode) return;
+    getFranchiseByCode(franchiseCode).then((f) => setFranchise(f ?? "invalid"));
+  }, [franchiseCode]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -26,7 +45,10 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: {
+          full_name: fullName,
+          ...(franchise && franchise !== "invalid" ? { franchise_code: franchiseCode } : {}),
+        },
         emailRedirectTo: `${window.location.origin}/api/auth/callback`,
       },
     });
@@ -56,6 +78,16 @@ export default function RegisterPage() {
       title="Бүртгүүлэх"
       subtitle="Ариг академийн цахим сургалтын платформд тавтай морил"
     >
+      {franchise && franchise !== "invalid" && (
+        <p className="mb-5 rounded-lg bg-brand-50 px-4 py-3 text-sm text-ink">
+          Та <span className="font-semibold">{franchise.name}</span> франчайзын ажилтнаар бүртгүүлж байна.
+        </p>
+      )}
+      {franchise === "invalid" && (
+        <p className="mb-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          Бүртгэлийн холбоос хүчингүй байна. Франчайзын менежерээсээ шинэ холбоос авна уу.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>
           <label className="block text-sm text-ink" htmlFor="name">

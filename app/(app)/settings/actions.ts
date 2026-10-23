@@ -12,11 +12,11 @@ export async function updateProfile(formData: FormData) {
   if (!user) return;
 
   const fullName = formData.get("full_name") as string;
-  const position = formData.get("position") as string;
 
+  // Албан тушаал харагдах сургалтыг шийддэг тул зөвхөн админ өөрчилнө.
   await supabase
     .from("profiles")
-    .update({ full_name: fullName, position })
+    .update({ full_name: fullName })
     .eq("id", user.id);
 
   revalidatePath("/settings");

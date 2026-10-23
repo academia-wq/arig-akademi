@@ -19,12 +19,29 @@ export type Database = {
           position: string | null;
           department: string | null;
           role: "student" | "instructor" | "admin";
+          employee_type: "core" | "franchise";
+          franchise_id: string | null;
           created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["profiles"]["Row"]> & {
           id: string;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
+        Relationships: [];
+      };
+      franchises: {
+        Row: {
+          id: string;
+          name: string;
+          invite_code: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["franchises"]["Row"]> & {
+          name: string;
+          invite_code: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["franchises"]["Row"]>;
         Relationships: [];
       };
       notifications: {
@@ -77,6 +94,7 @@ export type Database = {
           visible_positions: string[] | null;
           visible_departments: string[] | null;
           category: string | null;
+          audience: "core" | "franchise" | "all";
         };
         Insert: Partial<Database["public"]["Tables"]["modules"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["modules"]["Row"]>;

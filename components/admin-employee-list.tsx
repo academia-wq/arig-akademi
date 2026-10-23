@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { SearchIcon } from "@/components/icons";
 import { initialsOf } from "@/lib/format";
 import { EditEmployeeButton } from "@/components/edit-employee-modal";
+import type { FranchiseOption } from "@/components/employee-type-fields";
 
 type Employee = {
   id: string;
@@ -14,11 +15,20 @@ type Employee = {
   position: string | null;
   department: string | null;
   avatar_url: string | null;
+  employee_type: "core" | "franchise";
+  franchise_id: string | null;
+  franchise_name: string | null;
 };
 
 const MAX_ROWS = 10;
 
-export function AdminEmployeeList({ employees }: { employees: Employee[] }) {
+export function AdminEmployeeList({
+  employees,
+  franchises,
+}: {
+  employees: Employee[];
+  franchises: FranchiseOption[];
+}) {
   const [query, setQuery] = useState("");
   const [department, setDepartment] = useState<string | null>(null);
 
@@ -33,7 +43,7 @@ export function AdminEmployeeList({ employees }: { employees: Employee[] }) {
     return employees.filter((e) => {
       if (department && e.department !== department) return false;
       if (!q) return true;
-      return [e.full_name, e.email, e.position, e.department].some((v) =>
+      return [e.full_name, e.email, e.position, e.department, e.franchise_name].some((v) =>
         (v || "").toLowerCase().includes(q)
       );
     });
@@ -124,6 +134,11 @@ export function AdminEmployeeList({ employees }: { employees: Employee[] }) {
                   </td>
                   <td className="px-4 py-4 text-center text-sm text-[#8A9DA2]">
                     {p.department || "—"}
+                    {p.employee_type === "franchise" && (
+                      <span className="mt-1 block text-xs font-medium text-brand-500">
+                        Франчайз · {p.franchise_name || "—"}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-4 text-right">
                     <EditEmployeeButton
@@ -131,6 +146,9 @@ export function AdminEmployeeList({ employees }: { employees: Employee[] }) {
                       name={p.full_name || p.email}
                       department={p.department}
                       position={p.position}
+                      employeeType={p.employee_type}
+                      franchiseId={p.franchise_id}
+                      franchises={franchises}
                     />
                   </td>
                 </tr>

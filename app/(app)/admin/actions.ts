@@ -40,6 +40,31 @@ async function requireStaff() {
   return { ok: true as const, userId: user.id };
 }
 
+// Ажилтны төрөл: "core" (үндсэн) эсвэл "franchise" + идэвхтэй франчайзын id.
+async function parseEmployeeType(
+  formData: FormData
+): Promise<
+  | { ok: true; employee_type: "core" | "franchise"; franchise_id: string | null }
+  | { ok: false; error: string }
+> {
+  const type = formData.get("employeeType") === "franchise" ? "franchise" : "core";
+  if (type === "core") return { ok: true, employee_type: "core", franchise_id: null };
+  const franchiseId = String(formData.get("franchiseId") || "");
+  if (!franchiseId) return { ok: false, error: "Франчайзаа сонгоно уу." };
+  const { data } = await createServiceRoleClient()
+    .from("franchises")
+    .select("id")
+    .eq("id", franchiseId)
+    .maybeSingle();
+  if (!data) return { ok: false, error: "Франчайз олдсонгүй." };
+  return { ok: true, employee_type: "franchise", franchise_id: franchiseId };
+}
+
+function parseAudience(formData: FormData): "core" | "franchise" | "all" {
+  const v = formData.get("audience");
+  return v === "franchise" || v === "all" ? v : "core";
+}
+
 export async function assignEmployee(
   formData: FormData
 ): Promise<{ success: true } | { success: false; error: string }> {
@@ -52,11 +77,18 @@ export async function assignEmployee(
   if (!profileId || !department || !position) {
     return { success: false, error: "Бүх талбарыг бөглөнө үү." };
   }
+  const type = await parseEmployeeType(formData);
+  if (!type.ok) return { success: false, error: type.error };
 
   const admin = createServiceRoleClient();
   const { error } = await admin
     .from("profiles")
-    .update({ department, position })
+    .update({
+      department,
+      position,
+      employee_type: type.employee_type,
+      franchise_id: type.franchise_id,
+    })
     .eq("id", profileId);
 
   if (error) return { success: false, error: error.message };
@@ -86,6 +118,8 @@ export async function createEmployee(formData: FormData): Promise<
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { success: false, error: "Имэйл хаяг буруу байна." };
   }
+  const empType = await parseEmployeeType(formData);
+  if (!empType.ok) return { success: false, error: empType.error };
 
   const admin = createServiceRoleClient();
 
@@ -111,7 +145,13 @@ export async function createEmployee(formData: FormData): Promise<
 
   const { error: profileError } = await admin
     .from("profiles")
-    .update({ full_name: fullName, department, position })
+    .update({
+      full_name: fullName,
+      department,
+      position,
+      employee_type: empType.employee_type,
+      franchise_id: empType.franchise_id,
+    })
     .eq("id", linkData.user.id);
   if (profileError) return { success: false, error: profileError.message };
 
@@ -196,6 +236,7 @@ export async function createModuleWithLesson(
       course_id: courseId,
       title: moduleTitle,
       category: category || null,
+      audience: parseAudience(formData),
       position: count || 0,
     })
     .select("id")
@@ -269,7 +310,12 @@ export async function updateModule(
 
   const { error } = await supabase
     .from("modules")
-    .update({ title: moduleTitle, category: category || null, course_id: courseId })
+    .update({
+      title: moduleTitle,
+      category: category || null,
+      audience: parseAudience(formData),
+      course_id: courseId,
+    })
     .eq("id", moduleId);
   if (error) return { success: false, error: error.message };
 
@@ -344,4 +390,56 @@ export async function uploadLessonMaterial(
 
   revalidatePath(`/admin/courses/${courseId}/edit`);
   return { success: true, url: publicUrlData.publicUrl };
+}
+
+// ─── Франчайз ───
+
+function generateInviteCode() {
+  // Андуурагдах тэмдэгтгүй (0/O, 1/I) 8 тэмдэгт.
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+}
+
+export async function createFranchise(
+  formData: FormData
+): Promise<{ success: true } | { success: false; error: string }> {
+  const staff = await requireStaff();
+  if (!staff.ok) return { success: false, error: staff.error };
+
+  const name = String(formData.get("name") || "").trim();
+  if (!name) return { success: false, error: "Франчайзын нэрээ оруулна уу." };
+
+  const { error } = await createServiceRoleClient()
+    .from("franchises")
+    .insert({ name, invite_code: generateInviteCode() });
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function updateFranchise(
+  franchiseId: string,
+  patch: { name?: string; is_active?: boolean; regenerateCode?: boolean }
+): Promise<{ success: true } | { success: false; error: string }> {
+  const staff = await requireStaff();
+  if (!staff.ok) return { success: false, error: staff.error };
+
+  const update: { name?: string; is_active?: boolean; invite_code?: string } = {};
+  if (patch.name !== undefined) {
+    if (!patch.name.trim()) return { success: false, error: "Франчайзын нэрээ оруулна уу." };
+    update.name = patch.name.trim();
+  }
+  if (patch.is_active !== undefined) update.is_active = patch.is_active;
+  if (patch.regenerateCode) update.invite_code = generateInviteCode();
+
+  const { error } = await createServiceRoleClient()
+    .from("franchises")
+    .update(update)
+    .eq("id", franchiseId);
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/admin");
+  return { success: true };
 }

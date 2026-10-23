@@ -22,11 +22,11 @@ export default async function LessonPage({
   if (!user) redirect(`/login?redirect=/learn/${params.courseSlug}/${params.lessonId}`);
 
   const [{ data: profile }, { data: course }, { data: progressRows }] = await Promise.all([
-    supabase.from("profiles").select("position, department, role").eq("id", user.id).single(),
+    supabase.from("profiles").select("position, department, role, employee_type").eq("id", user.id).single(),
     supabase
       .from("courses")
       .select(
-        "id, title, slug, description, thumbnail_url, level, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, title, content_text, mux_playback_id, image_url, material_urls, duration_seconds, position))"
+        "id, title, slug, description, thumbnail_url, level, modules(id, title, position, visible_positions, visible_departments, audience, category, lessons(id, title, content_text, mux_playback_id, image_url, material_urls, duration_seconds, position))"
       )
       .eq("slug", decodeURIComponent(params.courseSlug))
       .single(),

@@ -17,14 +17,14 @@ export default async function CourseCurriculumPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("position, department, role")
+    .select("position, department, role, employee_type")
     .eq("id", user.id)
     .single();
 
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, slug, description, thumbnail_url, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, title, position, image_url))"
+      "id, title, slug, description, thumbnail_url, modules(id, title, position, visible_positions, visible_departments, audience, category, lessons(id, title, position, image_url))"
     )
     .eq("slug", decodeURIComponent(params.courseSlug))
     .single();

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { computeCourseProgress } from "@/lib/course-progress";
+import { isModuleVisible } from "@/lib/module-visibility";
 import { formatMonthRange } from "@/lib/format";
 import { UsersIcon, BookIcon, PlayIcon, CalendarIcon } from "@/components/icons";
 
@@ -61,10 +62,15 @@ export default async function DashboardPage() {
 
   // Хичээлийн чиглэлээр (module.category) явцыг тооцоолох
   const courseIds = coursesWithProgress.map((c) => c.course.id);
-  const { data: modules } = await supabase
-    .from("modules")
-    .select("id, category")
-    .in("course_id", courseIds.length ? courseIds : ["00000000-0000-0000-0000-000000000000"]);
+  const [{ data: allModules }, { data: viewer }] = await Promise.all([
+    supabase
+      .from("modules")
+      .select("id, category, visible_positions, visible_departments, audience")
+      .in("course_id", courseIds.length ? courseIds : ["00000000-0000-0000-0000-000000000000"]),
+    supabase.from("profiles").select("position, department, role, employee_type").eq("id", user.id).single(),
+  ]);
+  // Ангиллын явцад зөвхөн хэрэглэгчид харагдах модулиудыг тооцно.
+  const modules = (allModules || []).filter((m) => isModuleVisible(m, viewer));
 
   const moduleIds = (modules || []).map((m) => m.id);
   const { data: lessons } = await supabase

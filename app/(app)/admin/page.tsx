@@ -5,6 +5,7 @@ import { AdminOverviewTabs } from "@/components/admin-overview-tabs";
 import { AdminActiveTabProvider } from "@/components/admin-active-tab-context";
 import { AdminHeaderActions } from "@/components/admin-header-actions";
 import { AdminEmployeeList } from "@/components/admin-employee-list";
+import { AdminFranchiseSection } from "@/components/admin-franchise-section";
 import { AddEmployeeButton } from "@/components/add-employee-modal";
 import { AddCourseButton } from "@/components/add-course-modal";
 import { AdminModuleGrid, type ModuleCard } from "@/components/admin-module-grid";
@@ -36,10 +37,13 @@ export default async function AdminOverviewPage() {
     { data: lessons },
     { data: completedRows },
     { data: modules },
+    { data: franchiseRows },
   ] = await Promise.all([
     admin
       .from("profiles")
-      .select("id, full_name, role, position, department, avatar_url, created_at")
+      .select(
+        "id, full_name, role, position, department, employee_type, franchise_id, avatar_url, created_at"
+      )
       .order("created_at", { ascending: false }),
     admin
       .from("courses")
@@ -53,8 +57,26 @@ export default async function AdminOverviewPage() {
         "id, module_id, position, duration_seconds, image_url, mux_playback_id, modules!inner(course_id)"
       ),
     admin.from("lesson_progress").select("user_id, lesson_id").eq("is_completed", true),
-    admin.from("modules").select("id, title, category, course_id, position").order("position"),
+    admin
+      .from("modules")
+      .select("id, title, category, audience, course_id, position")
+      .order("position"),
+    admin
+      .from("franchises")
+      .select("id, name, invite_code, is_active, created_at")
+      .order("created_at"),
   ]);
+
+  const franchiseList = franchiseRows || [];
+  const franchiseNameById = new Map(franchiseList.map((f) => [f.id, f.name]));
+  // Шинэ ажилтанд оноох сонголтод зөвхөн идэвхтэй франчайз; засахад одоогийнх нь ч харагдана.
+  const franchiseOptions = franchiseList.map((f) => ({
+    id: f.id,
+    name: f.is_active ? f.name : `${f.name} (идэвхгүй)`,
+  }));
+  const activeFranchiseOptions = franchiseList
+    .filter((f) => f.is_active)
+    .map((f) => ({ id: f.id, name: f.name }));
 
   const emailById = new Map((authUsers?.users || []).map((u) => [u.id, u.email]));
   const courseIdByLesson = new Map((lessons || []).map((l: any) => [l.id, l.modules.course_id]));
@@ -112,6 +134,9 @@ export default async function AdminOverviewPage() {
     position: p.position,
     department: p.department,
     avatar_url: p.avatar_url,
+    employee_type: p.employee_type,
+    franchise_id: p.franchise_id,
+    franchise_name: p.franchise_id ? franchiseNameById.get(p.franchise_id) || null : null,
   }));
 
   const pendingProfiles = (profiles || [])
@@ -120,6 +145,8 @@ export default async function AdminOverviewPage() {
       id: p.id,
       full_name: p.full_name,
       email: emailById.get(p.id) || "",
+      employee_type: p.employee_type,
+      franchise_id: p.franchise_id,
     }));
 
   const courseOptions = (courses || []).map((c) => ({ id: c.id, title: c.title }));
@@ -133,6 +160,7 @@ export default async function AdminOverviewPage() {
       id: m.id,
       title: m.title,
       category: m.category,
+      audience: m.audience,
       courseId: m.course_id,
       courseTitle: course?.title || "",
       isPublished: !!course?.is_published,
@@ -175,7 +203,7 @@ export default async function AdminOverviewPage() {
           <p className="mt-1 text-ink">Админ панель</p>
         </div>
         <AdminHeaderActions
-          addEmployeeButton={<AddEmployeeButton pendingProfiles={pendingProfiles} />}
+          addEmployeeButton={<AddEmployeeButton pendingProfiles={pendingProfiles} franchises={activeFranchiseOptions} />}
           addCourseButton={<AddCourseButton courses={courseOptions} />}
         />
       </div>
@@ -233,7 +261,18 @@ export default async function AdminOverviewPage() {
             },
             {
               label: "Ажилтан",
-              content: <AdminEmployeeList employees={employeeList} />,
+              content: <AdminEmployeeList employees={employeeList} franchises={franchiseOptions} />,
+            },
+            {
+              label: "Франчайз",
+              content: (
+                <AdminFranchiseSection
+                  franchises={franchiseList.map((f) => ({
+                    ...f,
+                    employeeCount: (profiles || []).filter((p) => p.franchise_id === f.id).length,
+                  }))}
+                />
+              ),
             },
             {
               label: "Сургалт",

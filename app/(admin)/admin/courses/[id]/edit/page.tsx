@@ -7,6 +7,7 @@ import { DocumentCourseBuilder } from "@/components/document-course-builder";
 import { DeleteButton } from "@/components/delete-button";
 import { DEPARTMENTS } from "@/lib/departments";
 import { CATEGORIES } from "@/lib/categories";
+import { AUDIENCES } from "@/lib/module-visibility";
 
 const COURSE_LEVELS = ["Анхан", "Дунд", "Ахисан"] as const;
 
@@ -71,9 +72,11 @@ async function updateModuleDepartments(moduleId: string, courseId: string, formD
   const departments = (formData.getAll("visible_departments") as string[]).filter((d) =>
     DEPARTMENTS.includes(d)
   );
+  const rawAudience = formData.get("audience");
+  const audience = rawAudience === "franchise" || rawAudience === "all" ? rawAudience : "core";
   await supabase
     .from("modules")
-    .update({ visible_departments: departments.length ? departments : null })
+    .update({ visible_departments: departments.length ? departments : null, audience })
     .eq("id", moduleId);
   revalidatePath(`/admin/courses/${courseId}/edit`);
 }
@@ -146,7 +149,7 @@ export default async function EditCoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, title, description, is_published, level, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
+      "id, title, description, is_published, level, modules(id, title, position, visible_positions, visible_departments, audience, category, lessons(id, title, content_text, mux_playback_id, mux_asset_id, image_url, position, is_free_preview))"
     )
     .eq("id", params.id)
     .single();
@@ -270,6 +273,20 @@ export default async function EditCoursePage({
                 action={updateModuleDepartments.bind(null, mod.id, course.id)}
                 className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1"
               >
+                <label className="flex items-center gap-1 text-xs text-ink/50">
+                  Хэнд:
+                  <select
+                    name="audience"
+                    defaultValue={mod.audience || "core"}
+                    className="focus-ring rounded-md border border-ink/15 px-1.5 py-0.5 text-xs text-ink"
+                  >
+                    {AUDIENCES.map((a) => (
+                      <option key={a.value} value={a.value}>
+                        {a.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <span className="text-xs text-ink/50">Харагдах хэлтэс:</span>
                 {DEPARTMENTS.map((d) => (
                   <label key={d} className="flex items-center gap-1 text-xs text-ink">

@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { SearchIcon, TrashIcon, BookIcon } from "@/components/icons";
 import { formatDuration, initialsOf } from "@/lib/format";
 import { EditModuleButton } from "@/components/edit-module-modal";
+import { audienceLabel, type Audience } from "@/lib/module-visibility";
 import { deleteModuleAdmin } from "@/app/(app)/admin/actions";
 import { useConfirm } from "@/components/confirm-dialog";
 
@@ -13,6 +14,7 @@ export type ModuleCard = {
   id: string;
   title: string;
   category: string | null;
+  audience: Audience;
   courseId: string;
   courseTitle: string;
   isPublished: boolean;
@@ -142,6 +144,14 @@ export function AdminModuleGrid({
               >
                 {m.isPublished ? "Нийтлэгдсэн" : "Ноорог"}
               </span>
+              <span
+                className={clsx(
+                  "absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium",
+                  m.audience === "core" ? "bg-white/90 text-ink/60" : "bg-brand-500 text-white"
+                )}
+              >
+                {audienceLabel(m.audience)}
+              </span>
             </div>
 
             <div className="flex h-[60%] min-h-0 flex-col p-4">
@@ -170,6 +180,7 @@ export function AdminModuleGrid({
                   moduleId={m.id}
                   title={m.title}
                   category={m.category}
+                  audience={m.audience}
                   courseId={m.courseId}
                   courses={courseOptions}
                   firstLessonId={m.firstLessonId}

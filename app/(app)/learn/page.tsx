@@ -4,7 +4,7 @@ import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/s
 import { computeCourseProgress, mostCommonCategory } from "@/lib/course-progress";
 import { getCourseIcon } from "@/lib/course-icon";
 import { formatDuration, initialsOf } from "@/lib/format";
-import { isModuleVisible } from "@/lib/module-visibility";
+import { isModuleVisible, isPendingViewer } from "@/lib/module-visibility";
 import { AdminTabs } from "@/components/admin-tabs";
 import { Tooltip } from "@/components/tooltip";
 import { ArrowRightIcon, BookIcon, PlayCircleIcon } from "@/components/icons";
@@ -15,11 +15,11 @@ export default async function LearnCoursesPage() {
   if (!user) redirect("/login?redirect=/learn");
 
   const [{ data: profile }, { data: enrollments }] = await Promise.all([
-    supabase.from("profiles").select("full_name, position, department, role").eq("id", user.id).single(),
+    supabase.from("profiles").select("full_name, position, department, role, employee_type").eq("id", user.id).single(),
     supabase
       .from("enrollments")
       .select(
-        "course_id, courses(id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, position, duration_seconds, image_url)))"
+        "course_id, courses(id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, visible_departments, audience, category, lessons(id, position, duration_seconds, image_url)))"
       )
       .eq("user_id", user.id),
   ]);
@@ -32,7 +32,7 @@ export default async function LearnCoursesPage() {
   const { data: freeCourses } = await supabase
     .from("courses")
     .select(
-      "id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, position, duration_seconds, image_url))"
+      "id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, visible_departments, audience, category, lessons(id, position, duration_seconds, image_url))"
     )
     .eq("is_published", true)
     .eq("price", 0);
@@ -281,7 +281,11 @@ export default async function LearnCoursesPage() {
       <div className="mt-6">
         {coursesWithProgress.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-ink/20 p-10 text-center">
-            <p className="text-ink/60">Та одоогоор ямар ч сургалтад элсээгүй байна.</p>
+            <p className="text-ink/60">
+              {isPendingViewer(profile)
+                ? "Таны бүртгэлийг админ баталгаажуулж, хэлтэс, албан тушаал оноосны дараа сургалтууд энд харагдана."
+                : "Та одоогоор ямар ч сургалтад элсээгүй байна."}
+            </p>
             <Link
               prefetch={false}
               href="/dashboard"

@@ -11,9 +11,9 @@ export async function computeCourseProgress(
   const [{ data: allLessons }, { data: viewer }] = await Promise.all([
     supabase
       .from("lessons")
-      .select("id, duration_seconds, modules!inner(course_id, visible_positions, visible_departments)")
+      .select("id, duration_seconds, modules!inner(course_id, visible_positions, visible_departments, audience)")
       .eq("modules.course_id", course.id),
-    supabase.from("profiles").select("position, department, role").eq("id", userId).single(),
+    supabase.from("profiles").select("position, department, role, employee_type").eq("id", userId).single(),
   ]);
   const lessons = (allLessons || []).filter((l: any) => isModuleVisible(l.modules, viewer));
 

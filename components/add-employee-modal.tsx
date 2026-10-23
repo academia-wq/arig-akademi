@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { XIcon } from "@/components/icons";
 import { assignEmployee, createEmployee } from "@/app/(app)/admin/actions";
 import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
+import {
+  EmployeeTypeFields,
+  type EmployeeType,
+  type FranchiseOption,
+} from "@/components/employee-type-fields";
 
 export { DEPARTMENTS, POSITIONS };
 
@@ -12,8 +17,16 @@ type Mode = "create" | "assign";
 
 export function AddEmployeeButton({
   pendingProfiles,
+  franchises,
 }: {
-  pendingProfiles: { id: string; full_name: string | null; email: string }[];
+  pendingProfiles: {
+    id: string;
+    full_name: string | null;
+    email: string;
+    employee_type: EmployeeType;
+    franchise_id: string | null;
+  }[];
+  franchises: FranchiseOption[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -23,6 +36,8 @@ export function AddEmployeeButton({
   const [profileId, setProfileId] = useState("");
   const [department, setDepartment] = useState(DEPARTMENTS[0]);
   const [position, setPosition] = useState(POSITIONS[DEPARTMENTS[0]][0]);
+  const [employeeType, setEmployeeType] = useState<EmployeeType>("core");
+  const [franchiseId, setFranchiseId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{
@@ -43,6 +58,8 @@ export function AddEmployeeButton({
     setProfileId("");
     setDepartment(DEPARTMENTS[0]);
     setPosition(POSITIONS[DEPARTMENTS[0]][0]);
+    setEmployeeType("core");
+    setFranchiseId("");
     setCreated(null);
     setCopied(false);
   }
@@ -63,6 +80,8 @@ export function AddEmployeeButton({
     const formData = new FormData();
     formData.set("department", department);
     formData.set("position", position);
+    formData.set("employeeType", employeeType);
+    formData.set("franchiseId", franchiseId);
 
     if (mode === "create") {
       formData.set("fullName", fullName.trim());
@@ -233,13 +252,20 @@ export function AddEmployeeButton({
                     <label className="block text-sm font-medium text-ink">Ажилтан</label>
                     <select
                       value={profileId}
-                      onChange={(e) => setProfileId(e.target.value)}
+                      onChange={(e) => {
+                        setProfileId(e.target.value);
+                        // Франчайзын холбоосоор бүртгүүлсэн бол төрлийг нь хадгална.
+                        const p = pendingProfiles.find((x) => x.id === e.target.value);
+                        setEmployeeType(p?.employee_type ?? "core");
+                        setFranchiseId(p?.franchise_id ?? "");
+                      }}
                       className="focus-ring mt-1.5 w-full rounded-md border border-ink/15 px-3 py-2.5 text-sm text-ink"
                     >
                       <option value="">Сонгоно уу</option>
                       {pendingProfiles.map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.full_name || "Нэргүй"} — {p.email}
+                          {p.employee_type === "franchise" ? " (франчайз)" : ""}
                         </option>
                       ))}
                     </select>
@@ -250,6 +276,16 @@ export function AddEmployeeButton({
                     </p>
                   </div>
                 )}
+
+                <EmployeeTypeFields
+                  franchises={franchises}
+                  employeeType={employeeType}
+                  franchiseId={franchiseId}
+                  onChange={(t, id) => {
+                    setEmployeeType(t);
+                    setFranchiseId(id);
+                  }}
+                />
 
                 <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                   {DEPARTMENTS.map((d) => (

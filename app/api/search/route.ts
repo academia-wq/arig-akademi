@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isModuleVisible } from "@/lib/module-visibility";
 
 export async function GET(request: NextRequest) {
   const supabase = createClient();
@@ -21,8 +22,25 @@ export async function GET(request: NextRequest) {
     .select("course_id")
     .eq("user_id", user.id);
 
-  const courseIds = (enrollments || []).map((e) => e.course_id);
+  const enrolledIds = (enrollments || []).map((e) => e.course_id);
 
+  if (enrolledIds.length === 0) {
+    return NextResponse.json({ courses: [], lessons: [] });
+  }
+
+  // Хэрэглэгчид харагдах модультай бүлгүүдийг л хайна (хэлтэс, үндсэн/франчайз).
+  const [{ data: viewer }, { data: enrolledModules }] = await Promise.all([
+    supabase.from("profiles").select("position, department, role, employee_type").eq("id", user.id).single(),
+    supabase
+      .from("modules")
+      .select("course_id, visible_positions, visible_departments, audience")
+      .in("course_id", enrolledIds),
+  ]);
+  const courseIds = Array.from(
+    new Set(
+      (enrolledModules || []).filter((m) => isModuleVisible(m, viewer)).map((m) => m.course_id)
+    )
+  );
   if (courseIds.length === 0) {
     return NextResponse.json({ courses: [], lessons: [] });
   }
@@ -36,10 +54,12 @@ export async function GET(request: NextRequest) {
 
   const { data: lessonMatches } = await supabase
     .from("lessons")
-    .select("id, title, modules!inner(course_id, courses!inner(slug, title))")
+    .select(
+      "id, title, modules!inner(course_id, visible_positions, visible_departments, audience, courses!inner(slug, title))"
+    )
     .in("modules.course_id", courseIds)
     .ilike("title", `%${q}%`)
-    .limit(8);
+    .limit(40);
 
   const courses = (courseMatches || []).map((c) => ({
     id: c.id,
@@ -47,7 +67,10 @@ export async function GET(request: NextRequest) {
     slug: c.slug,
   }));
 
-  const lessons = (lessonMatches || []).map((l: any) => ({
+  const lessons = (lessonMatches || [])
+    .filter((l: any) => isModuleVisible(l.modules, viewer))
+    .slice(0, 8)
+    .map((l: any) => ({
     id: l.id,
     title: l.title,
     courseSlug: l.modules.courses.slug,

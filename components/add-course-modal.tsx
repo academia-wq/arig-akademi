@@ -16,6 +16,8 @@ import { createModuleWithLesson, uploadLessonMaterial } from "@/app/(app)/admin/
 import { uploadLessonImage } from "@/app/(admin)/admin/courses/[id]/edit/actions";
 import { uploadVideoToMux, waitForMuxVideo } from "@/lib/mux-upload";
 import { CATEGORIES } from "@/lib/categories";
+import type { Audience } from "@/lib/module-visibility";
+import { AudienceFields } from "@/components/audience-fields";
 
 export { CATEGORIES };
 
@@ -324,6 +326,7 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
   const [newCourseTitle, setNewCourseTitle] = useState("");
   const [moduleTitle, setModuleTitle] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
+  const [audience, setAudience] = useState<Audience>("core");
   const [lessonCount, setLessonCount] = useState("");
   const [duration, setDuration] = useState("");
   const [video, setVideo] = useState<File | null>(null);
@@ -347,6 +350,7 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
     setNewCourseTitle("");
     setModuleTitle("");
     setCategory(CATEGORIES[0]);
+    setAudience("core");
     setLessonCount("");
     setDuration("");
     setVideo(null);
@@ -413,6 +417,7 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
     else formData.set("courseId", courseId);
     formData.set("moduleTitle", moduleTitle.trim());
     formData.set("category", category);
+    formData.set("audience", audience);
     formData.set("duration", duration);
     formData.set("lessonCount", String(lessons));
 
@@ -583,6 +588,8 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
                     <ChevronDownIcon className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/60" />
                   </div>
                 </div>
+
+                <AudienceFields value={audience} onChange={setAudience} />
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>

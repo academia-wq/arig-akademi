@@ -6,23 +6,36 @@ import { XIcon, EditIcon } from "@/components/icons";
 import { Tooltip } from "@/components/tooltip";
 import { assignEmployee } from "@/app/(app)/admin/actions";
 import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
+import {
+  EmployeeTypeFields,
+  type EmployeeType,
+  type FranchiseOption,
+} from "@/components/employee-type-fields";
 
 export function EditEmployeeButton({
   profileId,
   name,
   department,
   position,
+  employeeType: initialType,
+  franchiseId: initialFranchiseId,
+  franchises,
 }: {
   profileId: string;
   name: string;
   department: string | null;
   position: string | null;
+  employeeType: EmployeeType;
+  franchiseId: string | null;
+  franchises: FranchiseOption[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const initialDepartment = department && DEPARTMENTS.includes(department) ? department : DEPARTMENTS[0];
   const [selectedDepartment, setSelectedDepartment] = useState(initialDepartment);
   const [selectedPosition, setSelectedPosition] = useState(position || POSITIONS[initialDepartment][0]);
+  const [employeeType, setEmployeeType] = useState<EmployeeType>(initialType);
+  const [franchiseId, setFranchiseId] = useState(initialFranchiseId || "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +57,8 @@ export function EditEmployeeButton({
     formData.set("profileId", profileId);
     formData.set("department", selectedDepartment);
     formData.set("position", selectedPosition);
+    formData.set("employeeType", employeeType);
+    formData.set("franchiseId", franchiseId);
 
     const result = await assignEmployee(formData);
     setSubmitting(false);
@@ -96,6 +111,16 @@ export function EditEmployeeButton({
                   {name}
                 </p>
               </div>
+
+              <EmployeeTypeFields
+                franchises={franchises}
+                employeeType={employeeType}
+                franchiseId={franchiseId}
+                onChange={(t, id) => {
+                  setEmployeeType(t);
+                  setFranchiseId(id);
+                }}
+              />
 
               <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                 {DEPARTMENTS.map((d) => (

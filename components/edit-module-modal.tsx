@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { XIcon, EditIcon, PlusIcon } from "@/components/icons";
 import { updateModule } from "@/app/(app)/admin/actions";
 import { CATEGORIES } from "@/lib/categories";
+import type { Audience } from "@/lib/module-visibility";
+import { AudienceFields } from "@/components/audience-fields";
 import { VideoUploader } from "@/components/video-uploader";
 import { ImageUploader } from "@/components/image-uploader";
 import { PdfMaterialUploader } from "@/components/pdf-material-uploader";
@@ -13,6 +15,7 @@ export function EditModuleButton({
   moduleId,
   title,
   category,
+  audience: initialAudience,
   courseId,
   courses,
   firstLessonId,
@@ -22,6 +25,7 @@ export function EditModuleButton({
   moduleId: string;
   title: string;
   category: string | null;
+  audience: Audience;
   courseId: string;
   courses: { id: string; title: string }[];
   firstLessonId?: string | null;
@@ -35,6 +39,7 @@ export function EditModuleButton({
   const [newCourseTitle, setNewCourseTitle] = useState("");
   const [moduleTitle, setModuleTitle] = useState(title);
   const [selectedCategory, setSelectedCategory] = useState(category || CATEGORIES[0]);
+  const [audience, setAudience] = useState<Audience>(initialAudience);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,6 +75,7 @@ export function EditModuleButton({
     else formData.set("courseId", selectedCourseId);
     formData.set("moduleTitle", moduleTitle.trim());
     formData.set("category", selectedCategory);
+    formData.set("audience", audience);
 
     const result = await updateModule(moduleId, formData);
     setSubmitting(false);
@@ -176,6 +182,8 @@ export function EditModuleButton({
                   ))}
                 </select>
               </div>
+
+              <AudienceFields value={audience} onChange={setAudience} />
 
               {firstLessonId && (
                 <div className="flex flex-col gap-4 border-t border-ink/10 pt-4">
