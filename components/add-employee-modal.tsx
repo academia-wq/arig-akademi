@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { XIcon } from "@/components/icons";
+import { PlusIcon, XIcon } from "@/components/icons";
 import { assignEmployee, createEmployee } from "@/app/(app)/admin/actions";
 import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
 import {
@@ -130,9 +130,10 @@ export function AddEmployeeButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="focus-ring flex items-center gap-2 rounded-md border border-ink/15 bg-white px-4 py-2.5 text-sm font-medium text-ink transition hover:border-brand-300"
+        className="focus-ring flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] transition hover:bg-brand-700"
       >
         Ажилтан нэмэх
+        <PlusIcon className="h-3.5 w-3.5" />
       </button>
 
       {open && (

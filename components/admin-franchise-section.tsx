@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { createFranchise, updateFranchise } from "@/app/(app)/admin/actions";
 import { useConfirm } from "@/components/confirm-dialog";
+import { PlusIcon } from "@/components/icons";
 
 type Franchise = {
   id: string;
@@ -107,9 +108,10 @@ export function AdminFranchiseSection({ franchises }: { franchises: Franchise[] 
           <button
             type="submit"
             disabled={adding || !name.trim()}
-            className="focus-ring flex-shrink-0 rounded-md bg-brand-500 px-5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+            className="focus-ring flex flex-shrink-0 items-center gap-2 rounded-md bg-brand-500 px-5 text-sm font-medium text-white shadow-[0px_0px_2px_rgba(248,123,79,0.5)] hover:bg-brand-700 disabled:opacity-60"
           >
             {adding ? "Нэмж байна..." : "Нэмэх"}
+            {!adding && <PlusIcon className="h-3.5 w-3.5" />}
           </button>
         </form>
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
