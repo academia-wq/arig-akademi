@@ -6,10 +6,8 @@ import { DownloadIcon } from "@/components/icons";
 
 export function AdminHeaderActions({
   addEmployeeButton,
-  addCourseButton,
 }: {
   addEmployeeButton: ReactNode;
-  addCourseButton: ReactNode;
 }) {
   const { active } = useAdminActiveTab();
 
@@ -23,7 +21,6 @@ export function AdminHeaderActions({
         <DownloadIcon className="h-3.5 w-3.5" />
       </button>
       {active === 1 && addEmployeeButton}
-      {active === 2 && addCourseButton}
     </div>
   );
 }

@@ -31,9 +31,11 @@ export type ModuleCard = {
 export function AdminModuleGrid({
   modules,
   courseOptions,
+  addCourseButton,
 }: {
   modules: ModuleCard[];
   courseOptions: { id: string; title: string }[];
+  addCourseButton?: React.ReactNode;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -114,7 +116,10 @@ export function AdminModuleGrid({
           </button>
         </div>
 
-        <p className="text-sm text-[#8A9DA2] sm:ml-auto">{filtered.length} сургалт</p>
+        <div className="flex items-center gap-4 sm:ml-auto">
+          <p className="text-sm text-[#8A9DA2]">{filtered.length} сургалт</p>
+          {addCourseButton}
+        </div>
       </div>
 
       <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

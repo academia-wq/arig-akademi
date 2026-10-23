@@ -204,7 +204,6 @@ export default async function AdminOverviewPage() {
         </div>
         <AdminHeaderActions
           addEmployeeButton={<AddEmployeeButton pendingProfiles={pendingProfiles} franchises={activeFranchiseOptions} />}
-          addCourseButton={<AddCourseButton courses={courseOptions} />}
         />
       </div>
 
@@ -276,7 +275,11 @@ export default async function AdminOverviewPage() {
             },
             {
               label: "Сургалт",
-              content: <AdminModuleGrid modules={moduleCards} courseOptions={courseOptions} />,
+              content: <AdminModuleGrid
+                  modules={moduleCards}
+                  courseOptions={courseOptions}
+                  addCourseButton={<AddCourseButton courses={courseOptions} />}
+                />,
             },
             { label: "Хөөрөх зурвас", content: <AdminOnboardingSection /> },
             { label: "Бүтэц", content: <AdminStructureSection /> },
