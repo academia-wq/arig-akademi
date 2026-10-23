@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/learn", "/settings", "/admin"];
+const PROTECTED_PREFIXES = ["/dashboard", "/learn", "/settings", "/admin", "/franchise"];
 
 export async function middleware(request: NextRequest) {
   // Next.js Link-ийн prefetch хүсэлтүүд (hover дээр автоматаар ачаалагддаг)

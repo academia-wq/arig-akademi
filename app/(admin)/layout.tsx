@@ -32,6 +32,7 @@ export default async function AdminLayout({
   return (
     <AppShell
       isStaff
+      isFranchiseManager={false}
       fullName={profile?.full_name ?? null}
       email={user.email ?? null}
       position={profile?.role === "admin" ? "Admin" : profile?.position ?? null}

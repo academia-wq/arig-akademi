@@ -18,7 +18,7 @@ export type Database = {
           avatar_url: string | null;
           position: string | null;
           department: string | null;
-          role: "student" | "instructor" | "admin";
+          role: "student" | "instructor" | "admin" | "franchise_manager";
           employee_type: "core" | "franchise";
           franchise_id: string | null;
           created_at: string;

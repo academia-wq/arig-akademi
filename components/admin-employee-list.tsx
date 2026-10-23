@@ -18,6 +18,7 @@ type Employee = {
   employee_type: "core" | "franchise";
   franchise_id: string | null;
   franchise_name: string | null;
+  is_franchise_manager: boolean;
 };
 
 const MAX_ROWS = 10;
@@ -137,6 +138,7 @@ export function AdminEmployeeList({
                     {p.employee_type === "franchise" && (
                       <span className="mt-1 block text-xs font-medium text-brand-500">
                         Франчайз · {p.franchise_name || "—"}
+                        {p.is_franchise_manager && " · Менежер"}
                       </span>
                     )}
                   </td>

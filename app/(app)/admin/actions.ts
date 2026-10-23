@@ -81,6 +81,13 @@ export async function assignEmployee(
   if (!type.ok) return { success: false, error: type.error };
 
   const admin = createServiceRoleClient();
+  const { data: current } = await admin
+    .from("profiles")
+    .select("role, franchise_id")
+    .eq("id", profileId)
+    .single();
+  const leavesFranchise =
+    current?.role === "franchise_manager" && current.franchise_id !== type.franchise_id;
   const { error } = await admin
     .from("profiles")
     .update({
@@ -88,6 +95,8 @@ export async function assignEmployee(
       position,
       employee_type: type.employee_type,
       franchise_id: type.franchise_id,
+      // Франчайзаас гарвал (эсвэл өөр франчайз руу шилжвэл) менежерийн эрх нь цуцлагдана.
+      ...(leavesFranchise ? { role: "student" as const } : {}),
     })
     .eq("id", profileId);
 
@@ -438,6 +447,38 @@ export async function updateFranchise(
     .from("franchises")
     .update(update)
     .eq("id", franchiseId);
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+// Франчайзын ажилтныг тухайн франчайзын менежер болгох / эрхийг нь цуцлах.
+export async function setFranchiseManager(
+  profileId: string,
+  makeManager: boolean
+): Promise<{ success: true } | { success: false; error: string }> {
+  const staff = await requireStaff();
+  if (!staff.ok) return { success: false, error: staff.error };
+
+  const admin = createServiceRoleClient();
+  const { data: target } = await admin
+    .from("profiles")
+    .select("role, franchise_id, employee_type")
+    .eq("id", profileId)
+    .single();
+  if (!target) return { success: false, error: "Ажилтан олдсонгүй." };
+  if (target.role === "admin" || target.role === "instructor") {
+    return { success: false, error: "Админ, багшийн эрхийг энд өөрчлөхгүй." };
+  }
+  if (makeManager && (target.employee_type !== "franchise" || !target.franchise_id)) {
+    return { success: false, error: "Зөвхөн франчайзын ажилтныг менежер болгоно." };
+  }
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ role: makeManager ? "franchise_manager" : "student" })
+    .eq("id", profileId);
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/admin");

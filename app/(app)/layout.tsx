@@ -9,6 +9,7 @@ export default async function AppLayout({
   const user = await getUser();
 
   let isStaff = false;
+  let isFranchiseManager = false;
   let fullName: string | null = null;
   let avatarUrl: string | null = null;
   let position: string | null = null;
@@ -28,6 +29,7 @@ export default async function AppLayout({
         .eq("is_read", false),
     ]);
     isStaff = profile?.role === "admin" || profile?.role === "instructor";
+    isFranchiseManager = profile?.role === "franchise_manager";
     fullName = profile?.full_name ?? null;
     avatarUrl = profile?.avatar_url ?? null;
     // Дизайнд админы нэрийн доор албан тушаалын оронд "Admin" гэж харагдана.
@@ -38,6 +40,7 @@ export default async function AppLayout({
   return (
     <AppShell
       isStaff={isStaff}
+      isFranchiseManager={isFranchiseManager}
       fullName={fullName}
       email={user?.email ?? null}
       position={position}

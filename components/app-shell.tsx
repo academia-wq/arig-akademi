@@ -7,6 +7,7 @@ import { AppFooter } from "@/components/app-footer";
 
 export function AppShell({
   isStaff,
+  isFranchiseManager,
   fullName,
   email,
   position,
@@ -15,6 +16,7 @@ export function AppShell({
   children,
 }: {
   isStaff: boolean;
+  isFranchiseManager: boolean;
   fullName: string | null;
   email: string | null;
   position: string | null;
@@ -28,6 +30,7 @@ export function AppShell({
     <div className="flex min-h-screen bg-paper">
       <Sidebar
         isStaff={isStaff}
+        isFranchiseManager={isFranchiseManager}
         mobileOpen={mobileNavOpen}
         onNavigate={() => setMobileNavOpen(false)}
       />

@@ -9,15 +9,18 @@ import {
   BookIcon,
   AwardIcon,
   UserIcon,
+  UsersIcon,
   XIcon,
 } from "@/components/icons";
 
 export function Sidebar({
   isStaff,
+  isFranchiseManager,
   mobileOpen,
   onNavigate,
 }: {
   isStaff: boolean;
+  isFranchiseManager: boolean;
   mobileOpen: boolean;
   onNavigate: () => void;
 }) {
@@ -28,6 +31,7 @@ export function Sidebar({
     isStaff
       ? { href: "/admin", label: "Админ панель", icon: LayoutDashboardIcon }
       : { href: "/dashboard", label: "Хяналтын самбар", icon: LayoutDashboardIcon },
+    ...(isFranchiseManager ? [{ href: "/franchise", label: "Франчайз", icon: UsersIcon }] : []),
     { href: "/learn", label: isStaff ? "Сургалт" : "Миний сургалт", icon: BookIcon, iconClassName: "h-6 w-6 -m-0.5", strokeWidth: 2 },
     { href: "/certificates", label: "Гэрчилгээнүүд", icon: AwardIcon },
     { href: "/settings", label: "Профайл", icon: UserIcon },

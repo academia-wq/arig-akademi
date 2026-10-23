@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { createFranchise, updateFranchise } from "@/app/(app)/admin/actions";
+import { createFranchise, setFranchiseManager, updateFranchise } from "@/app/(app)/admin/actions";
 import { useConfirm } from "@/components/confirm-dialog";
 import { PlusIcon } from "@/components/icons";
 
@@ -13,6 +13,7 @@ type Franchise = {
   invite_code: string;
   is_active: boolean;
   employeeCount: number;
+  members: { id: string; name: string; isManager: boolean }[];
 };
 
 // Админ самбарын "Франчайз" таб: франчайз нэмэх, бүртгэлийн холбоос хуулах,
@@ -60,6 +61,32 @@ export function AdminFranchiseSection({ franchises }: { franchises: Franchise[] 
     setBusyId(f.id);
     setError(null);
     const result = await updateFranchise(f.id, patch);
+    setBusyId(null);
+    if (result.success) router.refresh();
+    else setError(result.error);
+  }
+
+  async function changeManager(f: Franchise, profileId: string, makeManager: boolean) {
+    if (!profileId) return;
+    const member = f.members.find((m) => m.id === profileId);
+    const ok = await confirm(
+      makeManager
+        ? {
+            title: "Менежер томилох уу?",
+            message: `${member?.name} "${f.name}"-ийн ажилтнуудын явцыг харж, хэлтэс, албан тушаал оноож, идэвхгүй болгох эрхтэй болно.`,
+            confirmLabel: "Томилох",
+          }
+        : {
+            title: "Менежерийн эрхийг цуцлах уу?",
+            message: `${member?.name} энгийн ажилтан болно.`,
+            confirmLabel: "Цуцлах",
+            tone: "danger",
+          }
+    );
+    if (!ok) return;
+    setBusyId(f.id);
+    setError(null);
+    const result = await setFranchiseManager(profileId, makeManager);
     setBusyId(null);
     if (result.success) router.refresh();
     else setError(result.error);
@@ -118,11 +145,12 @@ export function AdminFranchiseSection({ franchises }: { franchises: Franchise[] 
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-ink/15 bg-white">
-        <table className="w-full min-w-[640px] text-left">
+        <table className="w-full min-w-[820px] text-left">
           <thead>
             <tr className="bg-brand-500 text-xs uppercase text-white">
               <th className="px-4 py-3 font-medium">Франчайз</th>
               <th className="px-4 py-3 text-center font-medium">Ажилтан</th>
+              <th className="px-4 py-3 font-medium">Менежер</th>
               <th className="px-4 py-3 font-medium">Бүртгэлийн холбоос</th>
               <th className="px-4 py-3 text-right font-medium"></th>
             </tr>
@@ -142,6 +170,45 @@ export function AdminFranchiseSection({ franchises }: { franchises: Franchise[] 
                   )}
                 </td>
                 <td className="px-4 py-4 text-center text-sm text-[#8A9DA2]">{f.employeeCount}</td>
+                <td className="px-4 py-4 text-sm">
+                  <div className="flex flex-col gap-1.5">
+                    {f.members
+                      .filter((m) => m.isManager)
+                      .map((m) => (
+                        <span key={m.id} className="flex items-center gap-2 text-ink">
+                          {m.name}
+                          <button
+                            type="button"
+                            disabled={busyId === f.id}
+                            onClick={() => changeManager(f, m.id, false)}
+                            aria-label="Менежерийн эрх цуцлах"
+                            className="focus-ring text-xs text-ink/40 hover:text-red-600"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    {f.members.some((m) => !m.isManager) ? (
+                      <select
+                        value=""
+                        disabled={busyId === f.id}
+                        onChange={(e) => changeManager(f, e.target.value, true)}
+                        className="focus-ring w-fit max-w-[180px] rounded-md border border-ink/15 px-2 py-1 text-xs text-ink/70"
+                      >
+                        <option value="">+ Менежер томилох</option>
+                        {f.members
+                          .filter((m) => !m.isManager)
+                          .map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name}
+                            </option>
+                          ))}
+                      </select>
+                    ) : (
+                      !f.members.length && <span className="text-xs text-ink/40">Ажилтангүй</span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-4 text-sm">
                   <div className="flex items-center gap-2">
                     <code className="rounded bg-paper px-2 py-1 text-xs text-ink/70">
@@ -181,7 +248,7 @@ export function AdminFranchiseSection({ franchises }: { franchises: Franchise[] 
             ))}
             {franchises.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-sm text-ink/50">
+                <td colSpan={5} className="px-4 py-8 text-center text-sm text-ink/50">
                   Франчайз бүртгэгдээгүй байна.
                 </td>
               </tr>

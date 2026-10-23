@@ -137,6 +137,7 @@ export default async function AdminOverviewPage() {
     employee_type: p.employee_type,
     franchise_id: p.franchise_id,
     franchise_name: p.franchise_id ? franchiseNameById.get(p.franchise_id) || null : null,
+    is_franchise_manager: p.role === "franchise_manager",
   }));
 
   const pendingProfiles = (profiles || [])
@@ -269,6 +270,13 @@ export default async function AdminOverviewPage() {
                   franchises={franchiseList.map((f) => ({
                     ...f,
                     employeeCount: (profiles || []).filter((p) => p.franchise_id === f.id).length,
+                    members: (profiles || [])
+                      .filter((p) => p.franchise_id === f.id)
+                      .map((p) => ({
+                        id: p.id,
+                        name: p.full_name || emailById.get(p.id) || "Нэргүй",
+                        isManager: p.role === "franchise_manager",
+                      })),
                   }))}
                 />
               ),
