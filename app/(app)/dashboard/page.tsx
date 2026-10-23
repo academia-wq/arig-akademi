@@ -29,9 +29,12 @@ export default async function DashboardPage() {
 
   const courses = (enrollments || []).map((e: any) => e.courses).filter(Boolean);
 
-  const coursesWithProgress = await Promise.all(
-    courses.map((course: any) => computeCourseProgress(supabase, user.id, course))
-  );
+  // Харагдах хичээлгүй бүлгийг (жишээ нь зөвхөн менежерт зориулсан) тооцохгүй.
+  const coursesWithProgress = (
+    await Promise.all(
+      courses.map((course: any) => computeCourseProgress(supabase, user.id, course))
+    )
+  ).filter((c) => c.totalLessons > 0);
 
   if (coursesWithProgress.length === 0) {
     return (

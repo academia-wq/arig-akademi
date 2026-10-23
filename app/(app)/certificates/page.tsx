@@ -21,9 +21,12 @@ export default async function CertificatesPage() {
     .eq("user_id", user.id);
 
   const courses = (enrollments || []).map((e: any) => e.courses).filter(Boolean);
-  const coursesWithProgress = await Promise.all(
-    courses.map((course: any) => computeCourseProgress(supabase, user.id, course))
-  );
+  // Харагдах хичээлгүй бүлгийг (жишээ нь зөвхөн менежерт зориулсан) тооцохгүй.
+  const coursesWithProgress = (
+    await Promise.all(
+      courses.map((course: any) => computeCourseProgress(supabase, user.id, course))
+    )
+  ).filter((c) => c.totalLessons > 0);
 
   const totalCourses = coursesWithProgress.length;
   const completedCourses = coursesWithProgress.filter((c) => c.progress >= 100);

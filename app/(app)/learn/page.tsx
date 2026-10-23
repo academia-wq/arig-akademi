@@ -26,31 +26,34 @@ export default async function LearnCoursesPage() {
 
   let courses = (enrollments || []).map((e: any) => e.courses).filter(Boolean);
 
-  // Хэрэглэгч ямар ч курст элсээгүй бол одоо байгаа үнэгүй курсуудад
-  // автоматаар элсүүлнэ.
-  if (courses.length === 0) {
-    const { data: freeCourses } = await supabase
-      .from("courses")
-      .select(
-        "id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, position, duration_seconds, image_url))"
-      )
-      .eq("is_published", true)
-      .eq("price", 0);
-
-    if (freeCourses && freeCourses.length > 0) {
-      await supabase
-        .from("enrollments")
-        .upsert(
-          freeCourses.map((c) => ({ user_id: user.id, course_id: c.id })),
-          { onConflict: "user_id,course_id", ignoreDuplicates: true }
-        );
-      courses = freeCourses;
-    }
+  // Нийтлэгдсэн үнэгүй курсуудаас элсээгүй байгаад нь автоматаар элсүүлнэ
+  // (шинээр нэмэгдсэн бүлэг одоо байгаа ажилтнуудад ч харагдана).
+  const enrolledIds = new Set(courses.map((c: any) => c.id));
+  const { data: freeCourses } = await supabase
+    .from("courses")
+    .select(
+      "id, title, slug, description, thumbnail_url, instructor_id, modules(id, title, position, visible_positions, visible_departments, category, lessons(id, position, duration_seconds, image_url))"
+    )
+    .eq("is_published", true)
+    .eq("price", 0);
+  const missingCourses = (freeCourses || []).filter((c) => !enrolledIds.has(c.id));
+  if (missingCourses.length > 0) {
+    await supabase
+      .from("enrollments")
+      .upsert(
+        missingCourses.map((c) => ({ user_id: user.id, course_id: c.id })),
+        { onConflict: "user_id,course_id", ignoreDuplicates: true }
+      );
+    courses = [...courses, ...missingCourses];
   }
 
-  const coursesWithProgress = await Promise.all(
-    courses.map((course: any) => computeCourseProgress(supabase, user.id, course))
-  );
+  // Хэрэглэгчид харагдах хичээлгүй бүлгийг (жишээ нь зөвхөн менежерт
+  // зориулсан) жагсаалтад харуулахгүй.
+  const coursesWithProgress = (
+    await Promise.all(
+      courses.map((course: any) => computeCourseProgress(supabase, user.id, course))
+    )
+  ).filter((c) => c.totalLessons > 0);
 
   const activeCourses = coursesWithProgress.filter((c) => c.progress < 100);
   const doneCourses = coursesWithProgress.filter((c) => c.progress >= 100);
@@ -77,16 +80,18 @@ export default async function LearnCoursesPage() {
     : { data: [] as { id: string; full_name: string | null; avatar_url: string | null }[] };
   const instructorById = new Map((instructorRows || []).map((p) => [p.id, p]));
 
-  const newlyAdded = await Promise.all(
-    (newlyAddedCourses || []).map(async (course) => {
-      const { totalLessons } = await computeCourseProgress(supabase, user.id, course);
-      return {
-        ...course,
-        totalLessons,
-        instructor: course.instructor_id ? instructorById.get(course.instructor_id) : undefined,
-      };
-    })
-  );
+  const newlyAdded = (
+    await Promise.all(
+      (newlyAddedCourses || []).map(async (course) => {
+        const { totalLessons } = await computeCourseProgress(supabase, user.id, course);
+        return {
+          ...course,
+          totalLessons,
+          instructor: course.instructor_id ? instructorById.get(course.instructor_id) : undefined,
+        };
+      })
+    )
+  ).filter((c) => c.totalLessons > 0);
 
   const featured =
     activeCourses.find((c) => c.progress > 0) || activeCourses[0] || doneCourses[0];
