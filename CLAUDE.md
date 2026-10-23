@@ -29,6 +29,18 @@
 - `supabase/schema.sql` + `supabase/migrations/*.sql` — database. **Гараар** SQL Editor-т ажиллуулдаг.
 - Эрх: `profiles.role` = `student` | `instructor` | `admin`. Админ хэсэгт admin/instructor л орно.
 
+## Харагдах эрх (үндсэн / франчайз, хэлтэс)
+
+- `lib/module-visibility.ts` → `isModuleVisible(mod, viewer)`: `modules.audience` (`core`|`franchise`|`all`)
+  ↔ `profiles.employee_type` (`core`|`franchise`), дээр нь `visible_departments` / `visible_positions`.
+  Модуль сонгох query бүрт `audience`, профайлд `employee_type`-ийг заавал оруулна.
+- Кодгүй бүртгүүлж албан тушаал аваагүй үндсэн ажилтан (`isPendingViewer`) админ батлах хүртэл сургалт харахгүй.
+- Франчайз: `franchises` хүснэгт (зөвхөн service role), бүртгэлийн холбоос `/register?code=XXXX` —
+  кодыг `handle_new_user` trigger шалгаж `franchise_id`-г онооно. Админ самбарын "Франчайз" таб.
+- `protect_profile_columns` trigger: role, department, position, employee_type, franchise_id-г зөвхөн
+  service role (сервер) өөрчилнө — хэрэглэгч өөрийн профайлаас зөвхөн нэр, зураг солино.
+- 2-р үе (хийгдээгүй): франчайзын менежер өөрийн франчайзын ажилтнуудыг харах эрх.
+
 ## "Бүтэц" таб (academy structure)
 
 - Өгөгдөл: `academy_structure` хүснэгтийн ганц мөр (`id = 00000000-0000-0000-0000-000000000001`), `data` нь JSONB.
