@@ -5,7 +5,6 @@ import { AdminOverviewTabs } from "@/components/admin-overview-tabs";
 import { AdminActiveTabProvider } from "@/components/admin-active-tab-context";
 import { AdminHeaderActions } from "@/components/admin-header-actions";
 import { AdminEmployeeList } from "@/components/admin-employee-list";
-import { AdminFranchiseSection } from "@/components/admin-franchise-section";
 import { AddEmployeeButton } from "@/components/add-employee-modal";
 import { AddCourseButton } from "@/components/add-course-modal";
 import { AdminModuleGrid, type ModuleCard } from "@/components/admin-module-grid";
@@ -262,24 +261,6 @@ export default async function AdminOverviewPage() {
             {
               label: "Ажилтан",
               content: <AdminEmployeeList employees={employeeList} franchises={franchiseOptions} />,
-            },
-            {
-              label: "Франчайз",
-              content: (
-                <AdminFranchiseSection
-                  franchises={franchiseList.map((f) => ({
-                    ...f,
-                    employeeCount: (profiles || []).filter((p) => p.franchise_id === f.id).length,
-                    members: (profiles || [])
-                      .filter((p) => p.franchise_id === f.id)
-                      .map((p) => ({
-                        id: p.id,
-                        name: p.full_name || emailById.get(p.id) || "Нэргүй",
-                        isManager: p.role === "franchise_manager",
-                      })),
-                  }))}
-                />
-              ),
             },
             {
               label: "Сургалт",

@@ -36,12 +36,12 @@
   Модуль сонгох query бүрт `audience`, профайлд `employee_type`-ийг заавал оруулна.
 - Кодгүй бүртгүүлж албан тушаал аваагүй үндсэн ажилтан (`isPendingViewer`) админ батлах хүртэл сургалт харахгүй.
 - Франчайз: `franchises` хүснэгт (зөвхөн service role), бүртгэлийн холбоос `/register?code=XXXX` —
-  кодыг `handle_new_user` trigger шалгаж `franchise_id`-г онооно. Админ самбарын "Франчайз" таб.
+  кодыг `handle_new_user` trigger шалгаж `franchise_id`-г онооно. Удирдлага: зүүн цэсний "Франчайз" хуудас (`/franchise`), админ бүх франчайзыг хардаг.
 - `protect_profile_columns` trigger: role, department, position, employee_type, franchise_id-г зөвхөн
   service role (сервер) өөрчилнө — хэрэглэгч өөрийн профайлаас зөвхөн нэр, зураг солино.
 - Франчайзын менежер (`role = franchise_manager`): `/franchise` хуудсанд зөвхөн өөрийн франчайзын ажилтнуудын
   явцыг харж, хэлтэс/албан тушаал оноож, идэвхгүй болгоно. Эрх шалгалт `lib/franchise-auth.ts`,
-  action-ууд `app/(app)/franchise/actions.ts`. Админ "Франчайз" табаас менежер томилно.
+  action-ууд `app/(app)/franchise/actions.ts`. Менежерийг `/franchise` хуудаснаас эсвэл Ажилтан засах цонхны "Франчайзын менежер" сонголтоор томилно.
 
 ## "Бүтэц" таб (academy structure)
 

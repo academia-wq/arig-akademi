@@ -44,7 +44,7 @@ export function EmployeeTypeFields({
       {employeeType === "franchise" &&
         (franchises.length === 0 ? (
           <p className="mt-2 text-xs text-red-600">
-            Франчайз бүртгэгдээгүй байна. Эхлээд "Франчайз" табаас франчайз нэмнэ үү.
+            Франчайз бүртгэгдээгүй байна. Эхлээд зүүн цэсний "Франчайз" хуудаснаас франчайз нэмнэ үү.
           </p>
         ) : (
           <select

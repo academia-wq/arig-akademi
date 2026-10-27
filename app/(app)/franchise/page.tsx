@@ -1,34 +1,55 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import clsx from "clsx";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { requireFranchiseViewer } from "@/lib/franchise-auth";
 import { isModuleVisible } from "@/lib/module-visibility";
 import { FranchiseEmployeeTable, type FranchiseEmployee } from "@/components/franchise-employee-table";
 import { CopyLinkButton } from "@/components/copy-link-button";
+import { AdminFranchiseSection } from "@/components/admin-franchise-section";
 
-// Франчайзын самбар: менежер зөвхөн өөрийн франчайзыг, admin/instructor бүх
-// франчайзыг (?id=) харна. Өгөгдлийг service role-оор уншиж, franchise_id-аар заавал шүүнэ.
+// Франчайзын самбар: менежер зөвхөн өөрийн франчайзыг харна. admin/instructor дээд
+// хэсэгт франчайзуудыг удирдаж (нэмэх, холбоос, менежер томилох), сонгосон
+// франчайзыг (?id=) доор харна. Өгөгдлийг service role-оор уншиж, franchise_id-аар шүүнэ.
 export default async function FranchisePage({ searchParams }: { searchParams: { id?: string } }) {
   const viewer = await requireFranchiseViewer();
   if (!viewer.ok) redirect("/");
 
   const db = createServiceRoleClient();
-  const { data: allFranchises } = viewer.isStaff
-    ? await db.from("franchises").select("id, name, is_active").order("created_at")
-    : { data: null };
+  const [{ data: allFranchises }, { data: franchiseMembers }, { data: authUsers }] = await Promise.all([
+    viewer.isStaff
+      ? db.from("franchises").select("id, name, invite_code, is_active").order("created_at")
+      : Promise.resolve({ data: null }),
+    viewer.isStaff
+      ? db.from("profiles").select("id, full_name, role, franchise_id").not("franchise_id", "is", null)
+      : Promise.resolve({ data: null }),
+    db.auth.admin.listUsers({ perPage: 1000 }),
+  ]);
+  const authById = new Map((authUsers?.users || []).map((u) => [u.id, u]));
+
   const franchiseId = viewer.isStaff
     ? (allFranchises || []).find((f) => f.id === searchParams.id)?.id ?? allFranchises?.[0]?.id
     : viewer.franchiseId;
-  if (!franchiseId) {
-    return (
-      <div className="rounded-xl border border-dashed border-ink/20 p-10 text-center text-ink/60">
-        Франчайз бүртгэгдээгүй байна. Админ самбарын "Франчайз" табаас нэмнэ үү.
-      </div>
-    );
-  }
+
+  const staffSection = allFranchises ? (
+    <AdminFranchiseSection
+      selectedId={franchiseId}
+      franchises={allFranchises.map((f) => {
+        const members = (franchiseMembers || []).filter((p) => p.franchise_id === f.id);
+        return {
+          ...f,
+          employeeCount: members.length,
+          members: members.map((p) => ({
+            id: p.id,
+            name: p.full_name || authById.get(p.id)?.email || "Нэргүй",
+            isManager: p.role === "franchise_manager",
+          })),
+        };
+      })}
+    />
+  ) : null;
+
+  if (!franchiseId) return <div className="flex flex-col gap-6">{staffSection}</div>;
   const manager = { franchiseId };
-  const [{ data: franchise }, { data: members }, { data: modules }, { data: authUsers }] =
+  const [{ data: franchise }, { data: members }, { data: modules }] =
     await Promise.all([
       db.from("franchises").select("name, invite_code, is_active").eq("id", manager.franchiseId).single(),
       db
@@ -42,7 +63,6 @@ export default async function FranchisePage({ searchParams }: { searchParams: { 
           "id, visible_positions, visible_departments, audience, courses!inner(is_published), lessons(id)"
         )
         .eq("courses.is_published", true),
-      db.auth.admin.listUsers({ perPage: 1000 }),
     ]);
 
   const memberIds = (members || []).map((m) => m.id);
@@ -52,7 +72,6 @@ export default async function FranchisePage({ searchParams }: { searchParams: { 
     .eq("is_completed", true)
     .in("user_id", memberIds.length ? memberIds : ["00000000-0000-0000-0000-000000000000"]);
 
-  const authById = new Map((authUsers?.users || []).map((u) => [u.id, u]));
   const completedByUser = new Map<string, Map<string, string | null>>();
   for (const row of completedRows || []) {
     const m = completedByUser.get(row.user_id) || new Map<string, string | null>();
@@ -99,26 +118,7 @@ export default async function FranchisePage({ searchParams }: { searchParams: { 
 
   return (
     <div className="flex flex-col gap-6">
-      {allFranchises && allFranchises.length > 1 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-ink/50">Франчайз:</span>
-          {allFranchises.map((f) => (
-            <Link
-              key={f.id}
-              prefetch={false}
-              href={`/franchise?id=${f.id}`}
-              className={clsx(
-                "focus-ring rounded-[7.5px] px-4 py-2 text-sm font-medium transition",
-                f.id === franchiseId
-                  ? "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)]"
-                  : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-brand-300 hover:text-brand-500"
-              )}
-            >
-              {f.name}
-            </Link>
-          ))}
-        </div>
-      )}
+      {staffSection}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-brand-500 bg-paper p-5">
         <div>
           <p className="text-base text-brand-500">Франчайзын самбар</p>

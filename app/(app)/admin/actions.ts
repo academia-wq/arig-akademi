@@ -434,6 +434,7 @@ export async function createFranchise(
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/admin");
+  revalidatePath("/franchise");
   return { success: true };
 }
 
@@ -459,6 +460,7 @@ export async function updateFranchise(
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/admin");
+  revalidatePath("/franchise");
   return { success: true };
 }
 
@@ -491,5 +493,6 @@ export async function setFranchiseManager(
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/admin");
+  revalidatePath("/franchise");
   return { success: true };
 }

@@ -17,9 +17,15 @@ type Franchise = {
   members: { id: string; name: string; isManager: boolean }[];
 };
 
-// Админ самбарын "Франчайз" таб: франчайз нэмэх, бүртгэлийн холбоос хуулах,
+// "Франчайз" хуудасны (/franchise) админы хэсэг: франчайз нэмэх, бүртгэлийн холбоос хуулах,
 // идэвхгүй болгох, кодыг шинэчлэх.
-export function AdminFranchiseSection({ franchises }: { franchises: Franchise[] }) {
+export function AdminFranchiseSection({
+  franchises,
+  selectedId,
+}: {
+  franchises: Franchise[];
+  selectedId?: string | null;
+}) {
   const router = useRouter();
   const [confirm, confirmDialog] = useConfirm();
   const [name, setName] = useState("");
@@ -160,7 +166,11 @@ export function AdminFranchiseSection({ franchises }: { franchises: Franchise[] 
             {franchises.map((f) => (
               <tr
                 key={f.id}
-                className={clsx("border-b border-ink/10 last:border-0", !f.is_active && "opacity-60")}
+                className={clsx(
+                  "border-b border-ink/10 last:border-0",
+                  !f.is_active && "opacity-60",
+                  f.id === selectedId && "bg-brand-50"
+                )}
               >
                 <td className="px-4 py-4 text-sm font-medium text-ink">
                   {f.name}
@@ -232,7 +242,7 @@ export function AdminFranchiseSection({ franchises }: { franchises: Franchise[] 
                       href={`/franchise?id=${f.id}`}
                       className="focus-ring font-medium text-brand-500 hover:text-brand-700"
                     >
-                      Самбар
+                      {f.id === selectedId ? "Харж байна" : "Харах"}
                     </Link>
                     <button
                       type="button"
