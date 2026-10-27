@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { requireFranchiseViewer } from "@/lib/franchise-auth";
 import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
+import { inviteEmployee, type InviteResult } from "@/lib/employee-invite";
 
 type Result = { success: true } | { success: false; error: string };
 
@@ -60,4 +61,42 @@ export async function setFranchiseEmployeeActive(profileId: string, active: bool
 
   revalidatePath("/franchise");
   return { success: true };
+}
+
+// Франчайзын самбараас шинэ ажилтан урих. Менежерт франчайз нь үргэлж өөрийнх;
+// админ сонгосон франчайзынхаа (franchiseId) самбараас урина.
+export async function inviteFranchiseEmployee(formData: FormData): Promise<InviteResult> {
+  const viewer = await requireFranchiseViewer();
+  if (!viewer.ok) return { success: false, error: viewer.error };
+
+  let franchiseId = viewer.franchiseId;
+  if (viewer.isStaff) {
+    const requested = String(formData.get("franchiseId") || "");
+    const { data } = await createServiceRoleClient()
+      .from("franchises")
+      .select("id")
+      .eq("id", requested)
+      .maybeSingle();
+    if (!data) return { success: false, error: "Франчайз олдсонгүй." };
+    franchiseId = data.id;
+  }
+
+  const department = String(formData.get("department") || "");
+  const position = String(formData.get("position") || "");
+  if (!DEPARTMENTS.includes(department) || !POSITIONS[department]?.includes(position)) {
+    return { success: false, error: "Хэлтэс, албан тушаалаа сонгоно уу." };
+  }
+
+  const result = await inviteEmployee({
+    fullName: String(formData.get("fullName") || ""),
+    email: String(formData.get("email") || ""),
+    department,
+    position,
+    employeeType: "franchise",
+    franchiseId,
+    // Зөвхөн энэ франчайзад өмнө нь урьсан, нэвтэрч амжаагүй энгийн ажилтанд шинэ холбоос.
+    canResend: (existing) => existing?.franchise_id === franchiseId && existing?.role === "student",
+  });
+  if (result.success) revalidatePath("/franchise");
+  return result;
 }

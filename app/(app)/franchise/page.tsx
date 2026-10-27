@@ -5,6 +5,7 @@ import { isModuleVisible } from "@/lib/module-visibility";
 import { FranchiseEmployeeTable, type FranchiseEmployee } from "@/components/franchise-employee-table";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { AdminFranchiseSection } from "@/components/admin-franchise-section";
+import { InviteFranchiseEmployeeButton } from "@/components/invite-franchise-employee-modal";
 
 // Франчайзын самбар: менежер зөвхөн өөрийн франчайзыг харна. admin/instructor дээд
 // хэсэгт франчайзуудыг удирдаж (нэмэх, холбоос, менежер томилох), сонгосон
@@ -147,7 +148,12 @@ export default async function FranchisePage({ searchParams }: { searchParams: { 
         ))}
       </div>
 
-      <FranchiseEmployeeTable employees={employees} />
+      <FranchiseEmployeeTable
+        employees={employees}
+        addButton={
+          <InviteFranchiseEmployeeButton franchiseId={franchiseId} franchiseName={franchise?.name || ""} />
+        }
+      />
     </div>
   );
 }

@@ -28,7 +28,13 @@ function percent(e: FranchiseEmployee) {
   return e.totalLessons ? Math.round((e.completedLessons / e.totalLessons) * 100) : 0;
 }
 
-export function FranchiseEmployeeTable({ employees }: { employees: FranchiseEmployee[] }) {
+export function FranchiseEmployeeTable({
+  employees,
+  addButton,
+}: {
+  employees: FranchiseEmployee[];
+  addButton?: React.ReactNode;
+}) {
   const router = useRouter();
   const [confirm, confirmDialog] = useConfirm();
   const [query, setQuery] = useState("");
@@ -81,7 +87,10 @@ export function FranchiseEmployeeTable({ employees }: { employees: FranchiseEmpl
             className="focus-ring h-[39px] w-full rounded-[7.5px] border border-[#D9D9D9] bg-paper pl-10 pr-3 text-sm text-ink placeholder:text-[#8A9DA2]"
           />
         </div>
-        <p className="text-sm text-[#8A9DA2] sm:ml-auto">{visible.length} ажилтан</p>
+        <div className="flex items-center gap-4 sm:ml-auto">
+          <p className="text-sm text-[#8A9DA2]">{visible.length} ажилтан</p>
+          {addButton}
+        </div>
       </div>
 
       <div className="mt-5 overflow-x-auto">
@@ -181,7 +190,7 @@ export function FranchiseEmployeeTable({ employees }: { employees: FranchiseEmpl
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-sm text-ink/50">
                   {employees.length === 0
-                    ? "Одоогоор ажилтан бүртгүүлээгүй байна. Бүртгэлийн холбоосыг ажилтнууддаа илгээнэ үү."
+                    ? "Одоогоор ажилтан алга. \"Ажилтан нэмэх\" товчоор урих эсвэл бүртгэлийн холбоосыг илгээнэ үү."
                     : "Хайлтад тохирох ажилтан алга."}
                 </td>
               </tr>

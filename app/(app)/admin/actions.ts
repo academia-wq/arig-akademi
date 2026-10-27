@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
-import { sendEmployeeInviteEmail } from "@/lib/email/invite-email";
+import { inviteEmployee, type InviteResult } from "@/lib/employee-invite";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 
 const SUPPORTED_PDF_MIME_TYPES = ["application/pdf"];
@@ -119,77 +118,24 @@ export async function assignEmployee(
 // /set-password холбоосоор өөрөө тохируулна (холбоосыг имэйлээр илгээж,
 // админд хуулж өгөх боломжтой харуулна). Хуучин бүртгүүлж амжаагүй урилгыг
 // дахин үүсгэвэл шинэ холбоос гаргана.
-export async function createEmployee(formData: FormData): Promise<
-  | { success: true; link: string; emailed: boolean; resent: boolean }
-  | { success: false; error: string }
-> {
+export async function createEmployee(formData: FormData): Promise<InviteResult> {
   const staff = await requireStaff();
   if (!staff.ok) return { success: false, error: staff.error };
 
-  const fullName = String(formData.get("fullName") || "").trim();
-  const email = String(formData.get("email") || "").trim().toLowerCase();
-  const department = String(formData.get("department") || "");
-  const position = String(formData.get("position") || "");
-  if (!fullName || !email || !department || !position) {
-    return { success: false, error: "Бүх талбарыг бөглөнө үү." };
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { success: false, error: "Имэйл хаяг буруу байна." };
-  }
   const empType = await parseEmployeeType(formData);
   if (!empType.ok) return { success: false, error: empType.error };
 
-  const admin = createServiceRoleClient();
-
-  const { data: list, error: listError } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  if (listError) return { success: false, error: listError.message };
-  const existing = list.users.find((u) => u.email?.toLowerCase() === email);
-  if (existing?.last_sign_in_at) {
-    return {
-      success: false,
-      error: "Энэ имэйлээр бүртгэл байна. Ажилтны жагсаалтаас засна уу.",
-    };
-  }
-
-  const type = existing ? "magiclink" : "invite";
-  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-    type,
-    email,
-    options: { data: { full_name: fullName } },
+  const result = await inviteEmployee({
+    fullName: String(formData.get("fullName") || ""),
+    email: String(formData.get("email") || ""),
+    department: String(formData.get("department") || ""),
+    position: String(formData.get("position") || ""),
+    employeeType: empType.employee_type,
+    franchiseId: empType.franchise_id,
+    canResend: () => true,
   });
-  if (linkError || !linkData.user) {
-    return { success: false, error: linkError?.message || "Бүртгэл үүсгэж чадсангүй." };
-  }
-
-  const { error: profileError } = await admin
-    .from("profiles")
-    .update({
-      full_name: fullName,
-      department,
-      position,
-      employee_type: empType.employee_type,
-      franchise_id: empType.franchise_id,
-    })
-    .eq("id", linkData.user.id);
-  if (profileError) return { success: false, error: profileError.message };
-
-  const origin =
-    headers().get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "https://arig-akademi.vercel.app";
-  const link = `${origin}/set-password?token_hash=${encodeURIComponent(
-    linkData.properties.hashed_token
-  )}&type=${type}`;
-
-  let emailed = false;
-  try {
-    await sendEmployeeInviteEmail({ email, fullName, link });
-    emailed = true;
-  } catch {
-    // Resend-ийн домэйн баталгаажаагүй үед зөвхөн эзэмшигчийн хаяг руу илгээнэ —
-    // энэ тохиолдолд админ холбоосыг хуулж өгнө.
-  }
-
-  revalidatePath("/admin");
-  return { success: true, link, emailed, resent: !!existing };
+  if (result.success) revalidatePath("/admin");
+  return result;
 }
 
 export async function createModuleWithLesson(
