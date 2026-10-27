@@ -19,6 +19,7 @@ export function EditEmployeeButton({
   position,
   employeeType: initialType,
   franchiseId: initialFranchiseId,
+  isFranchiseManager: initialIsManager,
   franchises,
 }: {
   profileId: string;
@@ -27,6 +28,7 @@ export function EditEmployeeButton({
   position: string | null;
   employeeType: EmployeeType;
   franchiseId: string | null;
+  isFranchiseManager: boolean;
   franchises: FranchiseOption[];
 }) {
   const router = useRouter();
@@ -36,6 +38,7 @@ export function EditEmployeeButton({
   const [selectedPosition, setSelectedPosition] = useState(position || POSITIONS[initialDepartment][0]);
   const [employeeType, setEmployeeType] = useState<EmployeeType>(initialType);
   const [franchiseId, setFranchiseId] = useState(initialFranchiseId || "");
+  const [isManager, setIsManager] = useState(initialIsManager);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +62,7 @@ export function EditEmployeeButton({
     formData.set("position", selectedPosition);
     formData.set("employeeType", employeeType);
     formData.set("franchiseId", franchiseId);
+    formData.set("isFranchiseManager", String(employeeType === "franchise" && isManager));
 
     const result = await assignEmployee(formData);
     setSubmitting(false);
@@ -121,6 +125,23 @@ export function EditEmployeeButton({
                   setFranchiseId(id);
                 }}
               />
+
+              {employeeType === "franchise" && franchiseId && (
+                <label className="flex items-start gap-2.5 rounded-md border border-ink/10 bg-paper px-3 py-2.5 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={isManager}
+                    onChange={(e) => setIsManager(e.target.checked)}
+                    className="mt-0.5 accent-brand-500"
+                  />
+                  <span>
+                    Франчайзын менежер
+                    <span className="block text-xs text-ink/50">
+                      Энэ франчайзын ажилтнуудын явцыг "Франчайз" цэсээс харж, хэлтэс, албан тушаал оноох эрхтэй.
+                    </span>
+                  </span>
+                </label>
+              )}
 
               <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                 {DEPARTMENTS.map((d) => (

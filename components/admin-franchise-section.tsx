@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { createFranchise, setFranchiseManager, updateFranchise } from "@/app/(app)/admin/actions";
@@ -226,6 +227,13 @@ export function AdminFranchiseSection({ franchises }: { franchises: Franchise[] 
                 </td>
                 <td className="px-4 py-4 text-right text-xs">
                   <div className="flex justify-end gap-3">
+                    <Link
+                      prefetch={false}
+                      href={`/franchise?id=${f.id}`}
+                      className="focus-ring font-medium text-brand-500 hover:text-brand-700"
+                    >
+                      Самбар
+                    </Link>
                     <button
                       type="button"
                       disabled={busyId === f.id}

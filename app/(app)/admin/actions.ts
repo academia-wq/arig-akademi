@@ -86,8 +86,18 @@ export async function assignEmployee(
     .select("role, franchise_id")
     .eq("id", profileId)
     .single();
-  const leavesFranchise =
-    current?.role === "franchise_manager" && current.franchise_id !== type.franchise_id;
+  // "Франчайзын менежер" сонголт (Ажилтан засах цонх) ирсэн бол түүгээр, үгүй бол
+  // франчайзаас гарах/шилжихэд менежерийн эрх цуцлагдана. Админ, багшийн эрхэд хүрэхгүй.
+  const isStaffRole = current?.role === "admin" || current?.role === "instructor";
+  const wantsManager = formData.get("isFranchiseManager");
+  let nextRole: "student" | "franchise_manager" | null = null;
+  if (!isStaffRole) {
+    if (wantsManager !== null) {
+      nextRole = wantsManager === "true" && type.employee_type === "franchise" ? "franchise_manager" : "student";
+    } else if (current?.role === "franchise_manager" && current.franchise_id !== type.franchise_id) {
+      nextRole = "student";
+    }
+  }
   const { error } = await admin
     .from("profiles")
     .update({
@@ -95,8 +105,7 @@ export async function assignEmployee(
       position,
       employee_type: type.employee_type,
       franchise_id: type.franchise_id,
-      // Франчайзаас гарвал (эсвэл өөр франчайз руу шилжвэл) менежерийн эрх нь цуцлагдана.
-      ...(leavesFranchise ? { role: "student" as const } : {}),
+      ...(nextRole ? { role: nextRole } : {}),
     })
     .eq("id", profileId);
 

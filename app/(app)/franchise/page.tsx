@@ -1,17 +1,33 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import clsx from "clsx";
 import { createServiceRoleClient } from "@/lib/supabase/server";
-import { requireFranchiseManager } from "@/lib/franchise-auth";
+import { requireFranchiseViewer } from "@/lib/franchise-auth";
 import { isModuleVisible } from "@/lib/module-visibility";
 import { FranchiseEmployeeTable, type FranchiseEmployee } from "@/components/franchise-employee-table";
 import { CopyLinkButton } from "@/components/copy-link-button";
 
-// Франчайзын менежерийн хуудас: зөвхөн өөрийн франчайзын ажилтнууд, тэдний явц.
-// Өгөгдлийг service role-оор уншиж, franchise_id-аар заавал шүүнэ.
-export default async function FranchisePage() {
-  const manager = await requireFranchiseManager();
-  if (!manager.ok) redirect("/");
+// Франчайзын самбар: менежер зөвхөн өөрийн франчайзыг, admin/instructor бүх
+// франчайзыг (?id=) харна. Өгөгдлийг service role-оор уншиж, franchise_id-аар заавал шүүнэ.
+export default async function FranchisePage({ searchParams }: { searchParams: { id?: string } }) {
+  const viewer = await requireFranchiseViewer();
+  if (!viewer.ok) redirect("/");
 
   const db = createServiceRoleClient();
+  const { data: allFranchises } = viewer.isStaff
+    ? await db.from("franchises").select("id, name, is_active").order("created_at")
+    : { data: null };
+  const franchiseId = viewer.isStaff
+    ? (allFranchises || []).find((f) => f.id === searchParams.id)?.id ?? allFranchises?.[0]?.id
+    : viewer.franchiseId;
+  if (!franchiseId) {
+    return (
+      <div className="rounded-xl border border-dashed border-ink/20 p-10 text-center text-ink/60">
+        Франчайз бүртгэгдээгүй байна. Админ самбарын "Франчайз" табаас нэмнэ үү.
+      </div>
+    );
+  }
+  const manager = { franchiseId };
   const [{ data: franchise }, { data: members }, { data: modules }, { data: authUsers }] =
     await Promise.all([
       db.from("franchises").select("name, invite_code, is_active").eq("id", manager.franchiseId).single(),
@@ -83,6 +99,26 @@ export default async function FranchisePage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {allFranchises && allFranchises.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-ink/50">Франчайз:</span>
+          {allFranchises.map((f) => (
+            <Link
+              key={f.id}
+              prefetch={false}
+              href={`/franchise?id=${f.id}`}
+              className={clsx(
+                "focus-ring rounded-[7.5px] px-4 py-2 text-sm font-medium transition",
+                f.id === franchiseId
+                  ? "bg-brand-500 text-paper shadow-[0px_0px_2px_rgba(248,123,79,0.5)]"
+                  : "border border-[#D9D9D9] bg-paper text-[#8A9DA2] hover:border-brand-300 hover:text-brand-500"
+              )}
+            >
+              {f.name}
+            </Link>
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-brand-500 bg-paper p-5">
         <div>
           <p className="text-base text-brand-500">Франчайзын самбар</p>

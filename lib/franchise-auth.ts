@@ -1,8 +1,10 @@
 import "server-only";
 import { createServiceRoleClient, getUser } from "@/lib/supabase/server";
 
-// Франчайзын менежер мөн эсэхийг шалгаж, түүний франчайзын id-г буцаана.
-export async function requireFranchiseManager() {
+// Франчайзын самбарт хандах эрх:
+// - франчайзын менежер зөвхөн өөрийн франчайзыг (franchiseId),
+// - admin/instructor бүх франчайзыг (franchiseId = null — дуртайгаа сонгоно).
+export async function requireFranchiseViewer() {
   const user = await getUser();
   if (!user) return { ok: false as const, error: "Нэвтрээгүй байна." };
   const { data: profile } = await createServiceRoleClient()
@@ -10,8 +12,16 @@ export async function requireFranchiseManager() {
     .select("role, franchise_id")
     .eq("id", user.id)
     .single();
-  if (profile?.role !== "franchise_manager" || !profile.franchise_id) {
-    return { ok: false as const, error: "Энэ үйлдэлд эрх хүрэлцэхгүй байна." };
+  if (profile?.role === "admin" || profile?.role === "instructor") {
+    return { ok: true as const, userId: user.id, isStaff: true, franchiseId: null };
   }
-  return { ok: true as const, userId: user.id, franchiseId: profile.franchise_id };
+  if (profile?.role === "franchise_manager" && profile.franchise_id) {
+    return {
+      ok: true as const,
+      userId: user.id,
+      isStaff: false,
+      franchiseId: profile.franchise_id as string,
+    };
+  }
+  return { ok: false as const, error: "Энэ үйлдэлд эрх хүрэлцэхгүй байна." };
 }

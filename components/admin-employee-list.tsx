@@ -150,6 +150,7 @@ export function AdminEmployeeList({
                       position={p.position}
                       employeeType={p.employee_type}
                       franchiseId={p.franchise_id}
+                      isFranchiseManager={p.is_franchise_manager}
                       franchises={franchises}
                     />
                   </td>

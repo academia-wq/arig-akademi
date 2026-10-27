@@ -2,16 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { createServiceRoleClient } from "@/lib/supabase/server";
-import { requireFranchiseManager } from "@/lib/franchise-auth";
+import { requireFranchiseViewer } from "@/lib/franchise-auth";
 import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
 
 type Result = { success: true } | { success: false; error: string };
 
 const DEACTIVATED_BAN = "876000h"; // ~100 жил — students/actions.ts-тэй ижил
 
-// Зорилтот хүн менежерийн өөрийн франчайзын энгийн ажилтан мөн эсэх.
+// Зорилтот хүн франчайзын энгийн ажилтан мөн эсэх: менежерт зөвхөн өөрийн
+// франчайзынх, admin/instructor-т аль ч франчайзынх.
 async function requireOwnEmployee(profileId: string) {
-  const manager = await requireFranchiseManager();
+  const manager = await requireFranchiseViewer();
   if (!manager.ok) return manager;
   if (profileId === manager.userId) {
     return { ok: false as const, error: "Өөрийгөө өөрчлөх боломжгүй." };
@@ -21,7 +22,8 @@ async function requireOwnEmployee(profileId: string) {
     .select("franchise_id, role")
     .eq("id", profileId)
     .single();
-  if (!target || target.franchise_id !== manager.franchiseId || target.role !== "student") {
+  const inScope = manager.isStaff ? !!target?.franchise_id : target?.franchise_id === manager.franchiseId;
+  if (!target || !inScope || target.role !== "student") {
     return { ok: false as const, error: "Энэ ажилтан таны франчайзад харьяалагдахгүй байна." };
   }
   return manager;
