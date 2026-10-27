@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
-import { computeCourseProgress, mostCommonCategory } from "@/lib/course-progress";
+import { computeCourseProgress } from "@/lib/course-progress";
 import { getCourseIcon } from "@/lib/course-icon";
 import { formatDuration, initialsOf } from "@/lib/format";
 import { isModuleVisible, isPendingViewer } from "@/lib/module-visibility";
 import { AdminTabs } from "@/components/admin-tabs";
 import { Tooltip } from "@/components/tooltip";
-import { ArrowRightIcon, BookIcon, PlayCircleIcon } from "@/components/icons";
+import { ArrowRightIcon, BookIcon, ChevronDownIcon, PlayCircleIcon } from "@/components/icons";
 
 export default async function LearnCoursesPage() {
   const supabase = createClient();
@@ -115,8 +115,7 @@ export default async function LearnCoursesPage() {
   }) {
     return (
       <div className="flex flex-col gap-6">
-        {entries.map(({ course, progress, totalLessons, completedLessons }: any) => {
-          const category = mostCommonCategory(course.modules);
+        {entries.map(({ course, progress, totalLessons, completedLessons }: any, index: number) => {
           const { tint, illustration, icon: TopicIcon, tone } = getCourseIcon(course.title);
 
           const notStarted = !done;
@@ -149,8 +148,8 @@ export default async function LearnCoursesPage() {
             : [];
 
           return (
-            <div key={course.id} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 rounded-2xl border border-[#D9D9D9] bg-white py-[15px] pl-[15px] pr-6 sm:flex-row sm:gap-[18px]">
+            <div key={course.id} className="overflow-hidden rounded-2xl border border-[#D9D9D9] bg-white">
+            <div className="flex flex-col gap-4 py-[15px] pl-[15px] pr-6 sm:flex-row sm:gap-[18px]">
               <div
                 className={`flex h-[116px] w-[116px] flex-shrink-0 items-center justify-center overflow-hidden rounded-lg ${
                   course.thumbnail_url ? "bg-ink/5" : tint
@@ -168,14 +167,11 @@ export default async function LearnCoursesPage() {
               </div>
 
               <div className="flex min-w-0 flex-1 flex-col">
-                <div className="h-[22px]">
-                  {category && (
-                    <span className="inline-block rounded bg-brand-500 px-2 py-[3px] text-xs font-medium uppercase leading-4 text-ink">
-                      {category}
-                    </span>
-                  )}
-                </div>
-                <p className="mt-[19px] text-base leading-6 text-ink">{course.title}</p>
+                <p className="mt-2 text-lg leading-6 text-ink">{course.title}</p>
+                <p className="mt-1 text-xs text-[#8A9DA2]">
+                  {moduleRows.length > 0 ? `${moduleRows.length} сургалт · ` : ""}
+                  {totalLessons} хичээл
+                </p>
                 <div className="mt-auto h-2 rounded-full bg-[#D9D9D9] p-px">
                   <div
                     className="h-full rounded-full bg-[#F87B4F]"
@@ -203,10 +199,16 @@ export default async function LearnCoursesPage() {
               </div>
             </div>
 
+            {/* Бүлгийн доторх сургалтууд — эхний бүлэг нээлттэй, бусад нь хураалттай. */}
             {moduleRows.length > 0 && (
-              <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6">
-                <p className="text-ink">Нийт сургалт</p>
-                <div className="mt-5 overflow-hidden rounded-lg">
+              <details open={index === 0} className="group border-t border-[#E2E8F0]">
+                <summary className="focus-ring flex cursor-pointer list-none items-center justify-between px-6 py-3 text-sm text-ink hover:bg-brand-50/50 [&::-webkit-details-marker]:hidden">
+                  <span>
+                    Энэ бүлгийн сургалтууд <span className="text-[#8A9DA2]">· {moduleRows.length}</span>
+                  </span>
+                  <ChevronDownIcon className="h-4 w-4 text-ink/50 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="mx-6 mb-6 overflow-hidden rounded-lg">
                   {/* Гарчиг болон мөрүүд ижил багана, ижил scrollbar-ийн зайтай тул тоо гарчгийн яг доор байрлана. */}
                   <div className="flex items-center gap-4 overflow-hidden bg-brand-500 px-4 py-3 text-xs font-medium uppercase text-paper [scrollbar-gutter:stable]">
                     <span className="flex-1">Сургалтын нэр</span>
@@ -246,7 +248,7 @@ export default async function LearnCoursesPage() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </details>
             )}
             </div>
           );
