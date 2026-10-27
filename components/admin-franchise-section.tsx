@@ -159,7 +159,7 @@ export function AdminFranchiseSection({
               <th className="px-4 py-3 text-center font-medium">Ажилтан</th>
               <th className="px-4 py-3 font-medium">Менежер</th>
               <th className="px-4 py-3 font-medium">Бүртгэлийн холбоос</th>
-              <th className="px-4 py-3 text-right font-medium"></th>
+              <th className="px-4 py-3 text-right font-medium">Үйлдэл</th>
             </tr>
           </thead>
           <tbody>
