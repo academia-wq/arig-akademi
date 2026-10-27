@@ -140,14 +140,15 @@ export function LessonCelebration({
         className="relative my-auto w-full max-w-sm rounded-3xl bg-white px-6 pb-6 pt-10 text-center shadow-2xl"
         style={{ animation: "celebrate-card 520ms cubic-bezier(.2,.9,.3,1.2) both" }}
       >
-        {/* Тэмдэг: эргэлддэг туяа + үсэрч гарах дугуй + зурагдах чагт */}
+        {/* Тэмдэг: эргэлддэг туяа + үсэрч гарах дугуй + зурагдах чагт.
+            Амжилтын хэсэг (тэмдэг, гарчиг, явц) нь accent ногоон, товч нь брэндийн улбар шар. */}
         <div className="relative mx-auto h-32 w-32">
           <div
             aria-hidden
             className="absolute -inset-6 rounded-full opacity-60"
             style={{
               background:
-                "repeating-conic-gradient(from 0deg, #FFDDD0 0deg 12deg, transparent 12deg 30deg)",
+                "repeating-conic-gradient(from 0deg, #CFE5DE 0deg 12deg, transparent 12deg 30deg)",
               maskImage: "radial-gradient(circle, black 35%, transparent 70%)",
               WebkitMaskImage: "radial-gradient(circle, black 35%, transparent 70%)",
               animation: "celebrate-rays 9s linear infinite",
@@ -173,7 +174,7 @@ export function LessonCelebration({
             style={{ animation: "celebrate-hop 1.4s ease-in-out 1s infinite" }}
           >
             <div
-              className="flex h-28 w-28 items-center justify-center rounded-full bg-brand-500 shadow-[0_8px_0_#E35F37]"
+              className="flex h-28 w-28 items-center justify-center rounded-full bg-accent shadow-[0_8px_0_#1F4D41]"
               style={{ animation: "celebrate-badge 650ms cubic-bezier(.2,.9,.3,1.3) 150ms both" }}
             >
               <svg viewBox="0 0 52 52" className="h-16 w-16" fill="none">
@@ -194,7 +195,7 @@ export function LessonCelebration({
 
         <h2
           id="celebrate-title"
-          className="mt-6 font-display text-3xl font-bold text-brand-500"
+          className="mt-6 font-display text-3xl font-bold text-accent"
           style={{ animation: "celebrate-text 500ms cubic-bezier(.2,.9,.3,1.3) 450ms both" }}
         >
           {praise}
@@ -210,13 +211,13 @@ export function LessonCelebration({
           <div className="mt-6" style={{ animation: "celebrate-rise 400ms ease-out 750ms both" }}>
             <div className="flex items-center justify-between text-xs font-medium">
               <span className="text-ink/60">Сургалтын явц</span>
-              <span className="text-brand-500">
+              <span className="text-accent">
                 {done}/{total} хичээл
               </span>
             </div>
-            <div className="mt-2 h-3 overflow-hidden rounded-full bg-brand-50">
+            <div className="mt-2 h-3 overflow-hidden rounded-full bg-[#E3F0EC]">
               <div
-                className="h-full rounded-full bg-brand-500 transition-[width] duration-700 ease-out"
+                className="h-full rounded-full bg-accent transition-[width] duration-700 ease-out"
                 style={{ width: `${barPercent}%` }}
               />
             </div>
