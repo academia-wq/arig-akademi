@@ -25,9 +25,9 @@
 - `app/mystery-shopper/` — нэвтрэлтгүй нийтийн үнэлгээний маягт
 - `lib/supabase/server.ts` — `createClient()` (RLS-тэй), `getUser()` (request-д cache-лэгдсэн),
   `createServiceRoleClient()` (RLS-ийг тойрно — зөвхөн эрх шалгасны дараа)
-- `middleware.ts` — `/dashboard`, `/learn`, `/settings`, `/admin`-ийг нэвтрэлтээр хамгаална
+- `middleware.ts` — `/dashboard`, `/learn`, `/settings`, `/admin`, `/franchise`-ийг нэвтрэлтээр хамгаална
 - `supabase/schema.sql` + `supabase/migrations/*.sql` — database. **Гараар** SQL Editor-т ажиллуулдаг.
-- Эрх: `profiles.role` = `student` | `instructor` | `admin`. Админ хэсэгт admin/instructor л орно.
+- Эрх: `profiles.role` = `student` | `instructor` | `admin` | `franchise_manager`. Админ хэсэгт admin/instructor л орно.
 
 ## Харагдах эрх (үндсэн / франчайз, хэлтэс)
 
@@ -39,7 +39,9 @@
   кодыг `handle_new_user` trigger шалгаж `franchise_id`-г онооно. Админ самбарын "Франчайз" таб.
 - `protect_profile_columns` trigger: role, department, position, employee_type, franchise_id-г зөвхөн
   service role (сервер) өөрчилнө — хэрэглэгч өөрийн профайлаас зөвхөн нэр, зураг солино.
-- 2-р үе (хийгдээгүй): франчайзын менежер өөрийн франчайзын ажилтнуудыг харах эрх.
+- Франчайзын менежер (`role = franchise_manager`): `/franchise` хуудсанд зөвхөн өөрийн франчайзын ажилтнуудын
+  явцыг харж, хэлтэс/албан тушаал оноож, идэвхгүй болгоно. Эрх шалгалт `lib/franchise-auth.ts`,
+  action-ууд `app/(app)/franchise/actions.ts`. Админ "Франчайз" табаас менежер томилно.
 
 ## "Бүтэц" таб (academy structure)
 
