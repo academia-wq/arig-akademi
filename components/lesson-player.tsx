@@ -11,6 +11,10 @@ const COMPLETION_THRESHOLD = 0.9; // Видеоны 90%-ийг БОДИТООР 
 const SAVE_INTERVAL_MS = 10_000; // 10 секунд тутамд хадгална (спек 4.3.3)
 // Энгийн тоглолтын үед timeupdate хооронд ~0.25с (2x үед ~0.5с); үүнээс их үсрэлт = гүйлгэсэн.
 const MAX_PLAYBACK_STEP = 1.5;
+// Видео бодит цагаас (× хурд) хурдан урагшилбал гүйлгэж (scrub) байна гэж үзнэ.
+// Гүйлгэгчийг чирэхэд жижиг алхмууд ирдэг тул зөвхөн алхмын хэмжээгээр ялгах боломжгүй.
+const WALL_CLOCK_TOLERANCE = 1.25;
+const WALL_CLOCK_SLACK_SECONDS = 0.35;
 const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2];
 
 // Үзсэн секундүүдийг энэ хөтчид хадгална — хуудсыг дахин ачаалсан ч тооцоо үргэлжилнэ.
@@ -83,6 +87,7 @@ export function LessonPlayer({
   const hasMarkedComplete = useRef(initiallyCompleted);
   const watchedSeconds = useRef<Set<number>>(new Set());
   const lastTime = useRef(startTime);
+  const lastWallClock = useRef(0);
 
   useEffect(() => {
     watchedSeconds.current = loadWatched(lessonId);
@@ -129,18 +134,31 @@ export function LessonPlayer({
     if (ratio >= COMPLETION_THRESHOLD) markCompleteOnce(media.currentTime);
   }
 
+  // Сүүлийн timeupdate-ээс хойш видео энгийн тоглолтоор (гүйлгээгүй) урагшилсан эсэх.
+  function isNormalPlayback(media: HTMLMediaElement, step: number, now: number) {
+    if (step <= 0 || step > MAX_PLAYBACK_STEP) return false;
+    if (media.paused || (media as { seeking?: boolean }).seeking) return false;
+    if (!lastWallClock.current) return false;
+    const wallSeconds = (now - lastWallClock.current) / 1000;
+    const allowed = wallSeconds * (media.playbackRate || 1) * WALL_CLOCK_TOLERANCE + WALL_CLOCK_SLACK_SECONDS;
+    return step <= allowed;
+  }
+
   function handleTimeUpdate(e: Event) {
     const media = e.currentTarget as HTMLMediaElement;
     const time = media.currentTime;
     const step = time - lastTime.current;
+    const wallNow = performance.now();
 
-    // Зөвхөн энгийн тоглолтоор өнгөрсөн секундүүдийг тоолно — гүйлгэж алгассан хэсэг орохгүй.
-    if (step > 0 && step <= MAX_PLAYBACK_STEP) {
+    // Зөвхөн энгийн тоглолтоор өнгөрсөн секундүүдийг тоолно — гүйлгэж алгассан, чирж
+    // гүйлгэсэн хэсэг орохгүй (бодит цагтай харьцуулна).
+    if (isNormalPlayback(media, step, wallNow)) {
       const before = watchedSeconds.current.size;
       for (let s = Math.floor(lastTime.current); s < Math.floor(time); s++) watchedSeconds.current.add(s);
       if (watchedSeconds.current.size !== before) storeWatched(lessonId, watchedSeconds.current);
     }
     lastTime.current = time;
+    lastWallClock.current = wallNow;
     updateWatched(media);
 
     const now = Date.now();
@@ -152,7 +170,12 @@ export function LessonPlayer({
   function handleEnded(e: Event) {
     const media = e.currentTarget as HTMLMediaElement;
     // Төгсгөлд энгийн тоглолтоор хүрсэн бол сүүлийн секундүүдийг тоолно.
-    if (media.currentTime - lastTime.current <= MAX_PLAYBACK_STEP) {
+    const step = media.currentTime - lastTime.current;
+    const wallSeconds = lastWallClock.current ? (performance.now() - lastWallClock.current) / 1000 : 0;
+    if (
+      step <= MAX_PLAYBACK_STEP &&
+      step <= wallSeconds * (media.playbackRate || 1) * WALL_CLOCK_TOLERANCE + WALL_CLOCK_SLACK_SECONDS
+    ) {
       for (let s = Math.floor(lastTime.current); s < Math.ceil(media.duration); s++) watchedSeconds.current.add(s);
       storeWatched(lessonId, watchedSeconds.current);
     }
