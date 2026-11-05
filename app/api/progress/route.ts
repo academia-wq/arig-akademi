@@ -17,13 +17,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "lessonId шаардлагатай" }, { status: 400 });
   }
 
+  // Дууссан хичээлийг дахин үзэхэд "дууссан" төлөв, огноо нь өөрчлөгдөхгүй.
+  const { data: existing } = await supabase
+    .from("lesson_progress")
+    .select("is_completed, completed_at")
+    .eq("user_id", user.id)
+    .eq("lesson_id", lessonId)
+    .maybeSingle();
+  const alreadyCompleted = !!existing?.is_completed;
+
   const { error } = await supabase.from("lesson_progress").upsert(
     {
       user_id: user.id,
       lesson_id: lessonId,
       last_position_seconds: lastPositionSeconds ?? 0,
-      is_completed: !!isCompleted,
-      completed_at: isCompleted ? new Date().toISOString() : null,
+      is_completed: alreadyCompleted || !!isCompleted,
+      completed_at: alreadyCompleted
+        ? existing?.completed_at
+        : isCompleted
+        ? new Date().toISOString()
+        : null,
     },
     { onConflict: "user_id,lesson_id" }
   );

@@ -17,23 +17,16 @@ const WALL_CLOCK_TOLERANCE = 1.25;
 const WALL_CLOCK_SLACK_SECONDS = 0.35;
 const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2];
 
-// Үзсэн секундүүдийг энэ хөтчид хадгална — хуудсыг дахин ачаалсан ч тооцоо үргэлжилнэ.
-function storageKey(lessonId: string) {
-  return `arig:watched:${lessonId}`;
-}
-function loadWatched(lessonId: string): Set<number> {
+// Үзсэн секундүүдийг зөвхөн тухайн үзэлтийн дотор тоолно: хуудсыг дахин нээх эсвэл
+// видео төгссөний дараа дахин тоглуулахад 0-ээс эхэлнэ (өмнөх үзэлт нэмэгдэхгүй).
+// Өмнөх хувилбар хөтчид хадгалдаг байсан түлхүүрүүдийг цэвэрлэнэ.
+function clearLegacyWatched() {
   try {
-    const raw = localStorage.getItem(storageKey(lessonId));
-    return new Set(raw ? (JSON.parse(raw) as number[]) : []);
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("arig:watched:"))
+      .forEach((k) => localStorage.removeItem(k));
   } catch {
-    return new Set();
-  }
-}
-function storeWatched(lessonId: string, seconds: Set<number>) {
-  try {
-    localStorage.setItem(storageKey(lessonId), JSON.stringify(Array.from(seconds)));
-  } catch {
-    // хадгалах боломжгүй (private mode г.м.) — тухайн сессийн дотор тоолсоор байна
+    // хандах боломжгүй (private mode г.м.) — хэрэггүй
   }
 }
 
@@ -85,13 +78,31 @@ export function LessonPlayer({
   const [watchedPercent, setWatchedPercent] = useState(0);
   const lastSavedAt = useRef(0);
   const hasMarkedComplete = useRef(initiallyCompleted);
+  // Дуусаагүй хичээл үргэлж эхнээс нь эхэлнэ (тоолол 0-ээс эхэлдэг тул); дууссан
+  // хичээл өмнөх байрлалаасаа үргэлжилнэ.
+  const effectiveStart = initiallyCompleted ? startTime : 0;
   const watchedSeconds = useRef<Set<number>>(new Set());
-  const lastTime = useRef(startTime);
+  const lastTime = useRef(effectiveStart);
   const lastWallClock = useRef(0);
+  const endedRef = useRef(false);
+  const celebratedRef = useRef(false);
 
   useEffect(() => {
-    watchedSeconds.current = loadWatched(lessonId);
+    clearLegacyWatched();
+    watchedSeconds.current = new Set();
+    setWatchedPercent(0);
   }, [lessonId]);
+
+  // Видео төгссөний дараа дахин тоглуулбал шинэ үзэлт — тоолол 0-ээс.
+  function handlePlay(e: Event) {
+    setPaused(false);
+    if (!endedRef.current) return;
+    endedRef.current = false;
+    watchedSeconds.current = new Set();
+    lastTime.current = (e.currentTarget as HTMLMediaElement).currentTime;
+    lastWallClock.current = 0;
+    setWatchedPercent(0);
+  }
 
   useEffect(() => {
     if (playerRef.current) playerRef.current.playbackRate = rate;
@@ -126,6 +137,8 @@ export function LessonPlayer({
   }
 
   function updateWatched(media: HTMLMediaElement) {
+    // Дууссан хичээлд тоолол, хувь өөрчлөгдөхгүй.
+    if (hasMarkedComplete.current) return;
     const ratio =
       media.duration > 0
         ? Math.min(1, watchedSeconds.current.size / Math.floor(media.duration))
@@ -152,10 +165,8 @@ export function LessonPlayer({
 
     // Зөвхөн энгийн тоглолтоор өнгөрсөн секундүүдийг тоолно — гүйлгэж алгассан, чирж
     // гүйлгэсэн хэсэг орохгүй (бодит цагтай харьцуулна).
-    if (isNormalPlayback(media, step, wallNow)) {
-      const before = watchedSeconds.current.size;
+    if (!hasMarkedComplete.current && isNormalPlayback(media, step, wallNow)) {
       for (let s = Math.floor(lastTime.current); s < Math.floor(time); s++) watchedSeconds.current.add(s);
-      if (watchedSeconds.current.size !== before) storeWatched(lessonId, watchedSeconds.current);
     }
     lastTime.current = time;
     lastWallClock.current = wallNow;
@@ -173,16 +184,20 @@ export function LessonPlayer({
     const step = media.currentTime - lastTime.current;
     const wallSeconds = lastWallClock.current ? (performance.now() - lastWallClock.current) / 1000 : 0;
     if (
+      !hasMarkedComplete.current &&
       step <= MAX_PLAYBACK_STEP &&
       step <= wallSeconds * (media.playbackRate || 1) * WALL_CLOCK_TOLERANCE + WALL_CLOCK_SLACK_SECONDS
     ) {
       for (let s = Math.floor(lastTime.current); s < Math.ceil(media.duration); s++) watchedSeconds.current.add(s);
-      storeWatched(lessonId, watchedSeconds.current);
     }
     updateWatched(media);
+    endedRef.current = true;
     saveProgress(0, hasMarkedComplete.current);
-    // Баярын цонх: энэ удаа дуусгасан бол видео бүрэн төгсөхөд л гарна.
-    if (hasMarkedComplete.current && !initiallyCompleted) setCelebrating(true);
+    // Баярын цонх: энэ удаа дуусгасан бол видео бүрэн төгсөхөд нэг л удаа гарна.
+    if (hasMarkedComplete.current && !initiallyCompleted && !celebratedRef.current) {
+      celebratedRef.current = true;
+      setCelebrating(true);
+    }
   }
 
   return (
@@ -245,7 +260,7 @@ export function LessonPlayer({
             }}
             playbackId={playbackId}
             streamType="on-demand"
-            startTime={startTime}
+            startTime={effectiveStart}
             autoPlay
             metadata={{ video_id: lessonId }}
             onTimeUpdate={handleTimeUpdate}
@@ -253,7 +268,7 @@ export function LessonPlayer({
             onLoadedMetadata={(e) => {
               (e.currentTarget as HTMLMediaElement).playbackRate = rate;
             }}
-            onPlay={() => setPaused(false)}
+            onPlay={handlePlay}
             onPause={() => setPaused(true)}
             style={
               {
@@ -278,7 +293,7 @@ export function LessonPlayer({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`https://image.mux.com/${playbackId}/thumbnail.webp?width=1280${startTime > 0 ? `&time=${Math.floor(startTime)}` : ""}`}
+              src={`https://image.mux.com/${playbackId}/thumbnail.webp?width=1280${effectiveStart > 0 ? `&time=${Math.floor(effectiveStart)}` : ""}`}
               alt=""
               className="h-full w-full object-cover"
             />
