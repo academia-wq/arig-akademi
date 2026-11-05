@@ -518,7 +518,8 @@ export function AddCourseButton({ courses }: { courses: { id: string; title: str
             </div>
 
             <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
-              <fieldset disabled={busy} className="flex flex-col gap-4">
+              {/* min-w-0: fieldset анхдагчаар min-content өргөнтэй тул урт файлын нэр цонхыг тэлж байсан. */}
+              <fieldset disabled={busy} className="flex min-w-0 flex-col gap-4">
                 <div>
                   <label className={labelClass}>Бүлэг</label>
                   <div className="mt-1.5 flex gap-2">
