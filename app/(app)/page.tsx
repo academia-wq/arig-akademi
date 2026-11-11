@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/server";
 import {
   ArrowRightCircleIcon,
   WorkItemIcon,
@@ -41,7 +41,9 @@ const FEATURES = [
 ];
 
 export default async function HomePage() {
-  const supabase = createClient();
+  // Хичээлийн RLS нь зөвхөн элссэн хэрэглэгчид нээлттэй тул нэвтрээгүй хүнд "0 хичээл" гардаг байсан.
+  // Энд зөвхөн id-г уншиж тоо гаргадаг (агуулга гадагш гарахгүй) тул service role ашиглана.
+  const supabase = createServiceRoleClient();
 
   const { data: courses } = await supabase
     .from("courses")
