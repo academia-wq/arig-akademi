@@ -16,6 +16,16 @@ const COURSE_DRAFT_DAILY_LIMIT = 5;
 const SUPPORTED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
+// Курсын агуулга (AI ноорог г.м.) үүсгэх нь зөвхөн admin/instructor-т.
+async function isStaff(userId: string) {
+  const { data: profile } = await createClient()
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  return profile?.role === "admin" || profile?.role === "instructor";
+}
+
 export async function uploadLessonImage(
   lessonId: string,
   courseId: string,
@@ -78,6 +88,9 @@ export async function generateDraftFromFile(
 ): Promise<{ success: true; draft: CourseDraft } | { success: false; error: string }> {
   const user = await getUser();
   if (!user) return { success: false, error: "Нэвтрээгүй байна." };
+  if (!(await isStaff(user.id))) {
+    return { success: false, error: "Энэ үйлдэлд эрх хүрэлцэхгүй байна." };
+  }
 
   const supabase = createClient();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -130,6 +143,9 @@ export async function saveDraftStructure(
 ): Promise<{ success: true } | { success: false; error: string }> {
   const user = await getUser();
   if (!user) return { success: false, error: "Нэвтрээгүй байна." };
+  if (!(await isStaff(user.id))) {
+    return { success: false, error: "Энэ үйлдэлд эрх хүрэлцэхгүй байна." };
+  }
 
   const supabase = createClient();
 

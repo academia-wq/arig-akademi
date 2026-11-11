@@ -91,9 +91,14 @@ function LoginForm() {
           />
         </div>
         <div>
-          <label className="block text-sm text-ink" htmlFor="password">
-            Нууц үг
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="block text-sm text-ink" htmlFor="password">
+              Нууц үг
+            </label>
+            <Link prefetch={false} href="/forgot-password" className="text-xs font-medium text-brand-500 hover:text-brand-700">
+              Нууц үгээ мартсан уу?
+            </Link>
+          </div>
           <div className="relative mt-2">
             <input
               id="password"

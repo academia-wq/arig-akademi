@@ -83,3 +83,22 @@ export async function inviteEmployee(input: {
 
   return { success: true, link, emailed, resent: !!existing };
 }
+
+// Нууц үг сэргээх (/set-password?type=recovery) холбоос — имэйлээр эсвэл админ/менежер хуулж өгнө.
+export async function createPasswordResetLink(email: string): Promise<string | null> {
+  const { data, error } = await createServiceRoleClient().auth.admin.generateLink({
+    type: "recovery",
+    email,
+  });
+  if (error || !data.properties?.hashed_token) return null;
+  const origin =
+    headers().get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "https://arig-akademi.vercel.app";
+  return `${origin}/set-password?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=recovery`;
+}
+
+// Profile id-аар нь сэргээх холбоос (админ/менежерийн "Нууц үг сэргээх холбоос" товч).
+export async function createPasswordResetLinkForUser(userId: string): Promise<string | null> {
+  const { data } = await createServiceRoleClient().auth.admin.getUserById(userId);
+  if (!data.user?.email) return null;
+  return createPasswordResetLink(data.user.email);
+}

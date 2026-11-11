@@ -8,7 +8,12 @@ import { Tooltip } from "@/components/tooltip";
 import { useConfirm } from "@/components/confirm-dialog";
 import { initialsOf } from "@/lib/format";
 import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
-import { setFranchiseEmployeeActive, updateFranchiseEmployee } from "@/app/(app)/franchise/actions";
+import {
+  createFranchiseEmployeeResetLink,
+  setFranchiseEmployeeActive,
+  updateFranchiseEmployee,
+} from "@/app/(app)/franchise/actions";
+import { ResetLinkButton } from "@/components/reset-link-button";
 
 export type FranchiseEmployee = {
   id: string;
@@ -309,6 +314,10 @@ function EditFranchiseEmployeeModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="border-t border-ink/10 pt-3">
+            <ResetLinkButton generate={() => createFranchiseEmployeeResetLink(employee.id)} />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

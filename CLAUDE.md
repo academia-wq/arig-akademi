@@ -62,7 +62,9 @@
   автомат backup БАЙХГҮЙ, 1 долоо хоног идэвхгүй бол зогсоно.
 - Env хувьсагчдыг Vercel дээр "Sensitive" төрлөөр хадгалсан тул `vercel env pull`-ээр татагдахгүй.
   Локал `.env.local`-ийг Supabase/Mux/Anthropic/Resend dashboard-оос бөглөнө (`.env.example`-ийг харна уу).
-- `RESEND_FROM_EMAIL` тохируулагдаагүй (onboarding@resend.dev-ээс илгээгдэнэ).
+- `RESEND_FROM_EMAIL` тохируулагдаагүй (onboarding@resend.dev-ээс илгээгдэнэ) — Resend зөвхөн эзэмшигчийн хаяг руу
+  илгээнэ. Урилга, "Нууц үгээ мартсан" (`/forgot-password`) имэйл ажилтанд хүрэхгүй; ariganya.com домэйныг
+  Resend-д баталгаажуулах хүртэл админ/менежер "Нууц үг сэргээх холбоос"-ыг хуулж өгнө.
 
 ⚠️ Локал `npm run dev` нь **production database**-тэй холбогдоно — туршилтын өгөгдөл жинхэнэ өгөгдлийг өөрчилнө.
 
@@ -79,8 +81,9 @@
 1. Mux webhook (`/api/mux/webhook`) видеог хичээлд холбож чадахгүй байна (signing secret эсвэл URL таарахгүй байх).
    Нөөц арга: видео хуулсны дараа `/api/mux/sync`-ээр шалгаж холбодог (`lib/mux-upload.ts` → `waitForMuxVideo`).
    Mux → Settings → Webhooks болон Vercel-ийн `MUX_WEBHOOK_SECRET`-ийг шалгах.
-2. `generateDraftFromFile`, `saveDraftStructure` — role шалгадаггүй.
-3. `/mystery-shopper` — нэвтрэлтгүй, service-role-оор бичдэг, spam хамгаалалтгүй.
+2. ~~`generateDraftFromFile`, `saveDraftStructure` role шалгадаггүй~~ — засагдсан (admin/instructor).
+3. `/mystery-shopper` — нэвтрэлтгүй, service-role-оор бичдэг. Spam хамгаалалт: honeypot, 30с доод хугацаа,
+   цагт 30 илгээлт (бүх эх сурвалжаас нийт), текстийн урт. IP-ээр хязгаарлаагүй.
 4. Production DB-д `ai_usage_logs`, `onboarding_plans` хүснэгт **үүсээгүй** — `supabase/migration_ai_usage_logs.sql`,
    `supabase/migrations/add_onboarding_plans.sql`-ийг ажиллуулах шаардлагатай.
 5. `lesson-materials` bucket-ийн migration файл байхгүй (production дээр гараар үүсгэсэн).

@@ -1,7 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { inviteEmployee, type InviteResult } from "@/lib/employee-invite";
+import {
+  createPasswordResetLinkForUser,
+  inviteEmployee,
+  type InviteResult,
+} from "@/lib/employee-invite";
 import { createClient, createServiceRoleClient, getUser } from "@/lib/supabase/server";
 
 const SUPPORTED_PDF_MIME_TYPES = ["application/pdf"];
@@ -441,4 +445,15 @@ export async function setFranchiseManager(
   revalidatePath("/admin");
   revalidatePath("/franchise");
   return { success: true };
+}
+
+// Ажилтны нууц үг сэргээх холбоос (имэйл хүрэхгүй үед админ хуулж өгнө).
+export async function createEmployeeResetLink(
+  profileId: string
+): Promise<{ success: true; link: string } | { success: false; error: string }> {
+  const staff = await requireStaff();
+  if (!staff.ok) return { success: false, error: staff.error };
+  const link = await createPasswordResetLinkForUser(profileId);
+  if (!link) return { success: false, error: "Холбоос үүсгэж чадсангүй." };
+  return { success: true, link };
 }

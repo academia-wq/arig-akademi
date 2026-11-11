@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { requireFranchiseViewer } from "@/lib/franchise-auth";
 import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
-import { inviteEmployee, type InviteResult } from "@/lib/employee-invite";
+import {
+  createPasswordResetLinkForUser,
+  inviteEmployee,
+  type InviteResult,
+} from "@/lib/employee-invite";
 
 type Result = { success: true } | { success: false; error: string };
 
@@ -99,4 +103,15 @@ export async function inviteFranchiseEmployee(formData: FormData): Promise<Invit
   });
   if (result.success) revalidatePath("/franchise");
   return result;
+}
+
+// Өөрийн франчайзын ажилтны нууц үг сэргээх холбоос.
+export async function createFranchiseEmployeeResetLink(
+  profileId: string
+): Promise<{ success: true; link: string } | { success: false; error: string }> {
+  const check = await requireOwnEmployee(profileId);
+  if (!check.ok) return { success: false, error: check.error };
+  const link = await createPasswordResetLinkForUser(profileId);
+  if (!link) return { success: false, error: "Холбоос үүсгэж чадсангүй." };
+  return { success: true, link };
 }

@@ -39,3 +39,26 @@ export async function sendEmployeeInviteEmail({
 
   if (error) throw new Error(error.message);
 }
+
+// "Нууц үгээ мартсан" — шинэ нууц үг тохируулах холбоос илгээнэ.
+export async function sendPasswordResetEmail({ email, link }: { email: string; link: string }) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const from = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
+  const { error } = await resend.emails.send({
+    from: `Ариг Академи <${from}>`,
+    to: email,
+    subject: "Ариг Академи — нууц үг сэргээх",
+    html: `
+  <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;line-height:1.6;">
+    <p>Сайн байна уу!</p>
+    <p>Таны Ариг Академийн бүртгэлийн нууц үгийг сэргээх хүсэлт ирлээ. Доорх товчоор орж шинэ нууц үгээ тохируулна уу.</p>
+    <p style="margin:28px 0;">
+      <a href="${escapeHtml(link)}" style="background:#f87b4f;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Шинэ нууц үг тохируулах</a>
+    </p>
+    <p style="color:#666;font-size:13px;">Хэрэв та хүсэлт илгээгээгүй бол энэ имэйлийг үл тоомсорлоно уу — нууц үг тань өөрчлөгдөхгүй.</p>
+  </div>`,
+  });
+
+  if (error) throw new Error(error.message);
+}

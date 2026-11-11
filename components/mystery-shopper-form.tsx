@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   MYSTERY_SHOPPER_QUESTIONS,
   calculateQuestionScore,
@@ -31,6 +31,9 @@ function initialAnswers(): Record<number, AnswerState> {
 }
 
 export function MysteryShopperForm() {
+  // Spam хамгаалалт: маягт нээгдсэн цаг, ботод л харагдах далд талбар.
+  const [startedAt] = useState(() => Date.now());
+  const honeypotRef = useRef<HTMLInputElement>(null);
   const [branchName, setBranchName] = useState("");
   const [evaluationDate, setEvaluationDate] = useState(todayISO());
   const [evaluatorName, setEvaluatorName] = useState("");
@@ -115,6 +118,8 @@ export function MysteryShopperForm() {
     formData.set("evaluationTime", evaluationTime.trim());
     formData.set("comment", comment.trim());
     formData.set("hasOutdoorAndRestroom", String(hasOutdoorAndRestroom));
+    formData.set("startedAt", String(startedAt));
+    formData.set("website", honeypotRef.current?.value || "");
 
     const applicableEntries = Object.entries(answers).filter(([num]) => applicableNumbers.has(Number(num)));
     const answersPayload = applicableEntries.map(([questionNumber, a]) => ({
@@ -171,6 +176,15 @@ export function MysteryShopperForm() {
 
   return (
     <form onSubmit={handleSubmit} className="pb-28">
+      <input
+        ref={honeypotRef}
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute -left-[9999px] h-px w-px opacity-0"
+      />
       <header className="mb-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-brand-500">
           Нууц үйлчлүүлэгч

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { XIcon, EditIcon } from "@/components/icons";
 import { Tooltip } from "@/components/tooltip";
-import { assignEmployee } from "@/app/(app)/admin/actions";
+import { assignEmployee, createEmployeeResetLink } from "@/app/(app)/admin/actions";
+import { ResetLinkButton } from "@/components/reset-link-button";
 import { DEPARTMENTS, POSITIONS } from "@/lib/departments";
 import {
   EmployeeTypeFields,
@@ -176,6 +177,10 @@ export function EditEmployeeButton({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className="border-t border-ink/10 pt-3">
+                <ResetLinkButton generate={() => createEmployeeResetLink(profileId)} />
               </div>
 
               {error && <p className="text-sm text-red-600">{error}</p>}

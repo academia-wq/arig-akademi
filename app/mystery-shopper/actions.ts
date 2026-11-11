@@ -9,6 +9,16 @@ const SUPPORTED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "im
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_IMAGES_PER_QUESTION = 3;
 
+// Spam хамгаалалт (нэвтрэлтгүй нийтийн маягт):
+// - далд "website" талбар (honeypot) бөглөгдвөл хадгалахгүй,
+// - маягт нээгдсэнээс хойш хэт хурдан илгээвэл татгалзана,
+// - бүх эх сурвалжаас нийт илгээлтийг цагаар хязгаарлана,
+// - текстийн уртыг хязгаарлана.
+const MIN_FILL_MS = 30_000;
+const MAX_SUBMISSIONS_PER_HOUR = 30;
+const MAX_SHORT_TEXT = 120;
+const MAX_LONG_TEXT = 2000;
+
 type AnswerInput = {
   questionNumber: number;
   answer: boolean;
@@ -27,6 +37,24 @@ export async function submitMysteryShopperEvaluation(formData: FormData): Promis
   const comment = String(formData.get("comment") || "").trim();
   const answersRaw = String(formData.get("answers") || "[]");
   const hasOutdoorAndRestroom = String(formData.get("hasOutdoorAndRestroom") || "true") === "true";
+
+  // Бот далд талбарыг бөглөдөг — амжилттай мэт хариулж, юу ч хадгалахгүй.
+  if (String(formData.get("website") || "").trim()) {
+    return { success: true, totalScore: 0, maxScore: 0 };
+  }
+  const startedAt = Number(formData.get("startedAt") || 0);
+  if (!startedAt || Date.now() - startedAt < MIN_FILL_MS) {
+    return { success: false, error: "Үнэлгээг хэт хурдан илгээлээ. Асуултуудыг анхааралтай бөглөөд дахин илгээнэ үү." };
+  }
+  if (
+    branchName.length > MAX_SHORT_TEXT ||
+    evaluatorName.length > MAX_SHORT_TEXT ||
+    evaluationTime.length > MAX_SHORT_TEXT ||
+    comment.length > MAX_LONG_TEXT ||
+    answersRaw.length > 100_000
+  ) {
+    return { success: false, error: "Бичвэр хэт урт байна." };
+  }
 
   if (!branchName) return { success: false, error: "Салбарын нэрийг оруулна уу." };
   if (!evaluationDate) return { success: false, error: "Огноог оруулна уу." };
@@ -51,6 +79,15 @@ export async function submitMysteryShopperEvaluation(formData: FormData): Promis
 
   const evaluationId = randomUUID();
   const supabase = createServiceRoleClient();
+
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count: recentCount } = await supabase
+    .from("mystery_shopper_evaluations")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", hourAgo);
+  if ((recentCount || 0) >= MAX_SUBMISSIONS_PER_HOUR) {
+    return { success: false, error: "Одоогоор хэт олон үнэлгээ ирсэн байна. Түр хүлээгээд дахин оролдоно уу." };
+  }
 
   const finalAnswers: Array<{
     questionNumber: number;
@@ -109,7 +146,7 @@ export async function submitMysteryShopperEvaluation(formData: FormData): Promis
       maxScore: question.maxScore,
       answer: answer.answer,
       score,
-      note: answer.note?.trim() || null,
+      note: answer.note?.trim().slice(0, MAX_LONG_TEXT) || null,
       imageUrls,
     });
   }

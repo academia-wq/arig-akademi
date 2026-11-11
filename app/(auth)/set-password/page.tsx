@@ -23,7 +23,9 @@ function SetPasswordForm() {
   const searchParams = useSearchParams();
   const tokenHash = searchParams.get("token_hash");
   const rawType = searchParams.get("type");
-  const type: EmailOtpType = rawType === "magiclink" ? "magiclink" : "invite";
+  const type: EmailOtpType =
+    rawType === "magiclink" ? "magiclink" : rawType === "recovery" ? "recovery" : "invite";
+  const isReset = type === "recovery";
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -53,7 +55,11 @@ function SetPasswordForm() {
       });
       if (verifyError) {
         setLoading(false);
-        setError("Холбоос хүчингүй эсвэл хугацаа нь дууссан байна. Админаас шинэ холбоос авна уу.");
+        setError(
+          isReset
+            ? "Холбоос хүчингүй эсвэл хугацаа нь дууссан байна. \"Нууц үгээ мартсан уу?\" хэсгээс дахин хүсэлт илгээнэ үү."
+            : "Холбоос хүчингүй эсвэл хугацаа нь дууссан байна. Админаас шинэ холбоос авна уу."
+        );
         return;
       }
     }
@@ -85,8 +91,12 @@ function SetPasswordForm() {
 
   return (
     <AuthCard
-      title="Нууц үг тохируулах"
-      subtitle="Ариг академид тавтай морил! Нэвтрэхдээ ашиглах нууц үгээ үүсгэнэ үү."
+      title={isReset ? "Шинэ нууц үг" : "Нууц үг тохируулах"}
+      subtitle={
+        isReset
+          ? "Шинэ нууц үгээ оруулаад хадгална уу."
+          : "Ариг академид тавтай морил! Нэвтрэхдээ ашиглах нууц үгээ үүсгэнэ үү."
+      }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>
