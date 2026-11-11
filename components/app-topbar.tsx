@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { SearchIcon, BellIcon, MenuIcon } from "@/components/icons";
+import { SearchIcon, MenuIcon } from "@/components/icons";
 import { SignOutButton } from "@/components/sign-out-button";
 import { NotificationsDropdown } from "@/components/notifications-dropdown";
 import { initialsOf } from "@/lib/format";
@@ -121,6 +121,8 @@ export function AppTopBar({
       </button>
 
       <div className="flex min-w-0 flex-1 items-center gap-8">
+      {/* Хайлт зөвхөн нэвтэрсэн хэрэглэгчийн элссэн сургалтаас хайдаг тул зочинд харуулахгүй. */}
+      {email && (
       <div className="relative min-w-0 max-w-[320px] flex-1" ref={searchRef}>
         {/* Дээд мөрийн талбар өөрөө хайлтын input — илэрц нь доор нь гарна. */}
         <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A9DA2]" />
@@ -196,6 +198,7 @@ export function AppTopBar({
           </div>
         )}
       </div>
+      )}
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2 sm:gap-6">
@@ -265,18 +268,8 @@ export function AppTopBar({
           </div>
         )}
 
-        {email ? (
-          <NotificationsDropdown unreadCount={unreadNotifications} />
-        ) : (
-          <Link
-            prefetch={false}
-            href="/notifications"
-            aria-label="Мэдэгдэл"
-            className="focus-ring relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-ink/60 transition hover:bg-ink/5 hover:text-ink"
-          >
-            <BellIcon className="h-[22px] w-[22px]" />
-          </Link>
-        )}
+        {/* Мэдэгдэл зөвхөн нэвтэрсэн хэрэглэгчид. */}
+        {email && <NotificationsDropdown unreadCount={unreadNotifications} />}
       </div>
     </header>
   );
