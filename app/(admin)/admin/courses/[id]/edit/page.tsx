@@ -140,10 +140,11 @@ async function deleteModule(moduleId: string, courseId: string) {
 }
 
 export default async function EditCoursePage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const params = await paramsPromise;
   const supabase = createClient();
 
   const { data: course } = await supabase

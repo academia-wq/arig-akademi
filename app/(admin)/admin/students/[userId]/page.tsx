@@ -6,10 +6,11 @@ import { formatDuration, formatJoinDate, formatCompletedDate, initialsOf } from 
 import { MailIcon, CalendarIcon } from "@/components/icons";
 
 export default async function StudentDetailPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
+  const params = await paramsPromise;
   const supabase = createClient();
   const viewer = await getUser();
   if (!viewer) redirect(`/login?redirect=/admin/students/${params.userId}`);

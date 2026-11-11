@@ -5,30 +5,24 @@ import { cache } from "react";
 import type { Database } from "@/types/database.types";
 import type { User } from "@supabase/supabase-js";
 
+// Next 15-д cookies() нь Promise буцаадаг. @supabase/ssr-ийн getAll/setAll нь async байж
+// болдог тул createClient() sync хэвээр үлдэж, дуудлагуудыг өөрчлөх шаардлагагүй.
 export function createClient() {
-  const cookieStore = cookies();
-
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        async getAll() {
+          return (await cookies()).getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
+        async setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           try {
-            cookieStore.set({ name, value, ...options });
+            const cookieStore = await cookies();
+            for (const { name, value, options } of cookiesToSet) cookieStore.set(name, value, options);
           } catch {
             // Server Component-с дуудагдвал бичих боломжгүй — middleware
             // session-ийг сэргээж байгаа тул үл тоомсорлож болно.
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch {
-            // дээрх шалтгаантай адил
           }
         },
       },

@@ -13,10 +13,11 @@ import { getCourseIcon } from "@/lib/course-icon";
 import { formatDuration } from "@/lib/format";
 
 export default async function LessonPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { courseSlug: string; lessonId: string };
+  params: Promise<{ courseSlug: string; lessonId: string }>;
 }) {
+  const params = await paramsPromise;
   const supabase = createClient();
   const user = await getUser();
   if (!user) redirect(`/login?redirect=/learn/${params.courseSlug}/${params.lessonId}`);

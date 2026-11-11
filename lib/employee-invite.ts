@@ -67,7 +67,7 @@ export async function inviteEmployee(input: {
   if (profileError) return { success: false, error: profileError.message };
 
   const origin =
-    headers().get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "https://arig-akademi.vercel.app";
+    (await headers()).get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "https://arig-akademi.vercel.app";
   const link = `${origin}/set-password?token_hash=${encodeURIComponent(
     linkData.properties.hashed_token
   )}&type=${type}`;
@@ -92,7 +92,7 @@ export async function createPasswordResetLink(email: string): Promise<string | n
   });
   if (error || !data.properties?.hashed_token) return null;
   const origin =
-    headers().get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "https://arig-akademi.vercel.app";
+    (await headers()).get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "https://arig-akademi.vercel.app";
   return `${origin}/set-password?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=recovery`;
 }
 

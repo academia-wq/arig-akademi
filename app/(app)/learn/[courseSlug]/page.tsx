@@ -7,10 +7,11 @@ import { ArrowRightIcon } from "@/components/icons";
 import { getCourseIcon } from "@/lib/course-icon";
 
 export default async function CourseCurriculumPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { courseSlug: string };
+  params: Promise<{ courseSlug: string }>;
 }) {
+  const params = await paramsPromise;
   const supabase = createClient();
   const user = await getUser();
   if (!user) redirect(`/login?redirect=/learn/${params.courseSlug}`);

@@ -25,10 +25,11 @@ async function enrollAction(courseId: string, courseSlug: string) {
 }
 
 export default async function CourseDetailPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const params = await paramsPromise;
   const supabase = createClient();
 
   const { data: course } = await supabase

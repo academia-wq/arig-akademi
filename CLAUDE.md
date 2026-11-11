@@ -7,7 +7,8 @@
 
 ## Технологи
 
-- **Next.js 14** (App Router) + React 18 + TypeScript + Tailwind CSS
+- **Next.js 15.5** (App Router) + React 19 + TypeScript + Tailwind CSS. Next 15-д `params`, `searchParams`,
+  `cookies()`, `headers()` нь Promise — `await` хийнэ. `createClient()` sync хэвээр (async getAll/setAll ашигладаг).
 - **Supabase**: PostgreSQL + Auth (имэйл/нууц үг, Google) + Storage
 - **Mux**: видео байршуулах/тоглуулах (`/api/mux/upload`, `/api/mux/webhook`)
 - **Anthropic Claude**: файлаас курсын ноорог, онбординг төлөвлөгөө үүсгэх (`lib/anthropic/`)

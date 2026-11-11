@@ -10,7 +10,12 @@ import { InviteFranchiseEmployeeButton } from "@/components/invite-franchise-emp
 // Франчайзын самбар: менежер зөвхөн өөрийн франчайзыг харна. admin/instructor дээд
 // хэсэгт франчайзуудыг удирдаж (нэмэх, холбоос, менежер томилох), сонгосон
 // франчайзыг (?id=) доор харна. Өгөгдлийг service role-оор уншиж, franchise_id-аар шүүнэ.
-export default async function FranchisePage({ searchParams }: { searchParams: { id?: string } }) {
+export default async function FranchisePage({
+  searchParams: searchParamsPromise,
+}: {
+  searchParams: Promise<{ id?: string }>;
+}) {
+  const searchParams = await searchParamsPromise;
   const viewer = await requireFranchiseViewer();
   if (!viewer.ok) redirect("/");
 
