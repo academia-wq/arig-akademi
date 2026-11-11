@@ -260,6 +260,7 @@ export type Database = {
           total_score: number;
           max_score: number;
           answers: unknown;
+          submitter_ip_hash: string | null;
           created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["mystery_shopper_evaluations"]["Row"]>;

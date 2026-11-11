@@ -98,7 +98,8 @@
    Mux → Settings → Webhooks болон Vercel-ийн `MUX_WEBHOOK_SECRET`-ийг шалгах.
 2. ~~`generateDraftFromFile`, `saveDraftStructure` role шалгадаггүй~~ — засагдсан (admin/instructor).
 3. `/mystery-shopper` — нэвтрэлтгүй, service-role-оор бичдэг. Spam хамгаалалт: honeypot, 30с доод хугацаа,
-   цагт 30 илгээлт (бүх эх сурвалжаас нийт), текстийн урт. IP-ээр хязгаарлаагүй.
+   нэг IP-ээс цагт 5 (`submitter_ip_hash` — IP-ийн SHA-256), нийт цагт 100 илгээлт, текстийн урт.
+   `20261111000000_mystery_shopper_ip_hash.sql` migration-ийг ажиллуулаагүй бол маягт илгээгдэхгүй.
 4. Production DB-д `ai_usage_logs`, `onboarding_plans` хүснэгт **үүсээгүй** — `supabase/migration_ai_usage_logs.sql`,
    `supabase/migrations/add_onboarding_plans.sql`-ийг ажиллуулах шаардлагатай.
 5. `lesson-materials` bucket-ийн migration файл байхгүй (production дээр гараар үүсгэсэн).

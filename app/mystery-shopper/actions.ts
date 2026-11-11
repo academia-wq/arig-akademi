@@ -1,7 +1,8 @@
 "use server";
 
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { calculateQuestionScore, getApplicableQuestions } from "@/lib/mystery-shopper/questions";
 
@@ -12,10 +13,19 @@ const MAX_IMAGES_PER_QUESTION = 3;
 // Spam хамгаалалт (нэвтрэлтгүй нийтийн маягт):
 // - далд "website" талбар (honeypot) бөглөгдвөл хадгалахгүй,
 // - маягт нээгдсэнээс хойш хэт хурдан илгээвэл татгалзана,
-// - бүх эх сурвалжаас нийт илгээлтийг цагаар хязгаарлана,
+// - нэг IP-ээс цагт MAX_SUBMISSIONS_PER_IP_PER_HOUR-аас илүү илгээхгүй (IP-ийн hash-ийг хадгална),
+// - бүх эх сурвалжаас нийт илгээлтийг цагаар хязгаарлана (нөөц хамгаалалт),
 // - текстийн уртыг хязгаарлана.
 const MIN_FILL_MS = 30_000;
-const MAX_SUBMISSIONS_PER_HOUR = 30;
+const MAX_SUBMISSIONS_PER_IP_PER_HOUR = 5;
+const MAX_SUBMISSIONS_PER_HOUR = 100;
+
+async function getSubmitterIpHash(): Promise<string> {
+  const h = await headers();
+  // Vercel x-forwarded-for-ийн эхний утгыг жинхэнэ клиентийн IP-ээр тавьдаг.
+  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip")?.trim() || "unknown";
+  return createHash("sha256").update(`arig-mystery-shopper:${ip}`).digest("hex");
+}
 const MAX_SHORT_TEXT = 120;
 const MAX_LONG_TEXT = 2000;
 
@@ -81,10 +91,21 @@ export async function submitMysteryShopperEvaluation(formData: FormData): Promis
   const supabase = createServiceRoleClient();
 
   const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count: recentCount } = await supabase
-    .from("mystery_shopper_evaluations")
-    .select("id", { count: "exact", head: true })
-    .gte("created_at", hourAgo);
+  const ipHash = await getSubmitterIpHash();
+  const [{ count: ipCount }, { count: recentCount }] = await Promise.all([
+    supabase
+      .from("mystery_shopper_evaluations")
+      .select("id", { count: "exact", head: true })
+      .eq("submitter_ip_hash", ipHash)
+      .gte("created_at", hourAgo),
+    supabase
+      .from("mystery_shopper_evaluations")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", hourAgo),
+  ]);
+  if ((ipCount || 0) >= MAX_SUBMISSIONS_PER_IP_PER_HOUR) {
+    return { success: false, error: "Та сүүлийн нэг цагт хэт олон үнэлгээ илгээсэн байна. Түр хүлээгээд дахин оролдоно уу." };
+  }
   if ((recentCount || 0) >= MAX_SUBMISSIONS_PER_HOUR) {
     return { success: false, error: "Одоогоор хэт олон үнэлгээ ирсэн байна. Түр хүлээгээд дахин оролдоно уу." };
   }
@@ -161,6 +182,7 @@ export async function submitMysteryShopperEvaluation(formData: FormData): Promis
     total_score: totalScore,
     max_score: maxScore,
     answers: finalAnswers,
+    submitter_ip_hash: ipHash,
   });
 
   if (insertError) {
